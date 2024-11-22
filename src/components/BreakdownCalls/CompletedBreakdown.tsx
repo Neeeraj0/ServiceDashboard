@@ -51,7 +51,7 @@ interface Order {
   photos: Photo[]; 
   materialsUsed: MaterialUsed[];
   issueObserved: string;
-  isPeriodService: boolean;
+  isPeriodicService: boolean;
   TAT1: string;
   TAT2: string;
 }
@@ -72,7 +72,9 @@ const CompletedBreakdown: React.FC = () => {
           customerDetails: order.client_number,
           issueReported: order.customerComplaint,
           issueObserved: order.issueObserved,
-          materialsUsed: order.materialsUsed || [],
+materialsUsed: order.materialsUsed
+          ? order.materialsUsed.flatMap((material: any) => material.materials || [])
+          : [], // Flatten nested materials         
           assignedDate: new Date(order.assignedDate).toLocaleString(), // Convert to readable date-time
           endDate: new Date(order.endDate).toLocaleString(),
           status: order.status,
@@ -149,26 +151,25 @@ const CompletedBreakdown: React.FC = () => {
               <td className="p-2 border-b border-blue-gray-50 text-sm">{order.issueReported || "N/A"}</td>
               <td className="p-2 border-b border-blue-gray-50 text-sm max-w-40 flex-wrap">{order.issueObserved || "N/A"}</td>
               <td className="p-2 border-b border-blue-gray-50 text-sm">
-              <td className="p-2 border-b border-blue-gray-50 text-sm">
-                  {order.materialsUsed.length > 0 ? (
-                    <ul className="list-disc ml-4">
-                      {order.materialsUsed.map((material, index) => (
-                        <li key={index}>
-                          {material.materialName}
-                          {material.sizeUsed ? ` - Size: ${material.sizeUsed}` : ""}
-                          {material.quantityUsed ? ` - Quantity: ${material.quantityUsed}` : ""}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    "No Materials Used"
-                  )}
-                </td>
+                {order.materialsUsed.length > 0 ? (
+                  <ul className="list-disc ml-4">
+                    {order.materialsUsed.map((material, index) => (
+                      <li key={index}>
+                        {material.materialName}
+                        {material.sizeUsed ? ` - Size: ${material.sizeUsed}` : ""}
+                        {material.quantityUsed ? ` - Quantity: ${material.quantityUsed}` : ""}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  "No Materials Used"
+                )}
               </td>
               <td className="p-4 border-b border-blue-gray-50 text-xs">{order.assignedDate || "N/A"}</td>
               <td className="p-4 border-b border-blue-gray-50 text-xs">{order.endDate || "N/A"}</td>
               <td className="p-4 border-b border-blue-gray-50 text-sm">
-                  {order.isPeriodService != null ? (order.isPeriodService ? "Yes" : "No") : "N/A"}
+                  {order.isPeriodicService !== undefined && order.isPeriodicService !== null ? 
+                (order.isPeriodicService ? "Yes" : "No") : "N/A"}
               </td>
               <td className="p-4 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs">
                 {order.TAT1 || "N/A"}

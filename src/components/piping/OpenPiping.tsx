@@ -21,7 +21,6 @@ interface PreorderResponse {
     plan_year: string;
     deposit: number;
     quantity: number;
-    contactPerson: string;
     _id: string;
   }[];
   Ac_totalAmount: number;
@@ -31,7 +30,7 @@ interface PreorderResponse {
     quantity: number;
     _id: string;
   }[];
-  material_totalAmount: number;
+  materialTotalAmount: number;
   status: string;
   with_material: boolean;
   pending_amount: number;
@@ -43,8 +42,8 @@ interface PreorderResponse {
     city: string;
     country: string;
     state: string;
-    contactPerson: String;
-    contactNumber: String;
+    contactPerson: string;
+    contactNumber: string;
   }[];
   PaymentStatus: string;
   orderingStatus: boolean;
@@ -73,6 +72,7 @@ const OpenPiping = () => {
       try {
         // Fetch preorders from the primary API
         const res = await axios.get("http://35.154.208.29:8080/api/SiteSurveyDetails/preOrders/piping");
+        // const res = await axios.get("http://localhost:8000/api/SiteSurveyDetails/preOrders/piping");
         const preorders: PreorderResponse[] = res.data;
   
         // Fetch statuses from the secondary API for each PreOrderId
@@ -146,11 +146,10 @@ const OpenPiping = () => {
           <tr>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer ID</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Contact Person</th>
-            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Status</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Payment Status</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer Details</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer Address</th>
-            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Date</th>
+            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">PreOrder Date</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Action</th>
           </tr>
         </thead>
@@ -172,8 +171,8 @@ const OpenPiping = () => {
                 ? `${order.customer_shipping_address[0].address_line1}, ${order.customer_shipping_address[0].address_line2 || ''}, ${order.customer_shipping_address[0].city}, ${order.customer_shipping_address[0].state}, ${order.customer_shipping_address[0].pincode}`
                 : 'Address not available';
 
-              const paymentStatusColor = order.PaymentStatus === "0" ? "bg-green-200 text-green-800" : "bg-red-100 text-red-800";
-              const paymentStatusText = order.PaymentStatus === "0" ? "Payment Completed" : "Payment Pending";
+              const paymentStatusColor = Number(order.PaymentStatus) < Number(order.materialTotalAmount)  ? "bg-green-200 text-green-800" : "bg-red-100 text-red-800";
+              const paymentStatusText = Number(order.PaymentStatus) < Number(order.materialTotalAmount) ? "Payment Completed" : "Payment Pending";
 
 
               return (
@@ -182,16 +181,6 @@ const OpenPiping = () => {
                   <td className="p-2 border-b border-blue-gray-50 text-sm whitespace-pre-line">
                     {order.customer_shipping_address[0]?.contactPerson || ''} <br />
                     {order.customer_shipping_address[0]?.contactNumber || ''}
-                  </td>
-                  <td className="p-2 border-b border-blue-gray-50 text-sm">
-                    <span className={`inline-block px-2 py-1 font-sans text-xs font-bold rounded shadow-md
-                      ${order.status === "Order Created" 
-                        ? "bg-green-200 text-green-800" 
-                        : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {order.status}
-                    </span>
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm">
                     <span className={`inline-block px-2 py-1 font-sans text-xs font-bold rounded shadow-md ${paymentStatusColor}`}>
@@ -203,20 +192,15 @@ const OpenPiping = () => {
                     {address}
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm">
-                    {new Date(order.OrderDate).toLocaleString('en-IN', { 
-                      timeZone: 'Asia/Kolkata',
-                      year: 'numeric',
-                      month: '2-digit',
-                      day: '2-digit',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      hour12: true
-                    })}
+                    {new Date(order.OrderDate).toLocaleDateString('en-IN', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                      })}
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm relative dropdown-container">
                     <button 
                       onClick={(e) => toggleDropdown(order._id, e)}
-                      disabled={order.PaymentStatus !== "0"}
                       className={`text-white bg-blue-700 focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center`}
                     >
                       Action
@@ -242,14 +226,15 @@ const OpenPiping = () => {
                           <li>
                             <PipingAssignTask 
                               addressDisplay={`${order.customer_shipping_address[0].address_line1} ${order.customer_shipping_address[0].address_line2} ${order.customer_shipping_address[0].city} ${order.customer_shipping_address[0].state}`}
-                              preOrderId={order._id} 
+                              preOrderId={order.PreOrderId} 
                               clientName={order.customer.name}
                               clientNumber={order.customer.mobile}
                               description=''
                               complaintRaised=''
                               customerComplaint=''
+                              contactName={order.customer_shipping_address[0].contactPerson}
+                              contactNumber={order.customer_shipping_address[0].contactNumber}
                               ac_units={acUnits}
-                              orderId={order.orderId} // Pass the retrieved orderId
                             />
                           </li>
                           <li>

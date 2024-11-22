@@ -109,8 +109,11 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
                 if(ac.ac_type === 'Cassette'){
                     acc.cassetteAC2T = ac.quantity.toString();
                 }
+                break;
               case 'C30':
-                acc.cassetteAC3T = ac.quantity.toString();
+                if(ac.ac_type === 'Cassette'){
+                  acc.cassetteAC2T = ac.quantity.toString();
+                }
                 break;
               default:
                 break;
@@ -195,10 +198,11 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
           return;
         }
 
+        console.log('inside the handle submit function');
+
         let commonSubscriptionPrice = 0;
         let commonInstallationPrice = 0;
 
-        // Check if any model has a non-zero subscription_price or installation_price
         orderData.AcDetails.forEach(ac => {
           if (ac.subscription_price > 0) {
             commonSubscriptionPrice = ac.subscription_price;
@@ -213,9 +217,7 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
             ac_type: 'Split',
             model: 'S10',
             quantity: parseInt(formData.splitAC1T, 10) || 0,
-            // subscription_price: orderData.AcDetails.find(ac => ac.model === '1')?.subscription_price || 0,
             subscription_price: commonSubscriptionPrice || 0,
-            // installation_price: orderData.AcDetails.find(ac => ac.model === '1')?.installation_price || 0,
             installation_price: commonInstallationPrice || 0,
             plan_year: orderData.AcDetails.find(ac => ac.model === '1')?.plan_year || '3+2year',
           });
@@ -227,9 +229,7 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
             model: 'S15',
             quantity: parseInt(formData.splitAC1_5T, 10) || 0,
             subscription_price: commonSubscriptionPrice || 0,
-            // subscription_price: orderData.AcDetails.find(ac => ac.model === '1.5')?.subscription_price || 0,
             installation_price: commonInstallationPrice || 0,
-            // installation_price: orderData.AcDetails.find(ac => ac.model === '1.5')?.installation_price || 0,
             plan_year: orderData.AcDetails.find(ac => ac.model === '1.5')?.plan_year || '3+2year',
           });
         }
@@ -240,9 +240,7 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
             model: 'S20',
             quantity: parseInt(formData.splitAC2T, 10) || 0,
             subscription_price: commonSubscriptionPrice || 0,
-            // subscription_price: orderData.AcDetails.find(ac => ac.model === '2')?.subscription_price || 0,
             installation_price: commonInstallationPrice || 0,
-            // installation_price: orderData.AcDetails.find(ac => ac.model === '2')?.installation_price || 0,
             plan_year: orderData.AcDetails.find(ac => ac.model === '2')?.plan_year || '3+2year',
           });
         }
@@ -250,7 +248,7 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
         if (formData.cassetteAC2T) {
           updatedAcDetails.push({
             ac_type: 'Cassette',
-            model: 'S20',
+            model: 'C20',
             quantity: parseInt(formData.cassetteAC2T, 10) || 0,
             subscription_price: commonSubscriptionPrice || 0,
             // subscription_price: orderData.AcDetails.find(ac => ac.model === '2')?.subscription_price || 0,
@@ -263,7 +261,7 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
         if (formData.cassetteAC3T) {
           updatedAcDetails.push({
             ac_type: 'Cassette',
-            model: 'S30',
+            model: 'C30',
             quantity: parseInt(formData.cassetteAC3T, 10) || 0,
             subscription_price: commonSubscriptionPrice || 0,
             // subscription_price: orderData.AcDetails.find(ac => ac.model === '3')?.subscription_price || 0,
@@ -336,7 +334,6 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
 
         const formData1 = new FormData();
 
-        // Construct the payload as an object
         const payload1 = {
           customer: {
             customer_id: orderData.customer.customer_id,
@@ -355,6 +352,7 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
             contactNumber: orderData.customer_shipping_address.contactNumber,
           },
           PaymentStatus: orderData.pending_amount,
+          materialTotalAmount: orderData.material_totalAmount,
           OrderDate: new Date(orderData.preOrdertimestamp).toISOString(),
           installationType: formData.installationType,
           uninstallationNeeded: formData.uninstallationNeeded,
@@ -380,11 +378,14 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
         });
         const [response, response1] = await Promise.all([
           axios.put(
-            `${process.env.NEXT_PUBLIC_SALES}${orderData._id}/updatedetails`, 
+            // `${process.env.NEXT_PUBLIC_SALES}${orderData._id}/updatedetails`, 
+            // `http://3.110.115.219:5000/api/preOrder/${orderData._id}/updatedetails`, 
+            `http://13.201.4.68:8080/api/preOrder/${orderData._id}/updatedetails`, 
             payload
           ),
           axios.post(
-            'http://35.154.208.29:8080/api/SiteSurveyDetails/SiteSurveyDetails',
+            // 'http://35.154.208.29:8080/api/SiteSurveyDetails/SiteSurveyDetails',
+            'http://localhost:8000/api/SiteSurveyDetails/SiteSurveyDetails',
             formData1,
             {
               headers: { 'Content-Type': 'multipart/form-data' },
@@ -393,9 +394,9 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
         ]);
         toast.success('Data, images, and PDF uploaded successfully!');
         closeModal();
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error updating data:', error);
-        alert('Failed to update data!');
+        toast.error('Failed to update data!', error);
       }
     };
 
@@ -554,8 +555,8 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
                   <input
                     type="radio"
                     name="installationType"
-                    value="piping"
-                    checked={formData.installationType === 'piping'}
+                    value="installation"
+                    checked={formData.installationType === 'installation'}
                     onChange={handleInputChange}
                     className="w-4 h-4 text-pink-600 accent-[#A14996]"
                   />
@@ -565,8 +566,8 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
                   <input
                     type="radio"
                     name="installationType"
-                    value="installation"
-                    checked={formData.installationType === 'installation'}
+                    value="piping"
+                    checked={formData.installationType === 'piping'}
                     onChange={handleInputChange}
                     className="w-4 h-4 text-gray-600 accent-[#A14996]"
                   />
@@ -762,7 +763,7 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
 
             {/* unloading */}
             <div> 
-              <h3 className="text-lg font-medium mb-4">Unloading Facality available ?</h3>
+              <h3 className="text-lg font-medium mb-4">Unloading Facility available ?</h3>
               <div className="space-x-6 flex">
                 <label className="inline-flex items-center">
                   <input
@@ -927,13 +928,11 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
                   <ul className="grid grid-cols-2 gap-4 mt-4">
                     {formData.attachments.map((file, index) => (
                       <li key={index} className="relative">
-                        {/* Display the image preview */}
                         <img
                           src={URL.createObjectURL(file)}
                           alt={`attachment-${index}`}
                           className="w-32 h-32 object-cover border rounded-md shadow"
                         />
-                        {/* Delete button */}
                         <button
                           className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 text-sm"
                           onClick={() => handleDeleteFile(index)}

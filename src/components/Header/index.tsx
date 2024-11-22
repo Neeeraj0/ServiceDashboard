@@ -10,7 +10,7 @@ const Header = (props: {
   setSidebarOpen: (arg0: boolean) => void;
 }) => {
   return (
-    <header className="sticky top-0 z-999 flex lg:w-full bg-white shadow-md shadow-gray-200 m-2 rounded-full dark:border-stroke-dark dark:bg-gray-dark w-[95vw]">
+    <header className="sticky top-0 z-10 flex lg:w-full bg-white shadow-md m-2 rounded-full dark:border-stroke-dark dark:bg-gray-dark w-[95vw]">
       <div className="flex flex-grow items-center justify-between px-4 py-5  md:px-5 2xl:px-10">
         <div className="flex items-center gap-2 sm:gap-4 lg:hidden">
           <button
@@ -68,7 +68,7 @@ const Header = (props: {
         <div className="hidden xl:block">
           <div>
             <h1 className="mb-0.5 text-heading-5 font-bold text-dark dark:text-white">
-               Service Dashboard
+               Operation Tool
             </h1>
           </div>
         </div>

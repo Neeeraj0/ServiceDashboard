@@ -52,6 +52,8 @@ interface PreorderResponse {
   paymentStatusFullPayment: string;
   paymentStatusToken: string;
   preOrdertimestamp: string;
+  DateofSiteSurvey: string;
+  DateofInstallation: string;
 }
 
 const OpenSiteSurvey = () => {
@@ -66,7 +68,8 @@ const OpenSiteSurvey = () => {
   useEffect(() => {
     const fetchPreorderData = async () => {
       try {
-        const res = await axios.get('http://3.110.27.89:5000/api/preOrder/getall/preorders');
+        // const res = await axios.get('http://3.110.115.219:5000/api/preOrder/getall/preorders');
+        const res = await axios.get('http://13.201.4.68:8080/api/preOrder/getall/preorders');
         setPreorderData(res.data);
       } catch (err: any) {
         console.error("Error fetching preorder data:", err);
@@ -175,17 +178,10 @@ const OpenSiteSurvey = () => {
                     {`${address}`}
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm">
-                    {new Date(order.preOrdertimestamp).toLocaleDateString('en-IN', {
+                    {new Date(order.DateofSiteSurvey).toLocaleDateString('en-IN', {
                       day: '2-digit',
                       month: '2-digit',
                       year: 'numeric',
-                    })}
-                    <br />
-                    {new Date(order.preOrdertimestamp).toLocaleTimeString('en-IN', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      hour12: true,
-                      timeZone: 'Asia/Kolkata' // Ensure it's in IST
                     })}
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm relative dropdown-container">
