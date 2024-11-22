@@ -73,6 +73,14 @@ const OpenPiping = () => {
         // Fetch preorders from the primary API
         const res = await axios.get("http://35.154.208.29:8080/api/SiteSurveyDetails/preOrders/piping");
         // const res = await axios.get("http://localhost:8000/api/SiteSurveyDetails/preOrders/piping");
+
+        if (res.status === 404) {
+          // Handle 404 case, display custom message for 'No records found for piping installation'
+          setError('No preorders available');
+          setLoading(false);
+          return; // Exit if no data found
+        }
+
         const preorders: PreorderResponse[] = res.data;
   
         // Fetch statuses from the secondary API for each PreOrderId
@@ -95,7 +103,12 @@ const OpenPiping = () => {
         setPreorderData(updatedPreorders); // Now this will not throw a type error
       } catch (err: any) {
         console.error("Error fetching preorder data:", err);
-        setError(err.message);
+         // If the error is from the backend with a custom message (e.g., "No records found")
+      if (err.response && err.response.status === 404 && err.response.data.message) {
+        setError(err.response.data.message);
+      } else {
+        setError('Error fetching data');
+      }
       } finally {
         setLoading(false);
       }
@@ -125,7 +138,7 @@ const OpenPiping = () => {
   };
 
   if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error fetching data: {error}</div>;
+  // if (error) return <div>Error fetching data: {error}</div>;
 
   const handleMoveToInstallation = async () => {
     if (!selectedOrderId) return;
@@ -154,11 +167,19 @@ const OpenPiping = () => {
           </tr>
         </thead>
         <tbody>
-          {preorderData.length === 0 ? (
-            <tr>
-              <td colSpan={9} className="text-center">No preorders available</td>
-            </tr>
-          ) : (
+        {loading ? (
+              <tr>
+                <td colSpan={9} className="text-center">Loading...</td>
+              </tr>
+            ) : error ? (
+              <tr>
+                <td colSpan={9} className="text-center">No Preorders available</td>
+              </tr>
+            ) : preorderData.length === 0 ? (
+              <tr>
+                <td colSpan={9} className="text-center">No preorders available</td>
+              </tr>
+            ) : (
             preorderData.map((order) => {
               const acUnits = order.AcDetails.map(ac => ({
                 type: ac.ac_type,
