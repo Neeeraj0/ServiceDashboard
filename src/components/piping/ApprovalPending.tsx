@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import PipingAssignTask from '../Dialogs/PipingAssignTask';
 import ReAssignTask from '../Dialogs/ReAssignTask';
+import PipingApprove from '../Dialogs/PipingApprove';
 interface ACUnit{
   type: string;
   model: string;
@@ -47,7 +48,7 @@ interface PipingResponse {
   }
 }
 
-const AssignedPiping = () => {
+const ApprovalPending = () => {
   const [pipingData, setPipingData] = useState<PipingResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +57,7 @@ const AssignedPiping = () => {
   useEffect(() => {
     const fetchPipingData = async () => {
       try {
-        const res = await axios.get('http://35.154.208.29:8080/api/piping');
+        const res = await axios.get('http://35.154.208.29:8080/api/piping/getApprovalPending');
         setPipingData(res.data);
       } catch (err: any) {
         console.error("Error fetching piping data:", err);
@@ -98,23 +99,7 @@ const AssignedPiping = () => {
               return (
                 <tr key={task._id}>
                   <td className="p-2 border-b border-blue-gray-50 text-sm">{task.task_id}</td>
-                  <td className={`border-b border-blue-gray-50 text-sm flex justify-center items-center py-2 ${
-                    task.status === "pending" 
-                      ? "" 
-                      : task.status === "open" 
-                      ? "" 
-                      : ""
-                  }`}>
-                    <span className={`${
-                      task.status === "pending" 
-                        ? "bg-red-300 px-3 py-1 rounded-xl" 
-                        : task.status === "open" 
-                        ? "bg-yellow-300 px-3 py-1 rounded-xl" 
-                        : "bg-gray-400 px-3 py-1 rounded-xl"
-                    }`}>
-                      {task.status}
-                    </span>
-                  </td>
+                  <td className="p-2 border-b border-blue-gray-50 text-sm">{task.status}</td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm">
                     {/* {task.assignedTechnicians.join(', ') || "N/A"} */}
                     {task.assignedTechnicians.map(technician => technician.name)}
@@ -137,7 +122,8 @@ const AssignedPiping = () => {
                       customerComplaint={task.customerComplaint}
                       ac_units={task.ac_units}
                     /> */}
-                    <ReAssignTask orderId={task._id}/>
+                    {/* <ReAssignTask orderId={task._id}/> */}
+                    <PipingApprove orderId={task.task_id}/>
                   </td>
                 </tr>
               );
@@ -149,4 +135,4 @@ const AssignedPiping = () => {
   );
 };
 
-export default AssignedPiping;
+export default ApprovalPending;

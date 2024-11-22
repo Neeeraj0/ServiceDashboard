@@ -2,6 +2,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { ACUnit } from "@/types/breakdown/Order";
+import toast from "react-hot-toast";
 
 interface Technician {
   name: string;
@@ -103,6 +104,37 @@ export default function AssignTask({
     }
   }
 
+  function convertTo24HourFormat(time: string): string {
+    const [timePart, period] = time.split(" "); // e.g., "9:00 AM"
+    let [hours, minutes] = timePart.split(":").map(Number);
+  
+    if (period === "PM" && hours !== 12) hours += 12; // Convert PM to 24-hour format
+    if (period === "AM" && hours === 12) hours = 0; // Handle midnight (12:00 AM)
+  
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+  }
+  
+
+   // Generate time options for the dropdown
+   const generateTimeOptions = (interval: number) => {
+    const options = [];
+    const startTime = new Date();
+    startTime.setHours(0, 0, 0, 0);
+
+    for (let i = 0; i < 24 * 60; i += interval) {
+      const time = new Date(startTime.getTime() + i * 60000);
+      const hours = time.getHours();
+      const minutes = time.getMinutes().toString().padStart(2, "0");
+      const period = hours < 12 ? "AM" : "PM";
+      const formattedHours = hours % 12 || 12;
+      options.push(`${formattedHours}:${minutes} ${period}`);
+    }
+
+    return options;
+  };
+
+  const timeOptions = generateTimeOptions(30); // 30-minute intervals
+
   const transformedACUnits = ac_units;
   const totalQuantity = transformedACUnits?.reduce((total, ac) => total + (ac.quantity || 1), 0);
   const queryData = {
@@ -134,9 +166,10 @@ export default function AssignTask({
 
   const handleAssignTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    const servicingDateTime = mergeDateTimeToISO(servicingDate, servicingTime);
+    const timeIn24Hour = convertTo24HourFormat(servicingTime);
+    const servicingDateTime = mergeDateTimeToISO(servicingDate, timeIn24Hour);
     if (!servicingDateTime) {
-      alert("Invalid servicing date or time.");
+      toast.error("Invalid servicing date or time.");
       return;
     }
 
@@ -184,11 +217,11 @@ export default function AssignTask({
           console.log(err);
         });
 
-      alert("Task assigned successfully");
+      toast.success("Task assigned successfully");
       setIsOpen(false); // Close modal
     } catch (error) {
       console.error("Error assigning task:", error);
-      alert("Failed to assign task");
+      toast.error("Failed to assign task");
     }
   };
 
@@ -265,7 +298,7 @@ export default function AssignTask({
 
                 <div className="mb-6">
                   <label className="block font-sans text-[14px] text-gray-700 mb-1">
-                    Servicing Date
+                    Assigning Date
                   </label>
                   <input
                     type="date"
@@ -277,14 +310,20 @@ export default function AssignTask({
 
                 <div className="mb-6">
                   <label className="block font-sans text-[14px] text-gray-700 mb-1">
-                    Servicing Time
+                    Assigning Time
                   </label>
-                  <input
-                    type="time"
-                    className="time-input rounded-md border w-full p-2"
+                  <select
+                    className="form-control w-full p-2 border rounded"
                     value={servicingTime}
                     onChange={(e) => setServicingTime(e.target.value)}
-                  />
+                  >
+                    <option value="">Select Time</option>
+                    {timeOptions.map((time, index) => (
+                      <option key={index} value={time}>
+                        {time}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="flex justify-center mt-8">

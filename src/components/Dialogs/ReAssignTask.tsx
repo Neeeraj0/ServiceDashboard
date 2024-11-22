@@ -2,6 +2,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { ACUnit } from "@/types/breakdown/Order";
+import toast from "react-hot-toast";
 
 interface Technician {
   name: string;
@@ -126,7 +127,7 @@ export default function ReAssignTask({
           console.log(err);
         });
 
-      alert("Task Reassigned successfully");
+      toast.success("Task Reassigned successfully! ✅");
       setIsOpen(false); 
     } catch (error) {
       console.error("Error assigning task:", error);
