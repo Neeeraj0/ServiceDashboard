@@ -112,7 +112,7 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
                 break;
               case 'C30':
                 if(ac.ac_type === 'Cassette'){
-                  acc.cassetteAC2T = ac.quantity.toString();
+                  acc.cassetteAC3T = ac.quantity.toString();
                 }
                 break;
               default:
@@ -379,13 +379,13 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
         const [response, response1] = await Promise.all([
           axios.put(
             // `${process.env.NEXT_PUBLIC_SALES}${orderData._id}/updatedetails`, 
-            // `http://3.110.115.219:5000/api/preOrder/${orderData._id}/updatedetails`, 
-            `http://13.201.4.68:8080/api/preOrder/${orderData._id}/updatedetails`, 
+            `http://3.110.115.219:5000/api/preOrder/${orderData._id}/updatedetails`, 
+            // `http://13.201.4.68:8080/api/preOrder/${orderData._id}/updatedetails`, 
             payload
           ),
           axios.post(
-            // 'http://35.154.208.29:8080/api/SiteSurveyDetails/SiteSurveyDetails',
-            'http://localhost:8000/api/SiteSurveyDetails/SiteSurveyDetails',
+            'http://35.154.208.29:8080/api/SiteSurveyDetails/SiteSurveyDetails',
+            // 'http://localhost:8000/api/SiteSurveyDetails/SiteSurveyDetails',
             formData1,
             {
               headers: { 'Content-Type': 'multipart/form-data' },

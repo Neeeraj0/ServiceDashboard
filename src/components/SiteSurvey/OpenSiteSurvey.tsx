@@ -68,8 +68,8 @@ const OpenSiteSurvey = () => {
   useEffect(() => {
     const fetchPreorderData = async () => {
       try {
-        // const res = await axios.get('http://3.110.115.219:5000/api/preOrder/getall/preorders');
-        const res = await axios.get('http://13.201.4.68:8080/api/preOrder/getall/preorders');
+        const res = await axios.get('http://3.110.115.219:5000/api/preOrder/getall/preorders');
+        // const res = await axios.get('http://13.201.4.68:8080/api/preOrder/getall/preorders');
         setPreorderData(res.data);
       } catch (err: any) {
         console.error("Error fetching preorder data:", err);
