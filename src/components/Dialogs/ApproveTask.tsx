@@ -29,12 +29,12 @@ export default function CompletedApproveTask({
     e.preventDefault();
     if (orderId) {
       try {
-        await axios.post("http://35.154.99.208:5000/api/query/resolveQuery", taskDataCreation, {
+        await axios.post("http://devappapi.circolives.in/api/query/resolveQuery", taskDataCreation, {
           headers: {
             "Content-Type": "application/json",
           },
         });
-        await axios.put(`http://35.154.99.208:5000/api/query/changeQueryStatus/${orderId}`, queryData, {
+        await axios.put(`http://devappapi.circolives.in/api/query/changeQueryStatus/${orderId}`, queryData, {
           headers: {
             "Content-Type": "application/json",
           },
