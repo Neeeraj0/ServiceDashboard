@@ -204,7 +204,7 @@ export default function AssignTask({
       })
       axios({
         method: "PUT",
-        url: `${'http://35.154.99.208:5000/api/query/changeQueryStatus'}/${orderId}`,
+        url: `${'http://devappapi.circolives.in/api/query/changeQueryStatus'}/${orderId}`,
         headers: {
           "Content-Type": "application/json",
         },
