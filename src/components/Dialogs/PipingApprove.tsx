@@ -19,7 +19,7 @@ export default function PipingApprove({
     e.preventDefault();
     if (orderId) {
       try {
-        await axios.put(`http://localhost:8000/api/routine/approveTask/${orderId}`, {
+        await axios.put(`http://35.154.208.29:8080/api/routine/approveTask/${orderId}`, {
           headers: {
             "Content-Type": "application/json",
           },
