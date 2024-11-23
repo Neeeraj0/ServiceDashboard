@@ -5,6 +5,7 @@ import CompletedApproveTask from '../Dialogs/ApproveTask';
 import RoutineAssignTask from '../Dialogs/RoutineAssignTask';
 import RoutineApproveTask from '../Dialogs/RoutineApprove';
 import PipingModal from '../Modal/PipingModal';
+import ReAssignTask from '../Dialogs/ReAssignTask';
 
 interface Address {
   location: string;
@@ -73,6 +74,9 @@ const CompletedPiping: React.FC = () => {
           contactPerson: order.client_name,
           customerDetails: order.client_number,
           issueReported: order.customerComplaint,
+          materialsUsed: order.materialsUsed
+          ? order.materialsUsed.flatMap((material: any) => material.materials || [])
+          : [], // Flatten nested materials  
           isPeriodicService: order.periodicService,
           approvalPending: order.approvalPending, 
           status: order.status,
@@ -156,26 +160,27 @@ const CompletedPiping: React.FC = () => {
               </td>
               {/* <td className="p-4 border-b border-blue-gray-50">{order.issueReported || "N/A"}</td> */}
               <td className="p-2 border-b border-blue-gray-50 text-sm">
-                  {order.materialsUsed?.length > 0 ? (
-                    <ul className="list-disc ml-4">
-                      {order.materialsUsed.map((material, index) => (
-                        <li key={index}>
-                          {material.materialName}
-                          {material.sizeUsed ? ` - Size: ${material.sizeUsed}` : ""}
-                          {material.quantityUsed ? ` - Quantity: ${material.quantityUsed}` : ""}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    "No Materials Used"
-                  )}
-                </td>
+                {order.materialsUsed.length > 0 ? (
+                  <ul className="list-disc ml-4">
+                    {order.materialsUsed.map((material, index) => (
+                      <li key={index}>
+                        {material.materialName}
+                        {material.sizeUsed ? ` - Size: ${material.sizeUsed}` : ""}
+                        {material.quantityUsed ? ` - Quantity: ${material.quantityUsed}` : ""}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  "No Materials Used"
+                )}
+              </td>
               <td className="p-4 border-b border-blue-gray-50">{order.date || "N/A"}</td>
               <td className="p-4 border-b border-blue-gray-50">{order.closureDate || "N/A"}</td>
               <td className="p-4 border-b border-blue-gray-50">{order.TAT1 ? order.TAT1 : "0"}</td>
               <td className="p-4 border-b border-blue-gray-50">{order.TAT2 ? order.TAT2 : "0"}</td>
               <td className="p-4 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs z-99999">
-                <RoutineApproveTask orderId={order._id} />
+                {/* <RoutineApproveTask orderId={order._id} /> */}
+                <ReAssignTask orderId={order._id}/>
               </td>
             </tr>
           ))
