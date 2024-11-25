@@ -5,13 +5,15 @@ import axios from "axios";
 import { ACUnit, Order } from "@/types/breakdown/Order";
 import { ShippingAddress } from "@/types/breakdown/ShippingAddress";
 import AssignTask from "../Dialogs/AssignTask";
+import "./module.style.css";
 
 const OpenBreakdown = () => {
   const [backendData, setBackendData] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [shippingAddresses, setShippingAddresses] = useState<ShippingAddress[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const itemsPerPage = 10; // For pagination, if required
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // Number of items per page
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -106,6 +108,13 @@ const OpenBreakdown = () => {
     );
   };
 
+  // Pagination logic
+  const indexOfLastOrder = currentPage * itemsPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
+  const currentOrders = backendData.slice(indexOfFirstOrder, indexOfLastOrder);
+
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error fetching data: {error}</div>;
 
@@ -125,60 +134,131 @@ const OpenBreakdown = () => {
           </tr>
         </thead>
         <tbody>
-          {backendData.length === 0 ? (
+          {currentOrders.length === 0 ? (
             <tr>
               <td colSpan={8} className="text-center">
                 No tasks available
               </td>
             </tr>
           ) : (
-            backendData
-              .filter((order) => ["open", "assign"].includes(order.queryStatus)) // Adjust filter for new queryStatus
-              .map((order, index) => {
-                const shippingAddress = getShippingAddress(order._id);
-                const addressDisplay = shippingAddress
-                  ? `${shippingAddress.line1}, ${shippingAddress.line2 || ""}, ${shippingAddress.city}, ${shippingAddress.state}, ${shippingAddress.pincode}`
-                  : "N/A";
+            currentOrders.map((order, index) => {
+              const shippingAddress = getShippingAddress(order._id);
+              const addressDisplay = shippingAddress
+                ? `${shippingAddress.line1}, ${shippingAddress.line2 || ""}, ${shippingAddress.city}, ${shippingAddress.state}, ${shippingAddress.pincode}`
+                : "N/A";
 
-                return (
-                  <tr key={order._id}>
-                    <td className="p-2 border-b border-blue-gray-50 text-sm">{index + 1}</td>
-                    <td className="p-2 border-b border-blue-gray-50 text-sm">
-                      {order.contactperson} <br /> {order.contactnumber}
-                    </td>
-                    <td className="p-2 border-b border-blue-gray-50 text-sm">
-                      {order.contactperson} <br /> {order.contactnumber}
-                    </td>
-                    <td className="p-2 border-b border-blue-gray-50 text-sm">{order.subject}</td>
-                    <td className="p-2 border-b border-blue-gray-50 text-wrap max-w-50">{addressDisplay}</td>
-                    <td className="p-2 border-b border-blue-gray-50 text-wrap text-sm flex-wrap">
-                      {formatDate(order.TimeStamp)}
-                    </td>
-                    <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
-                      {order.deviceid && order.deviceid !== "Select Device" ? order.deviceid : "N/A"}
-                    </td>
-                    <td className="p-2 border-b border-blue-gray-50 mt-[5vh] text-sm">
-                      <AssignTask
-                        orderId={order._id}
-                        clientName={order.contactperson}
-                        clientNumber={order.contactnumber}
-                        description={order.summery}
-                        complaintRaised={order.TimeStamp}
-                        customerComplaint={order.subject}
-                        addressDisplay={addressDisplay}
-                        ac_units={
-                          Array.isArray(order.orderModels) && typeof order.orderModels[0] === "string"
-                            ? transformOrderModels(order.orderModels as (string | number | null)[])
-                            : (order.orderModels as ACUnit[])
-                        }
-                      />
-                    </td>
-                  </tr>
-                );
-              })
+              return (
+                <tr key={order._id}>
+                  <td className="p-2 border-b border-blue-gray-50 text-sm">{index + 1}</td>
+                  <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
+                    {order.contactperson} <br /> {order.contactnumber}
+                  </td>
+                  <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
+                    {order.contactperson} <br /> {order.contactnumber}
+                  </td>
+                  <td className="p-2 border-b border-blue-gray-50 text-sm">{order.subject}</td>
+                  <td className="p-2 border-b border-blue-gray-50 text-wrap max-w-50">{addressDisplay}</td>
+                  <td className="p-2 border-b border-blue-gray-50 text-wrap text-sm flex-wrap">
+                    {formatDate(order.TimeStamp)}
+                  </td>
+                  <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
+                    {order.deviceid && order.deviceid !== "Select Device" ? order.deviceid : "N/A"}
+                  </td>
+                  <td className="p-2 border-b border-blue-gray-50 mt-[5vh] text-sm">
+                    <AssignTask
+                      orderId={order._id}
+                      clientName={order.contactperson}
+                      clientNumber={order.contactnumber}
+                      description={order.summery}
+                      complaintRaised={order.TimeStamp}
+                      customerComplaint={order.subject}
+                      addressDisplay={addressDisplay}
+                      ac_units={
+                        Array.isArray(order.orderModels) && typeof order.orderModels[0] === "string"
+                          ? transformOrderModels(order.orderModels as (string | number | null)[])
+                          : (order.orderModels as ACUnit[])
+                      }
+                    />
+                  </td>
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>
+
+      {/* Pagination Controls */}
+      <Pagination
+        totalPages={Math.ceil(backendData.length / itemsPerPage)}
+        currentPage={currentPage}
+        paginate={paginate}
+      />
+    </div>
+  );
+};
+
+const Pagination = ({
+  totalPages,
+  currentPage,
+  paginate,
+}: {
+  totalPages: number;
+  currentPage: number;
+  paginate: (page: number) => void;
+}) => {
+  const visiblePages = 5; // Number of pages to display
+  const pages = [];
+
+  const startPage = Math.max(currentPage - Math.floor(visiblePages / 2), 1);
+  const endPage = Math.min(startPage + visiblePages - 1, totalPages);
+
+  const adjustedStart = Math.max(endPage - visiblePages + 1, 1);
+
+  for (let i = adjustedStart; i <= endPage; i++) {
+    pages.push(
+      <button
+        key={i}
+        onClick={() => paginate(i)}
+        className={`pagination-button ${currentPage === i ? "active" : ""}`}
+      >
+        {i}
+      </button>
+    );
+  }
+
+  return (
+    <div className="pagination">
+      <button
+        className="pagination-button"
+        onClick={() => paginate(1)}
+        disabled={currentPage === 1}
+      >
+        First
+      </button>
+      <button
+        className="pagination-button"
+        onClick={() => paginate(currentPage - 1)}
+        disabled={currentPage === 1}
+      >
+        Previous
+      </button>
+
+      {pages}
+
+      <button
+        className="pagination-button"
+        onClick={() => paginate(currentPage + 1)}
+        disabled={currentPage === totalPages}
+      >
+        Next
+      </button>
+      <button
+        className="pagination-button"
+        onClick={() => paginate(totalPages)}
+        disabled={currentPage === totalPages}
+      >
+        Last
+      </button>
     </div>
   );
 };

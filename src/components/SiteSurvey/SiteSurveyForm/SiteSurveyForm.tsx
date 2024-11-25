@@ -17,6 +17,8 @@ interface AcDetail {
   quantity: number;
   subscription_price: number;
   installation_price: number;
+  fixedPriceAfter3Years: number;
+  deposit: number;
   plan_year: string;
 }
 interface MaterialDetail {
@@ -28,8 +30,19 @@ interface MaterialDetail {
 interface Payload {
   AcDetails: AcDetail[];
   materialsdetails?: MaterialDetail[];
+  Ac_totalAmount: number;
+  material_totalAmount: number;
+  pending_amount: number;
   with_material: boolean;
 }
+
+type MaterialName =
+  | 'copper_piping_p'
+  | 'copper_piping_cassette_p'
+  | 'core_cable_4_p'
+  | 'l_stand_p'
+  | 'cross_stand_p'
+  | 'rubber_stand_p';
 
 export const generateAndUploadPDF = async (orderData: any, formData: any) => {
   try {
@@ -89,10 +102,34 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
         RatBiteChances: 'no',
         attachments: [] as File[] // Use an array to store files
       });
+      const [splitInstallationPrice, setSplitInstallationPrice] = useState<number | null>(null);
+      const [splitSubscriptionPrice, setSplitSubscriptionPrice] = useState<number | null>(null);
+      const [cassetteSubscriptionPrice, setCassetteSubcriptionPrice] = useState<number | null>(null);
+      const [cassetteInstallationPrice, setCassetteInstallationPrice] = useState<number | null>(null);
+      const [acTotalAmount, setAcTotalAmount] = useState<number>(0);
+      const [materialTotalAmount, setMaterialTotalAmount] = useState<number>(0);
+      const [pendingAmount, setPendingAmount] = useState<number>(0);
+
+      const defaultMaterialPrices: Record<MaterialName, number> = {
+        copper_piping_p: 449,
+        copper_piping_cassette_p: 499,
+        core_cable_4_p: 50,
+        l_stand_p: 599,
+        cross_stand_p: 1800,
+        rubber_stand_p: 299,
+      };
+
+      const [commonMaterialPrices, setCommonMaterialPrices] = useState<Record<MaterialName, number>>(defaultMaterialPrices);
+
 
       useEffect(() => {
         if (orderData) {
           const acDetails = orderData.AcDetails.reduce((acc, ac) => {
+            if (ac.installation_price > 0) {
+              if (ac.ac_type === 'Split') setSplitSubscriptionPrice(ac.subscription_price);
+              if (ac.ac_type === 'Cassette') setCassetteSubcriptionPrice(ac.subscription_price);
+              console.log(splitSubscriptionPrice, cassetteSubscriptionPrice);
+            }
             switch (ac.model) {
               case 'S10':
                 acc.splitAC1T = ac.quantity.toString();
@@ -150,16 +187,54 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
             ...materialDetails,
           }));
 
+          const updatedMaterialPrices = { ...defaultMaterialPrices };
+          orderData.materialsdetails.forEach((material) => {
+            if (material.material_name in updatedMaterialPrices) {
+              updatedMaterialPrices[material.material_name as MaterialName] = material.material_price;
+            }
+          });
+          setCommonMaterialPrices(updatedMaterialPrices);
+
           console.log(formData);
         }
       }, [orderData]);
 
+      useEffect(() => {
+        let totalAcAmount = 0;
+        if (formData.splitAC1T) {
+          totalAcAmount += parseInt(formData.splitAC1T, 10) * ((splitSubscriptionPrice || 1299) + 5000); 
+        }
+        if (formData.splitAC1_5T) {
+          totalAcAmount += parseInt(formData.splitAC1_5T, 10) * ((splitSubscriptionPrice || 1399) + 6000);
+        }
+        if (formData.splitAC2T) {
+          totalAcAmount += parseInt(formData.splitAC2T, 10) * ((splitSubscriptionPrice || 1699) +  7000);
+        }
+        if (formData.cassetteAC2T) {
+          totalAcAmount += parseInt(formData.cassetteAC2T, 10) * ((cassetteSubscriptionPrice || 2499) + 12000);
+        }
+        if (formData.cassetteAC3T) {
+          totalAcAmount += parseInt(formData.cassetteAC3T, 10) * ((cassetteSubscriptionPrice || 2999) + 15000);
+        }
+        
+        setAcTotalAmount(totalAcAmount);
+        console.log('triggered', totalAcAmount);
+    
+        // Calculate Material Total Amount
+        let totalMaterialAmount = 0;
+        totalMaterialAmount += parseInt(formData.copperPipeSplit || '0', 10) * commonMaterialPrices.copper_piping_p;
+        totalMaterialAmount += parseInt(formData.copperPipeCassette || '0', 10) * commonMaterialPrices.copper_piping_cassette_p;
+        totalMaterialAmount += parseInt(formData.lStand || '0', 10) * commonMaterialPrices.l_stand_p;
+        totalMaterialAmount += parseInt(formData.rubberStand || '0', 10) * commonMaterialPrices.rubber_stand_p;
+        totalMaterialAmount += parseInt(formData.polycabWire || '0', 10) * commonMaterialPrices.core_cable_4_p;
+        totalMaterialAmount += parseInt(formData.crossStand || '0', 10) * commonMaterialPrices.cross_stand_p;
 
-
-      // useEffect(()=>{
-      //   console.log('called');
-      
-      // },[])
+    
+        setMaterialTotalAmount(totalMaterialAmount);
+    
+        // Calculate Pending Amount
+        setPendingAmount(totalAcAmount + totalMaterialAmount);
+      }, [formData, splitSubscriptionPrice, cassetteSubscriptionPrice, orderData]);
     
       const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setFormData({
@@ -217,8 +292,10 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
             ac_type: 'Split',
             model: 'S10',
             quantity: parseInt(formData.splitAC1T, 10) || 0,
-            subscription_price: commonSubscriptionPrice || 0,
-            installation_price: commonInstallationPrice || 0,
+            subscription_price: commonSubscriptionPrice || 1299,
+            fixedPriceAfter3Years: 799,
+            deposit: 5000,
+            installation_price: commonInstallationPrice || 1800,
             plan_year: orderData.AcDetails.find(ac => ac.model === '1')?.plan_year || '3+2year',
           });
         }
@@ -228,8 +305,10 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
             ac_type: 'Split',
             model: 'S15',
             quantity: parseInt(formData.splitAC1_5T, 10) || 0,
-            subscription_price: commonSubscriptionPrice || 0,
-            installation_price: commonInstallationPrice || 0,
+            subscription_price: commonSubscriptionPrice || 1399,
+            deposit: 6000,
+            fixedPriceAfter3Years: 899,
+            installation_price: commonInstallationPrice || 1800,
             plan_year: orderData.AcDetails.find(ac => ac.model === '1.5')?.plan_year || '3+2year',
           });
         }
@@ -239,8 +318,10 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
             ac_type: 'Split',
             model: 'S20',
             quantity: parseInt(formData.splitAC2T, 10) || 0,
-            subscription_price: commonSubscriptionPrice || 0,
-            installation_price: commonInstallationPrice || 0,
+            deposit: 7000,
+            subscription_price: commonSubscriptionPrice || 1699,
+            fixedPriceAfter3Years: 1099,
+            installation_price: commonInstallationPrice || 1800,
             plan_year: orderData.AcDetails.find(ac => ac.model === '2')?.plan_year || '3+2year',
           });
         }
@@ -250,10 +331,10 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
             ac_type: 'Cassette',
             model: 'C20',
             quantity: parseInt(formData.cassetteAC2T, 10) || 0,
-            subscription_price: commonSubscriptionPrice || 0,
-            // subscription_price: orderData.AcDetails.find(ac => ac.model === '2')?.subscription_price || 0,
-            installation_price: commonInstallationPrice || 0,
-            // installation_price: orderData.AcDetails.find(ac => ac.model === '2')?.installation_price || 0,
+            deposit: 12000,
+            subscription_price: commonSubscriptionPrice || 2499,
+            installation_price: commonInstallationPrice || 4000,
+            fixedPriceAfter3Years: 1499,
             plan_year: orderData.AcDetails.find(ac => ac.model === '2')?.plan_year || '3+2year',
           });
         }
@@ -263,10 +344,10 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
             ac_type: 'Cassette',
             model: 'C30',
             quantity: parseInt(formData.cassetteAC3T, 10) || 0,
-            subscription_price: commonSubscriptionPrice || 0,
-            // subscription_price: orderData.AcDetails.find(ac => ac.model === '3')?.subscription_price || 0,
-            installation_price: commonInstallationPrice || 0,
-            // installation_price: orderData.AcDetails.find(ac => ac.model === '3')?.installation_price || 0,
+            subscription_price: commonSubscriptionPrice || 2999,
+            deposit: 15000,
+            fixedPriceAfter3Years: 1999,
+            installation_price: commonInstallationPrice || 4000,
             plan_year: orderData.AcDetails.find(ac => ac.model === '3')?.plan_year || '3+2year',
           });
         }
@@ -276,7 +357,7 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
         if (formData.copperPipeSplit) {
           updatedMaterials.push({
             material_name: 'copper_piping_p',
-            material_price: 20, 
+            material_price: commonMaterialPrices.copper_piping_p, 
             quantity: parseInt(formData.copperPipeSplit, 10) || 0,
           });
         }
@@ -284,7 +365,7 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
         if (formData.copperPipeCassette) {
           updatedMaterials.push({
             material_name: 'copper_piping_cassette_p',
-            material_price: 20, 
+            material_price: commonMaterialPrices.copper_piping_cassette_p, 
             quantity: parseInt(formData.copperPipeCassette, 10) || 0,
           });
         }
@@ -292,7 +373,7 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
         if(formData.polycabWire){
           updatedMaterials.push({
             material_name: 'core_cable_4_p',
-            material_price: 20, 
+            material_price: commonMaterialPrices.core_cable_4_p, 
             quantity: parseInt(formData.polycabWire, 10) || 0,
           });
         }
@@ -300,7 +381,7 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
         if(formData.lStand){
           updatedMaterials.push({
             material_name: 'l_stand_p',
-            material_price: 20, 
+            material_price: commonMaterialPrices.l_stand_p, 
             quantity: parseInt(formData.lStand, 10) || 0,
           });
         }
@@ -308,7 +389,7 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
         if(formData.rubberStand){
           updatedMaterials.push({
             material_name: 'rubber_stand_p',
-            material_price: 299, 
+            material_price: commonMaterialPrices.rubber_stand_p, 
             quantity: parseInt(formData.rubberStand, 10) || 0,
           });
         }
@@ -316,17 +397,22 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
         if(formData.crossStand){
           updatedMaterials.push({
             material_name: 'cross_stand_p',
-            material_price: 299, 
+            material_price: commonMaterialPrices.cross_stand_p, 
             quantity: parseInt(formData.crossStand, 10) || 0,
           });
         }
     
         const withMaterial = updatedMaterials.some((material) => material.quantity > 0);
-    
+        
         const payload: Payload = {
           AcDetails: updatedAcDetails,
           with_material: withMaterial,
+          Ac_totalAmount: acTotalAmount,
+          material_totalAmount: materialTotalAmount,
+          pending_amount: acTotalAmount + materialTotalAmount,
         };
+
+        console.log('payload', payload);
     
         if (withMaterial) {
           payload.materialsdetails = updatedMaterials;
@@ -384,8 +470,8 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
             payload
           ),
           axios.post(
-            'http://35.154.208.29:8080/api/SiteSurveyDetails/SiteSurveyDetails',
-            // 'http://localhost:8000/api/SiteSurveyDetails/SiteSurveyDetails',
+            // 'http://35.154.208.29:8080/api/SiteSurveyDetails/SiteSurveyDetails',
+            'http://localhost:8000/api/SiteSurveyDetails/SiteSurveyDetails',
             formData1,
             {
               headers: { 'Content-Type': 'multipart/form-data' },
