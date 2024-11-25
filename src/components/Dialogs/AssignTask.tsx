@@ -136,7 +136,6 @@ export default function AssignTask({
   const timeOptions = generateTimeOptions(30); // 30-minute intervals
 
   const transformedACUnits = ac_units;
-  const totalQuantity = transformedACUnits?.reduce((total, ac) => total + (ac.quantity || 1), 0);
   const queryData = {
     queryStatus: "assign",
   };
@@ -145,21 +144,21 @@ export default function AssignTask({
     let type, capacity;
   
     // Determine type and capacity based on model
-    if (unit.model.startsWith("S")) {
+    if (unit?.model.startsWith("S")) {
       type = "Split AC";
       capacity = unit.model === "S10" ? "S10" : unit.model === "S15" ? "S15" : unit.model === "S20" ? "S20" : unit.model;
-    } else if (unit.model.startsWith("C")) {
+    } else if (unit?.model.startsWith("C")) {
       type = "Cassette AC";
       capacity = unit.model === "C10" ? "C10" : unit.model === "C15" ? "C15" : unit.model === "C20" ? "C20": unit.model === "C30" ? "C30" : unit.model;
     } else {
       type = "Split AC"; // or handle other types as needed
-      capacity = unit.model;
+      capacity = unit?.model;
     }
   
     return {
       type,
       capacity,
-      quantity: unit.quantity,
+      quantity: unit?.quantity,
     };
   });
   
