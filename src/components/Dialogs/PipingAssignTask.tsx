@@ -152,15 +152,12 @@ export default function PipingAssignTask({
   };
 
   const transformedAC = ac_units.flatMap((unit) => {
-    const typeAbbreviation = unit.type === "Split" ? "S" : "C";
     const modelCapacity = unit.model === "10" ? "1 Ton" : unit.model === "15" ? "1.5 Ton" :  unit.model === "20" ? "2 Ton" : unit.model;
-    const deviceNameCapacity = unit.model === "10" ? "10" : unit.model === "15" ? "15" :  unit.model === "20" ? "20" : unit.model;
     return Array.from({ length: unit.quantity }, (_, index) => ({
       type: unit.type === "Split" ? "Split AC" : "Cassette AC",
       capacity: modelCapacity,
       quantity: 1, 
-      deviceName: `${typeAbbreviation}${deviceNameCapacity}-${index + 1}`, // Append serial number
-      orderId: unit.OrderId
+      deviceName: `${unit.model}-${index + 1}`, 
     }));
   });  
 
@@ -198,8 +195,8 @@ export default function PipingAssignTask({
     };
 
     try {
-      await axios.post(`http://35.154.208.29:8080/api/tasks`, taskDataCreation, {
-      //  await axios.post(`http://localhost:8000/api/tasks`, taskDataCreation, {
+      // await axios.post(`http://35.154.208.29:8080/api/tasks`, taskDataCreation, {
+       await axios.post(`http://localhost:8000/api/tasks`, taskDataCreation, {
         headers: {
           "Content-Type": "application/json",
         },

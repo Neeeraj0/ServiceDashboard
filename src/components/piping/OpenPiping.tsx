@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import PipingAssignTask from '../Dialogs/PipingAssignTask';
 import MoveToInstallation from '../Dialogs/MoveToInstallation';
-import toast from 'react-hot-toast';
+import toast, { ToastIcon } from 'react-hot-toast';
+import { exit } from 'process';
 
 interface PreorderResponse {
   customer: {
@@ -66,6 +67,7 @@ const OpenPiping = () => {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null); // Track which dropdown is open
   const [isInstallationDialogOpen, setIsInstallationDialogOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [currentPreOrderId, setCurrentPreOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPreorderData = async () => {
@@ -134,31 +136,116 @@ const OpenPiping = () => {
 
   const toggleDropdown = (orderId: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent event from bubbling up
-    setOpenDropdownId(openDropdownId === orderId ? null : orderId);
+    if (openDropdownId === orderId) {
+      setOpenDropdownId(null);
+    } else {
+      setOpenDropdownId(orderId);
+    }
   };
 
   if (loading) return <div>Loading...</div>;
   // if (error) return <div>Error fetching data: {error}</div>;
-
-  const handleMoveToInstallation = async () => {
-    if (!selectedOrderId) return;
+  
+  const handleMoveToInstallation = async (preOrderId: string) => {
+    if (!preOrderId) return;
+    console.log("inside the move to installation");
     try {
-      // Close the dialog
+      // Find the specific order details for this preOrderId
+      const orderDetails = preorderData.find((order) => order.PreOrderId === preOrderId);
+  
+      if (!orderDetails) {
+        toast.error("Order details not found!");
+        return;
+      }
+  
+      const statusRes = await axios.get(
+        `http://13.201.4.68:8080/api/preOrder/orders/detail/${preOrderId}`
+      );
+  
+      if (!Array.isArray(statusRes.data) || statusRes.data.length === 0) {
+        toast.error("No order details found!");
+        return;
+      }
+  
+      const orders = statusRes.data;
+  
+      // Iterate over each order and send the installation payload
+      for (const orderData of orders) {
+        const installationPayload = {
+          userid: orderData.userid,
+          preorderid: preOrderId,
+          Fullname: orderData.Fullname,
+          mobile: orderData.mobile,
+          email: orderData.email,
+          longitude: orderData.longitude,
+          latitude: orderData.latitude,
+          area: orderData.area,
+          flat: orderData.flat,
+          address: orderData.address,
+          state: orderData.state,
+          city: orderData.city,
+          pincode: orderData.pincode,
+          model: orderData.model,
+          plan_year: orderData.plan_year,
+          quantity: orderData.quantity,
+          ac_type: orderData.ac_type,
+          orderingDate: orderData.orderingDate,
+          appointmentDate: orderData.appointmentDate,
+          installationstatus: true, // Set to true as we're moving to installation
+          deviceid: orderData.deviceid,
+          customer_details: {
+            customer_id: orderDetails.customer.customer_id,
+            name: orderDetails.customer.name,
+          },
+          shipping_address: orderDetails.customer_shipping_address[0],
+        };
+  
+        await axios.post(
+          // "http://35.154.208.29:8080/api/installation/saveInstallationDetails",
+          "http://localhost:8000/api/installation/saveInstallationDetails",
+          installationPayload
+        );
+      }
+  
+      // await axios.put(`http://35.154.208.29:8080/api/piping/moveToInstallation/${preOrderId}`);
+      await axios.put(`http://localhost:8000/api/piping/moveToInstallation/${preOrderId}`);
+
+      toast.success("Successfully moved to installation for all orders!");
+    } catch (error) {
+      console.error("Error moving to installation:", error);
+      toast.error("Failed to move orders to installation. Please try again.");
+    } finally {
       setIsInstallationDialogOpen(false);
       setSelectedOrderId(null);
-      toast.success('Order moved to installation successfully! 🎉');
-    } catch (error) {
-      console.error('Error moving to installation:', error);
     }
   };
+  
+  
 
   return (
     <div>
+    {isInstallationDialogOpen && (
+      <MoveToInstallation
+        isOpen={isInstallationDialogOpen}
+        onClose={() => {
+          setIsInstallationDialogOpen(false);
+          setCurrentPreOrderId(null); // Reset the preOrderId
+        }}
+        onConfirm={() => {
+          if (currentPreOrderId) {
+            handleMoveToInstallation(currentPreOrderId); // Pass the currentPreOrderId to the handler
+          }
+        }}
+        title="Are you sure you want to move this task to Installation?"
+        description={`Moving order to Installation`}
+      />
+    )}
       <table className="w-full text-left table-auto min-w-max">
         <thead>
           <tr>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer ID</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Contact Person</th>
+            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Order Status</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Payment Status</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer Details</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer Address</th>
@@ -203,6 +290,12 @@ const OpenPiping = () => {
                     {order.customer_shipping_address[0]?.contactPerson || ''} <br />
                     {order.customer_shipping_address[0]?.contactNumber || ''}
                   </td>
+                  <td className={`p-2 border-b border-blue-gray-50 text-sm`}>
+                      <span className={`inline-block px-2 py-1 font-sans text-xs font-bold rounded shadow-md  ${order.status === "Order Created" ? "text-green-700" : 
+                    "text-red-700"}`}>
+                      {order.status}
+                    </span>
+                  </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm">
                     <span className={`inline-block px-2 py-1 font-sans text-xs font-bold rounded shadow-md ${paymentStatusColor}`}>
                       {paymentStatusText}
@@ -229,18 +322,6 @@ const OpenPiping = () => {
                         <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4"/>
                       </svg>
                     </button>
-
-                    <MoveToInstallation 
-                      isOpen={isInstallationDialogOpen}
-                      onClose={() => {
-                        setIsInstallationDialogOpen(false);
-                        setSelectedOrderId(null);
-                      }}
-                      onConfirm={handleMoveToInstallation}
-                      title="Are you sure you want to move this task to Installation?"
-                      description={`Moving order ${order.customer.customer_id} to Installation`}
-                    />
-
                     {openDropdownId === order._id && (
                       <div className="z-10 bg-white divide-y divide-gray-100 rounded-lg shadow w-44 absolute ml-[-2vw]">
                         <ul className="py-2 text-sm text-gray-700" aria-labelledby="dropdownDefaultButton">
@@ -262,7 +343,7 @@ const OpenPiping = () => {
                             <button
                                 className="block px-4 py-2 hover:bg-gray-100 w-full text-left border-1 border-gray-200"
                                 onClick={() => {
-                                  setSelectedOrderId(order._id);
+                                  setCurrentPreOrderId(order.PreOrderId); // Save the preOrderId
                                   setIsInstallationDialogOpen(true);
                                   setOpenDropdownId(null); 
                                 }}
@@ -273,13 +354,25 @@ const OpenPiping = () => {
                         </ul>
                       </div>
                     )}
+                     {/* <MoveToInstallation 
+                      isOpen={isInstallationDialogOpen}
+                      onClose={() => {
+                        setIsInstallationDialogOpen(false);
+                        setSelectedOrderId(null);
+                      }}
+                      onConfirm={() => handleMoveToInstallation(order.PreOrderId)}
+                      title="Are you sure you want to move this task to Installation?"
+                      description={`Moving order ${order.customer.customer_id} to Installation`}
+                    /> */}
                   </td>
                 </tr>
               );
             })
           )}
         </tbody>
+        
       </table>
+      
     </div>
   );
 };

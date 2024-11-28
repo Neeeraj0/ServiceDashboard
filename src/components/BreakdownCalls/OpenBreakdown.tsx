@@ -76,6 +76,7 @@ const OpenBreakdown = () => {
         );
 
         const token = loginResponse.data.token;
+        console.log("token", token);
 
         const res = await axios.get("http://35.154.208.29:5000/api/summary/address", {
           headers: {
@@ -98,6 +99,8 @@ const OpenBreakdown = () => {
     return address?.customerData?.shipping_address[0] || null;
   };
 
+  console.log("shipping address", shippingAddresses);
+
   const formatDate = (timestamp: string) => {
     const date = new Date(timestamp);
     return (
@@ -119,7 +122,7 @@ const OpenBreakdown = () => {
   if (error) return <div>Error fetching data: {error}</div>;
 
   return (
-    <div>
+    <div className="overflow-x-auto">
       <table className="w-full text-left table-auto min-w-max">
         <thead>
           <tr>
@@ -143,6 +146,7 @@ const OpenBreakdown = () => {
           ) : (
             currentOrders.map((order, index) => {
               const shippingAddress = getShippingAddress(order._id);
+              console.log("shipping address", shippingAddress);
               const addressDisplay = shippingAddress
                 ? `${shippingAddress.line1}, ${shippingAddress.line2 || ""}, ${shippingAddress.city}, ${shippingAddress.state}, ${shippingAddress.pincode}`
                 : "N/A";

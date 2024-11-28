@@ -147,7 +147,6 @@ export default function Login() {
                   onChange={(e) => handleRoleChange(e.target.value)}
                 >
                   <option value="">Select Role</option>
-                  <option value="serviceengineer">Service Engineer</option>
                   <option value="servicehead">Service Head</option>
                 </select>
               </div>

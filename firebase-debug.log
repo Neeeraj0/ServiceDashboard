@@ -1,29 +1,28 @@
-[debug] [2024-11-25T05:25:08.961Z] ----------------------------------------------------------------------
-[debug] [2024-11-25T05:25:08.967Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\ACER\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js emulators:start
-[debug] [2024-11-25T05:25:08.969Z] CLI Version:   13.25.0
-[debug] [2024-11-25T05:25:08.969Z] Platform:      win32
-[debug] [2024-11-25T05:25:08.969Z] Node Version:  v20.16.0
-[debug] [2024-11-25T05:25:08.969Z] Time:          Mon Nov 25 2024 10:55:08 GMT+0530 (India Standard Time)
-[debug] [2024-11-25T05:25:08.970Z] ----------------------------------------------------------------------
+[debug] [2024-11-28T05:06:16.739Z] ----------------------------------------------------------------------
+[debug] [2024-11-28T05:06:16.742Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\ACER\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js emulators:start
+[debug] [2024-11-28T05:06:16.742Z] CLI Version:   13.25.0
+[debug] [2024-11-28T05:06:16.742Z] Platform:      win32
+[debug] [2024-11-28T05:06:16.743Z] Node Version:  v20.16.0
+[debug] [2024-11-28T05:06:16.743Z] Time:          Thu Nov 28 2024 10:36:16 GMT+0530 (India Standard Time)
+[debug] [2024-11-28T05:06:16.743Z] ----------------------------------------------------------------------
 [debug] 
-[debug] [2024-11-25T05:25:08.975Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
-[debug] [2024-11-25T05:25:09.229Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
-[debug] [2024-11-25T05:25:09.229Z] > authorizing via signed-in user (neeraj.patil@circolife.com)
+[debug] [2024-11-28T05:06:16.859Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2024-11-28T05:06:16.859Z] > authorizing via signed-in user (neeraj.patil@circolife.com)
 [info] i  emulators: Starting emulators: auth, hosting {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: auth, hosting"}}
 [warn] !  hosting: The hosting emulator is configured but there is no hosting configuration. Have you run firebase init hosting? {"metadata":{"emulator":{"name":"hosting"},"message":"The hosting emulator is configured but there is no hosting configuration. Have you run \u001b[1mfirebase init hosting\u001b[22m?"}}
-[debug] [2024-11-25T05:25:09.260Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
-[debug] [2024-11-25T05:25:09.260Z] [auth] Authentication Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
-[debug] [2024-11-25T05:25:09.261Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000},{"address":"::1","family":"IPv6","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"auth":[{"address":"127.0.0.1","family":"IPv4","port":9099}]},"metadata":{"message":"assigned listening specs for emulators"}}
-[debug] [2024-11-25T05:25:09.269Z] [hub] writing locator at C:\Users\ACER\AppData\Local\Temp\hub-service-backend-87abd.json
-[debug] [2024-11-25T05:25:18.757Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"ui"},"message":"Ignoring unsupported arg: auto_download"}}
-[debug] [2024-11-25T05:25:18.757Z] Ignoring unsupported arg: port {"metadata":{"emulator":{"name":"ui"},"message":"Ignoring unsupported arg: port"}}
-[debug] [2024-11-25T05:25:18.758Z] Starting Emulator UI with command {"binary":"node","args":["C:\\Users\\ACER\\.cache\\firebase\\emulators\\ui-v1.14.0\\server\\server.mjs"],"optionalArgs":[],"joinArgs":false,"shell":false,"port":4000} {"metadata":{"emulator":{"name":"ui"},"message":"Starting Emulator UI with command {\"binary\":\"node\",\"args\":[\"C:\\\\Users\\\\ACER\\\\.cache\\\\firebase\\\\emulators\\\\ui-v1.14.0\\\\server\\\\server.mjs\"],\"optionalArgs\":[],\"joinArgs\":false,\"shell\":false,\"port\":4000}"}}
+[debug] [2024-11-28T05:06:16.874Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2024-11-28T05:06:16.874Z] [auth] Authentication Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2024-11-28T05:06:16.875Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000},{"address":"::1","family":"IPv6","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"auth":[{"address":"127.0.0.1","family":"IPv4","port":9099}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[debug] [2024-11-28T05:06:16.879Z] [hub] writing locator at C:\Users\ACER\AppData\Local\Temp\hub-service-backend-87abd.json
+[debug] [2024-11-28T05:06:23.275Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"ui"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2024-11-28T05:06:23.275Z] Ignoring unsupported arg: port {"metadata":{"emulator":{"name":"ui"},"message":"Ignoring unsupported arg: port"}}
+[debug] [2024-11-28T05:06:23.276Z] Starting Emulator UI with command {"binary":"node","args":["C:\\Users\\ACER\\.cache\\firebase\\emulators\\ui-v1.14.0\\server\\server.mjs"],"optionalArgs":[],"joinArgs":false,"shell":false,"port":4000} {"metadata":{"emulator":{"name":"ui"},"message":"Starting Emulator UI with command {\"binary\":\"node\",\"args\":[\"C:\\\\Users\\\\ACER\\\\.cache\\\\firebase\\\\emulators\\\\ui-v1.14.0\\\\server\\\\server.mjs\"],\"optionalArgs\":[],\"joinArgs\":false,\"shell\":false,\"port\":4000}"}}
 [info] i  ui: Emulator UI logging to ui-debug.log {"metadata":{"emulator":{"name":"ui"},"message":"Emulator UI logging to \u001b[1mui-debug.log\u001b[22m"}}
-[debug] [2024-11-25T05:25:18.949Z] Web / API server started at 127.0.0.1:4000
+[debug] [2024-11-28T05:06:23.472Z] Web / API server started at 127.0.0.1:4000
  {"metadata":{"emulator":{"name":"ui"},"message":"Web / API server started at 127.0.0.1:4000\n"}}
-[debug] [2024-11-25T05:25:18.950Z] Web / API server started at ::1:4000
+[debug] [2024-11-28T05:06:23.473Z] Web / API server started at ::1:4000
  {"metadata":{"emulator":{"name":"ui"},"message":"Web / API server started at ::1:4000\n"}}
-[debug] [2024-11-25T05:25:19.005Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.
+[debug] [2024-11-28T05:06:23.514Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.
 [info] 
 ┌─────────────────────────────────────────────────────────────┐
 │ ✔  All emulators ready! It is now safe to connect your app. │
@@ -42,51 +41,4 @@
 
 Issues? Report them at https://github.com/firebase/firebase-tools/issues and attach the *-debug.log files.
  
-[debug] [2024-11-25T05:25:19.018Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
-[debug] [2024-11-25T05:25:19.019Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
-[info] i  To verify the phone number +919326576727, use the code 835076. {"metadata":{"emulator":{"name":"auth"},"message":"To verify the phone number +919326576727, use the code 835076."}}
-[debug] [2024-11-25T08:55:08.603Z] ----------------------------------------------------------------------
-[debug] [2024-11-25T08:55:08.606Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\ACER\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js emulators:start
-[debug] [2024-11-25T08:55:08.606Z] CLI Version:   13.25.0
-[debug] [2024-11-25T08:55:08.606Z] Platform:      win32
-[debug] [2024-11-25T08:55:08.607Z] Node Version:  v20.16.0
-[debug] [2024-11-25T08:55:08.607Z] Time:          Mon Nov 25 2024 14:25:08 GMT+0530 (India Standard Time)
-[debug] [2024-11-25T08:55:08.607Z] ----------------------------------------------------------------------
-[debug] 
-[debug] [2024-11-25T08:55:08.721Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
-[debug] [2024-11-25T08:55:08.722Z] > authorizing via signed-in user (neeraj.patil@circolife.com)
-[info] i  emulators: Starting emulators: auth, hosting {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: auth, hosting"}}
-[warn] !  hosting: The hosting emulator is configured but there is no hosting configuration. Have you run firebase init hosting? {"metadata":{"emulator":{"name":"hosting"},"message":"The hosting emulator is configured but there is no hosting configuration. Have you run \u001b[1mfirebase init hosting\u001b[22m?"}}
-[debug] [2024-11-25T08:55:08.733Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
-[debug] [2024-11-25T08:55:08.734Z] [auth] Authentication Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
-[debug] [2024-11-25T08:55:08.734Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000},{"address":"::1","family":"IPv6","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"auth":[{"address":"127.0.0.1","family":"IPv4","port":9099}]},"metadata":{"message":"assigned listening specs for emulators"}}
-[warn] !  emulators: It seems that you are running multiple instances of the emulator suite for project service-backend-87abd. This may result in unexpected behavior. 
-[debug] [2024-11-25T08:55:08.741Z] [hub] writing locator at C:\Users\ACER\AppData\Local\Temp\hub-service-backend-87abd.json
-[debug] [2024-11-25T08:55:15.331Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"ui"},"message":"Ignoring unsupported arg: auto_download"}}
-[debug] [2024-11-25T08:55:15.332Z] Ignoring unsupported arg: port {"metadata":{"emulator":{"name":"ui"},"message":"Ignoring unsupported arg: port"}}
-[debug] [2024-11-25T08:55:15.332Z] Starting Emulator UI with command {"binary":"node","args":["C:\\Users\\ACER\\.cache\\firebase\\emulators\\ui-v1.14.0\\server\\server.mjs"],"optionalArgs":[],"joinArgs":false,"shell":false,"port":4000} {"metadata":{"emulator":{"name":"ui"},"message":"Starting Emulator UI with command {\"binary\":\"node\",\"args\":[\"C:\\\\Users\\\\ACER\\\\.cache\\\\firebase\\\\emulators\\\\ui-v1.14.0\\\\server\\\\server.mjs\"],\"optionalArgs\":[],\"joinArgs\":false,\"shell\":false,\"port\":4000}"}}
-[info] i  ui: Emulator UI logging to ui-debug.log {"metadata":{"emulator":{"name":"ui"},"message":"Emulator UI logging to \u001b[1mui-debug.log\u001b[22m"}}
-[debug] [2024-11-25T08:55:15.482Z] Web / API server started at 127.0.0.1:4000
- {"metadata":{"emulator":{"name":"ui"},"message":"Web / API server started at 127.0.0.1:4000\n"}}
-[debug] [2024-11-25T08:55:15.482Z] Web / API server started at ::1:4000
- {"metadata":{"emulator":{"name":"ui"},"message":"Web / API server started at ::1:4000\n"}}
-[debug] [2024-11-25T08:55:15.583Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.
-[info] 
-┌─────────────────────────────────────────────────────────────┐
-│ ✔  All emulators ready! It is now safe to connect your app. │
-│ i  View Emulator UI at http://127.0.0.1:4000/               │
-└─────────────────────────────────────────────────────────────┘
-
-┌────────────────┬──────────────────────────────────┬────────────────────────────┐
-│ Emulator       │ Host:Port                        │ View in Emulator UI        │
-├────────────────┼──────────────────────────────────┼────────────────────────────┤
-│ Authentication │ 127.0.0.1:9099                   │ http://127.0.0.1:4000/auth │
-├────────────────┼──────────────────────────────────┼────────────────────────────┤
-│ Hosting        │ Failed to initialize (see above) │                            │
-└────────────────┴──────────────────────────────────┴────────────────────────────┘
-  Emulator Hub running at 127.0.0.1:4400
-  Other reserved ports: 4500
-
-Issues? Report them at https://github.com/firebase/firebase-tools/issues and attach the *-debug.log files.
- 
-[info] i  To verify the phone number +919326576727, use the code 159325. {"metadata":{"emulator":{"name":"auth"},"message":"To verify the phone number +919326576727, use the code 159325."}}
+[info] i  To verify the phone number +919326576727, use the code 105325. {"metadata":{"emulator":{"name":"auth"},"message":"To verify the phone number +919326576727, use the code 105325."}}
