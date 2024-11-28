@@ -126,9 +126,15 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
         if (orderData) {
           const acDetails = orderData.AcDetails.reduce((acc, ac) => {
             if (ac.installation_price > 0) {
-              if (ac.ac_type === 'Split') setSplitSubscriptionPrice(ac.subscription_price);
-              if (ac.ac_type === 'Cassette') setCassetteSubcriptionPrice(ac.subscription_price);
-              console.log(splitSubscriptionPrice, cassetteSubscriptionPrice);
+              if (ac.ac_type === 'Split') {
+                setSplitSubscriptionPrice(ac.subscription_price);
+                setSplitInstallationPrice(ac.installation_price);
+              }
+              if (ac.ac_type === 'Cassette') {
+                setCassetteSubcriptionPrice(ac.subscription_price);
+                setCassetteInstallationPrice(ac.installation_price);
+              }
+                console.log(splitSubscriptionPrice, cassetteSubscriptionPrice);
             }
             switch (ac.model) {
               case 'S10':
@@ -200,41 +206,54 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
       }, [orderData]);
 
       useEffect(() => {
+        if (!orderData) return; // Ensure orderData is present
+    
         let totalAcAmount = 0;
+
         if (formData.splitAC1T) {
-          totalAcAmount += parseInt(formData.splitAC1T, 10) * ((splitSubscriptionPrice || 1299) + 5000); 
+            totalAcAmount += parseInt(formData.splitAC1T, 10) * (( 1299) + (splitInstallationPrice || 1800) + 5000);
         }
         if (formData.splitAC1_5T) {
-          totalAcAmount += parseInt(formData.splitAC1_5T, 10) * ((splitSubscriptionPrice || 1399) + 6000);
+            totalAcAmount += parseInt(formData.splitAC1_5T, 10) * ((1399) + (splitInstallationPrice || 1800) + 6000);
         }
         if (formData.splitAC2T) {
-          totalAcAmount += parseInt(formData.splitAC2T, 10) * ((splitSubscriptionPrice || 1699) +  7000);
+            totalAcAmount += parseInt(formData.splitAC2T, 10) * (( 1699) + (splitInstallationPrice || 1800) + 7000);
         }
         if (formData.cassetteAC2T) {
-          totalAcAmount += parseInt(formData.cassetteAC2T, 10) * ((cassetteSubscriptionPrice || 2499) + 12000);
+            totalAcAmount += parseInt(formData.cassetteAC2T, 10) * (( 2499) + (cassetteInstallationPrice || 4000) + 12000);
         }
         if (formData.cassetteAC3T) {
-          totalAcAmount += parseInt(formData.cassetteAC3T, 10) * ((cassetteSubscriptionPrice || 2999) + 15000);
+            totalAcAmount += parseInt(formData.cassetteAC3T, 10) * (( 2999) + (cassetteInstallationPrice || 4000) + 15000);
         }
-        
+    
         setAcTotalAmount(totalAcAmount);
-        console.log('triggered', totalAcAmount);
     
         // Calculate Material Total Amount
         let totalMaterialAmount = 0;
-        totalMaterialAmount += parseInt(formData.copperPipeSplit || '0', 10) * commonMaterialPrices.copper_piping_p;
-        totalMaterialAmount += parseInt(formData.copperPipeCassette || '0', 10) * commonMaterialPrices.copper_piping_cassette_p;
-        totalMaterialAmount += parseInt(formData.lStand || '0', 10) * commonMaterialPrices.l_stand_p;
-        totalMaterialAmount += parseInt(formData.rubberStand || '0', 10) * commonMaterialPrices.rubber_stand_p;
-        totalMaterialAmount += parseInt(formData.polycabWire || '0', 10) * commonMaterialPrices.core_cable_4_p;
-        totalMaterialAmount += parseInt(formData.crossStand || '0', 10) * commonMaterialPrices.cross_stand_p;
-
+        if (formData.copperPipeSplit) {
+            totalMaterialAmount += parseInt(formData.copperPipeSplit || '0', 10) * commonMaterialPrices.copper_piping_p;
+        }
+        if (formData.copperPipeCassette) {
+            totalMaterialAmount += parseInt(formData.copperPipeCassette || '0', 10) * commonMaterialPrices.copper_piping_cassette_p;
+        }
+        if (formData.lStand) {
+            totalMaterialAmount += parseInt(formData.lStand || '0', 10) * commonMaterialPrices.l_stand_p;
+        }
+        if (formData.rubberStand) {
+            totalMaterialAmount += parseInt(formData.rubberStand || '0', 10) * commonMaterialPrices.rubber_stand_p;
+        }
+        if (formData.polycabWire) {
+            totalMaterialAmount += parseInt(formData.polycabWire || '0', 10) * commonMaterialPrices.core_cable_4_p;
+        }
+        if (formData.crossStand) {
+            totalMaterialAmount += parseInt(formData.crossStand || '0', 10) * commonMaterialPrices.cross_stand_p;
+        }
     
         setMaterialTotalAmount(totalMaterialAmount);
-    
+        
         // Calculate Pending Amount
         setPendingAmount(totalAcAmount + totalMaterialAmount);
-      }, [formData, splitSubscriptionPrice, cassetteSubscriptionPrice, orderData]);
+    }, [formData, splitSubscriptionPrice, cassetteSubscriptionPrice, orderData, splitInstallationPrice, cassetteInstallationPrice]);
     
       const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setFormData({
@@ -275,15 +294,17 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
 
         console.log('inside the handle submit function');
 
-        let commonSubscriptionPrice = 0;
-        let commonInstallationPrice = 0;
+        let splitInstallationPrice = 1800; // Default installation price for Split
+        let cassetteInstallationPrice = 4000; // Default installation price for Cassette
 
-        orderData.AcDetails.forEach(ac => {
-          if (ac.subscription_price > 0) {
-            commonSubscriptionPrice = ac.subscription_price;
+        orderData.AcDetails.forEach((ac) => {
+          if (ac.ac_type === 'Split' && ac.installation_price > 0) {
+            console.log(ac.installation_price);
+            splitInstallationPrice = ac.installation_price;
           }
-          if (ac.installation_price > 0) {
-            commonInstallationPrice = ac.installation_price;
+          if (ac.ac_type === 'Cassette' && ac.installation_price > 0) {
+            console.log(ac.installation_price);
+            cassetteInstallationPrice = ac.installation_price;
           }
         });
         const updatedAcDetails: AcDetail[] = [];
@@ -292,10 +313,10 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
             ac_type: 'Split',
             model: 'S10',
             quantity: parseInt(formData.splitAC1T, 10) || 0,
-            subscription_price: commonSubscriptionPrice || 1299,
+            subscription_price:  1299,
             fixedPriceAfter3Years: 799,
             deposit: 5000,
-            installation_price: commonInstallationPrice || 1800,
+            installation_price:  splitInstallationPrice,
             plan_year: orderData.AcDetails.find(ac => ac.model === '1')?.plan_year || '3+2year',
           });
         }
@@ -305,10 +326,10 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
             ac_type: 'Split',
             model: 'S15',
             quantity: parseInt(formData.splitAC1_5T, 10) || 0,
-            subscription_price: commonSubscriptionPrice || 1399,
+            subscription_price:  1399,
             deposit: 6000,
             fixedPriceAfter3Years: 899,
-            installation_price: commonInstallationPrice || 1800,
+            installation_price:   splitInstallationPrice,
             plan_year: orderData.AcDetails.find(ac => ac.model === '1.5')?.plan_year || '3+2year',
           });
         }
@@ -319,9 +340,9 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
             model: 'S20',
             quantity: parseInt(formData.splitAC2T, 10) || 0,
             deposit: 7000,
-            subscription_price: commonSubscriptionPrice || 1699,
+            subscription_price:   1699,
             fixedPriceAfter3Years: 1099,
-            installation_price: commonInstallationPrice || 1800,
+            installation_price:   splitInstallationPrice,
             plan_year: orderData.AcDetails.find(ac => ac.model === '2')?.plan_year || '3+2year',
           });
         }
@@ -332,9 +353,9 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
             model: 'C20',
             quantity: parseInt(formData.cassetteAC2T, 10) || 0,
             deposit: 12000,
-            subscription_price: commonSubscriptionPrice || 2499,
-            installation_price: commonInstallationPrice || 4000,
-            fixedPriceAfter3Years: 1499,
+            subscription_price:   2499,
+            installation_price:   4000,
+            fixedPriceAfter3Years: cassetteInstallationPrice,
             plan_year: orderData.AcDetails.find(ac => ac.model === '2')?.plan_year || '3+2year',
           });
         }
@@ -344,10 +365,10 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
             ac_type: 'Cassette',
             model: 'C30',
             quantity: parseInt(formData.cassetteAC3T, 10) || 0,
-            subscription_price: commonSubscriptionPrice || 2999,
+            subscription_price:   2999,
             deposit: 15000,
             fixedPriceAfter3Years: 1999,
-            installation_price: commonInstallationPrice || 4000,
+            installation_price:   cassetteInstallationPrice,
             plan_year: orderData.AcDetails.find(ac => ac.model === '3')?.plan_year || '3+2year',
           });
         }
@@ -409,7 +430,7 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
           with_material: withMaterial,
           Ac_totalAmount: acTotalAmount,
           material_totalAmount: materialTotalAmount,
-          pending_amount: acTotalAmount + materialTotalAmount,
+          pending_amount: (acTotalAmount + materialTotalAmount) - orderData.paidamount,
         };
 
         console.log('payload', payload);
@@ -470,8 +491,8 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
             payload
           ),
           axios.post(
-            // 'http://35.154.208.29:8080/api/SiteSurveyDetails/SiteSurveyDetails',
-            'http://localhost:8000/api/SiteSurveyDetails/SiteSurveyDetails',
+            'http://35.154.208.29:8080/api/SiteSurveyDetails/SiteSurveyDetails',
+            // 'http://localhost:8000/api/SiteSurveyDetails/SiteSurveyDetails',
             formData1,
             {
               headers: { 'Content-Type': 'multipart/form-data' },

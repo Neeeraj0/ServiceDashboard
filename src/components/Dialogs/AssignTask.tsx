@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { ACUnit } from "@/types/breakdown/Order";
 import toast from "react-hot-toast";
+import React from "react";
 
 interface Technician {
   name: string;
@@ -20,7 +21,10 @@ interface AssignTaskProps {
   ac_units: ACUnit[];
 }
 
-export default function AssignTask({
+// Cache for fetched technicians to avoid repeated API calls
+let techniciansCache: Technician[] | null = null;
+
+export default React.memo(function AssignTask({
   orderId,
   clientName,
   clientNumber,
@@ -36,15 +40,22 @@ export default function AssignTask({
   const [servicingTime, setServicingTime] = useState("");
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [filteredTechnicians, setFilteredTechnicians] = useState<Technician[]>([]);
-  const [selectedTechnicians, setSelectedTechnicians] = useState<Technician[]>([]); // Track selected technicians
-  console.log(ac_units);
+  const [selectedTechnicians, setSelectedTechnicians] = useState<Technician[]>([]);
+
+  // Fetch technicians with caching
   useEffect(() => {
     const fetchTechnicians = async () => {
-      try {
-        const response = await axios.get(`http://35.154.208.29:8080/api/technicians/getTechnicians`);
-        setTechnicians(response.data); 
-      } catch (error) {
-        console.error("Error fetching technicians:", error);
+      if (techniciansCache) {
+        setTechnicians(techniciansCache);
+      } else {
+        try {
+          const response = await axios.get(`http://35.154.208.29:8080/api/technicians/getTechnicians`);
+          techniciansCache = response.data;
+          setTechnicians(response.data);
+        } catch (error) {
+          console.error("Error fetching technicians:", error);
+          toast.error("Failed to load technicians");
+        }
       }
     };
     fetchTechnicians();
@@ -72,101 +83,35 @@ export default function AssignTask({
   };
 
   const handleRemoveTechnician = (techId: string) => {
-    setSelectedTechnicians((prev) => prev.filter((tech) => tech.technician_id !== techId));
+    setSelectedTechnicians((prev) =>
+      prev.filter((tech) => tech.technician_id !== techId)
+    );
   };
 
-  function mergeDateTimeToISO(servicingDate: string, servicingTime: string) {
-    if (!servicingDate || !servicingTime) {
-      console.error(
-        "Invalid input: servicingDate and servicingTime are required"
-      );
-      return null;
-    }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(servicingDate)) {
-      console.error("Invalid servicingDate format. Expected YYYY-MM-DD");
-      return null;
-    }
-    if (!/^\d{2}:\d{2}$/.test(servicingTime)) {
-      console.error("Invalid servicingTime format. Expected HH:MM");
-      return null;
-    }
+  const mergeDateTimeToISO = (date: string, time: string): string | null => {
+    if (!date || !time) return null;
 
     try {
-      const combinedDateTime = `${servicingDate}T${servicingTime}:00.000Z`;
-      const date = new Date(combinedDateTime);
-      if (isNaN(date.getTime())) {
-        throw new Error("Invalid date created");
-      }
-      return date.toISOString();
+      const [hours, minutes] = time.split(":").map(Number);
+      const combinedDateTime = new Date(date);
+      combinedDateTime.setHours(hours, minutes, 0, 0);
+      return combinedDateTime.toISOString();
     } catch (error) {
-      console.error("Error in mergeDateTimeToISO:", error);
+      console.error("Error merging date and time:", error);
       return null;
     }
-  }
-
-  function convertTo24HourFormat(time: string): string {
-    const [timePart, period] = time.split(" "); // e.g., "9:00 AM"
-    let [hours, minutes] = timePart.split(":").map(Number);
-  
-    if (period === "PM" && hours !== 12) hours += 12; // Convert PM to 24-hour format
-    if (period === "AM" && hours === 12) hours = 0; // Handle midnight (12:00 AM)
-  
-    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
-  }
-  
-
-   // Generate time options for the dropdown
-   const generateTimeOptions = (interval: number) => {
-    const options = [];
-    const startTime = new Date();
-    startTime.setHours(0, 0, 0, 0);
-
-    for (let i = 0; i < 24 * 60; i += interval) {
-      const time = new Date(startTime.getTime() + i * 60000);
-      const hours = time.getHours();
-      const minutes = time.getMinutes().toString().padStart(2, "0");
-      const period = hours < 12 ? "AM" : "PM";
-      const formattedHours = hours % 12 || 12;
-      options.push(`${formattedHours}:${minutes} ${period}`);
-    }
-
-    return options;
   };
 
-  const timeOptions = generateTimeOptions(30); // 30-minute intervals
-
-  const transformedACUnits = ac_units;
-  const queryData = {
-    queryStatus: "assign",
-  };
-
-  const transformedACUnit = ac_units?.map((unit) => {
-    let type, capacity;
-  
-    // Determine type and capacity based on model
-    if (unit?.model.startsWith("S")) {
-      type = "Split AC";
-      capacity = unit.model === "S10" ? "S10" : unit.model === "S15" ? "S15" : unit.model === "S20" ? "S20" : unit.model;
-    } else if (unit?.model.startsWith("C")) {
-      type = "Cassette AC";
-      capacity = unit.model === "C10" ? "C10" : unit.model === "C15" ? "C15" : unit.model === "C20" ? "C20": unit.model === "C30" ? "C30" : unit.model;
-    } else {
-      type = "Split AC"; // or handle other types as needed
-      capacity = unit?.model;
-    }
-  
-    return {
-      type,
-      capacity,
-      quantity: unit?.quantity,
-    };
-  });
-  
+  const transformedACUnits = ac_units?.map((unit) => ({
+    type: unit?.model.startsWith("S") ? "Split AC" : "Cassette AC",
+    capacity: unit?.model,
+    quantity: unit?.quantity,
+  })) || [];
 
   const handleAssignTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    const timeIn24Hour = convertTo24HourFormat(servicingTime);
-    const servicingDateTime = mergeDateTimeToISO(servicingDate, timeIn24Hour);
+
+    const servicingDateTime = mergeDateTimeToISO(servicingDate, servicingTime);
     if (!servicingDateTime) {
       toast.error("Invalid servicing date or time.");
       return;
@@ -175,46 +120,30 @@ export default function AssignTask({
     const taskDataCreation = {
       _id: orderId,
       title: "Breakdown",
-      customerComplaint: customerComplaint,
+      customerComplaint,
       description,
       servicingDate: servicingDateTime,
       status: "open",
       address: [{ location: addressDisplay }],
       client_number: clientNumber,
       client_name: clientName,
-      // ac_units: transformedACUnits?.map((unit) => ({
-      //   type: "Split AC",
-      //   capacity: unit.model,
-      //   quantity: unit.quantity,
-      // })),
-      ac_units: transformedACUnit,
-      quantity: 1,
+      ac_units: transformedACUnits,
       taskType: "breakdown",
       complaintRaised,
-      assignedTechnicians: selectedTechnicians.map((tech) => tech.name), // Send selected technician names
+      assignedTechnicians: selectedTechnicians.map((tech) => tech.name),
     };
 
     try {
       await axios.post(`http://35.154.208.29:8080/api/tasks`, taskDataCreation, {
-      //  await axios.post(`http://localhost:8000/api/tasks`, taskDataCreation, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-      axios({
-        method: "PUT",
-        url: `${'http://devappapi.circolives.in/api/query/changeQueryStatus'}/${orderId}`,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        data: queryData,
-      })
-        .then((res) => {
-          alert("Task assigned successfully");
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+        headers: { "Content-Type": "application/json" },
+      });
+
+      // Update query status
+      await axios.put(
+        `http://devappapi.circolives.in/api/query/changeQueryStatus/${orderId}`,
+        { queryStatus: "assign" },
+        { headers: { "Content-Type": "application/json" } }
+      );
 
       toast.success("Task assigned successfully");
       setIsOpen(false); // Close modal
@@ -258,7 +187,7 @@ export default function AssignTask({
 
               <form onSubmit={handleAssignTask} className="mt-4">
                 <div className="mb-6 relative">
-                  <label className="block font-sans text-[14px] text-gray-700 mb-1">
+                  <label className="block text-sm text-gray-700 mb-1">
                     Technician Name
                   </label>
                   <input
@@ -296,39 +225,33 @@ export default function AssignTask({
                 </div>
 
                 <div className="mb-6">
-                  <label className="block font-sans text-[14px] text-gray-700 mb-1">
+                  <label className="block text-sm text-gray-700 mb-1">
                     Assigning Date
                   </label>
                   <input
                     type="date"
-                    className="date-input rounded-md border w-full p-2"
+                    className="form-control w-full p-2 border rounded"
                     value={servicingDate}
                     onChange={(e) => setServicingDate(e.target.value)}
                   />
                 </div>
 
                 <div className="mb-6">
-                  <label className="block font-sans text-[14px] text-gray-700 mb-1">
+                  <label className="block text-sm text-gray-700 mb-1">
                     Assigning Time
                   </label>
-                  <select
+                  <input
+                    type="time"
                     className="form-control w-full p-2 border rounded"
                     value={servicingTime}
                     onChange={(e) => setServicingTime(e.target.value)}
-                  >
-                    <option value="">Select Time</option>
-                    {timeOptions.map((time, index) => (
-                      <option key={index} value={time}>
-                        {time}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
 
                 <div className="flex justify-center mt-8">
                   <button
                     type="submit"
-                    className="bg-purple-600 text-white py-2 px-8 rounded text-[16px] hover:bg-purple-700"
+                    className="bg-purple-600 text-white py-2 px-8 rounded text-sm hover:bg-purple-700"
                   >
                     Submit
                   </button>
@@ -340,4 +263,4 @@ export default function AssignTask({
       </Dialog.Root>
     </div>
   );
-}
+});

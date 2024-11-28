@@ -48,6 +48,7 @@ interface PreorderResponse {
     contactPerson: string;
     contactNumber: string;
   };
+  paidamount: number;
   orderingStatus: boolean;
   paymentStatusFullPayment: string;
   paymentStatusToken: string;
