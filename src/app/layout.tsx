@@ -10,6 +10,7 @@ import { UserProvider } from "./context/UserContext";
 // import jwt from 'jsonwebtoken';
 
 import ProtectedRoute from "@/components/ProtectedRoutes/ProtectedRoutes";
+import { ReactQueryProvider } from "@/providers/ReactQueryProvider";
 
 export default function RootLayout({
   children,
@@ -54,15 +55,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body suppressHydrationWarning={true}>
-        <UserProvider>
-          {loading ? ( 
-            <Loader /> 
-          ): isPublicRoute ? (
-            children
-          ) : (
-            <ProtectedRoute>{children}</ProtectedRoute>
-          )}
-        </UserProvider>
+        <ReactQueryProvider>
+          <UserProvider>
+            {loading ? ( 
+              <Loader /> 
+            ): isPublicRoute ? (
+              children
+            ) : (
+              <ProtectedRoute>{children}</ProtectedRoute>
+            )}
+          </UserProvider>
+        </ReactQueryProvider>
         <Toaster position="top-center" />
       </body>
     </html>
