@@ -1,9 +1,10 @@
 import * as Dialog from "@radix-ui/react-dialog";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { ACUnit } from "@/types/breakdown/Order";
 import toast from "react-hot-toast";
 import React from "react";
+
 
 interface Technician {
   name: string;
@@ -42,16 +43,35 @@ export default React.memo(function AssignTask({
   const [filteredTechnicians, setFilteredTechnicians] = useState<Technician[]>([]);
   const [selectedTechnicians, setSelectedTechnicians] = useState<Technician[]>([]);
 
-  // Fetch technicians with caching
+  // // Fetch technicians with caching
+  // useEffect(() => {
+  //   const fetchTechnicians = async () => {
+  //     if (techniciansCache) {
+  //       setTechnicians(techniciansCache);
+  //     } else {
+  //       try {
+  //         const response = await axios.get(`http://35.154.208.29:8080/api/technicians/getTechnicians`);
+  //         techniciansCache = response.data;
+  //         setTechnicians(response.data);
+  //       } catch (error) {
+  //         console.error("Error fetching technicians:", error);
+  //         toast.error("Failed to load technicians");
+  //       }
+  //     }
+  //   };
+  //   fetchTechnicians();
+  // }, []);
+
   useEffect(() => {
     const fetchTechnicians = async () => {
-      if (techniciansCache) {
-        setTechnicians(techniciansCache);
-      } else {
+      const cachedTechnicians = JSON.parse(localStorage.getItem("technicians") || "[]");
+      setTechnicians(cachedTechnicians); // Serve cached data immediately
+      
+      if(!technicians){
         try {
           const response = await axios.get(`http://35.154.208.29:8080/api/technicians/getTechnicians`);
-          techniciansCache = response.data;
-          setTechnicians(response.data);
+          localStorage.setItem("technicians", JSON.stringify(response.data)); // Update cache
+          setTechnicians(response.data); // Update with fresh data
         } catch (error) {
           console.error("Error fetching technicians:", error);
           toast.error("Failed to load technicians");
@@ -60,6 +80,20 @@ export default React.memo(function AssignTask({
     };
     fetchTechnicians();
   }, []);
+  
+  const refreshTechnicians = async () => {
+    try {
+      const response = await axios.get(`http://35.154.208.29:8080/api/technicians/getTechnicians`);
+      localStorage.setItem("technicians", JSON.stringify(response.data));
+      setTechnicians(response.data);
+      toast.success("Technicians list updated");
+    } catch (error) {
+      console.error("Error refreshing technicians:", error);
+      toast.error("Failed to refresh technicians");
+    }
+  };
+  
+
 
   const handleTechnicianInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
@@ -88,32 +122,121 @@ export default React.memo(function AssignTask({
     );
   };
 
-  const mergeDateTimeToISO = (date: string, time: string): string | null => {
-    if (!date || !time) return null;
-
-    try {
-      const [hours, minutes] = time.split(":").map(Number);
-      const combinedDateTime = new Date(date);
-      combinedDateTime.setHours(hours, minutes, 0, 0);
-      return combinedDateTime.toISOString();
-    } catch (error) {
-      console.error("Error merging date and time:", error);
+  function mergeDateTimeToISO(servicingDate: string, servicingTime: string) {
+    if (!servicingDate || !servicingTime) {
+      console.error(
+        "Invalid input: servicingDate and servicingTime are required"
+      );
       return null;
     }
-  };
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(servicingDate)) {
+      console.error("Invalid servicingDate format. Expected YYYY-MM-DD");
+      return null;
+    }
+    if (!/^\d{2}:\d{2}$/.test(servicingTime)) {
+      console.error("Invalid servicingTime format. Expected HH:MM");
+      return null;
+    }
 
-  const transformedACUnits = ac_units?.map((unit) => ({
-    type: unit?.model.startsWith("S") ? "Split AC" : "Cassette AC",
-    capacity: unit?.model,
-    quantity: unit?.quantity,
-  })) || [];
+    try {
+      const combinedDateTime = `${servicingDate}T${servicingTime}:00.000Z`;
+      const date = new Date(combinedDateTime);
+      if (isNaN(date.getTime())) {
+        throw new Error("Invalid date created");
+      }
+      return date.toISOString();
+    } catch (error) {
+      console.error("Error in mergeDateTimeToISO:", error);
+      return null;
+    }
+  }
+
+  function convertTo24HourFormat(time: string): string {
+    const [timePart, period] = time.split(" "); // e.g., "9:00 AM"
+    let [hours, minutes] = timePart.split(":").map(Number);
+  
+    if (period === "PM" && hours !== 12) hours += 12; // Convert PM to 24-hour format
+    if (period === "AM" && hours === 12) hours = 0; // Handle midnight (12:00 AM)
+  
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+  }
+
+  const transformedACUnit =
+  ac_units && ac_units.length > 0
+    ? ac_units.map((unit) => {
+        let type, capacity;
+        console.log("units", unit);
+
+        // If model is a standard ton size, set type to Split AC
+        if (
+          unit?.model === "1 Ton" ||
+          unit?.model === "1.5 Ton" ||
+          unit?.model === "2 Ton" ||
+          unit?.model === "3 Ton"
+        ) {
+          type = "Split AC";
+          capacity =
+            unit.model === "1 Ton"
+              ? "S10"
+              : unit.model === "1.5 Ton"
+              ? "S15"
+              : unit.model === "2 Ton"
+              ? "S20"
+              : unit.model === "3 Ton"
+              ? "S30"
+              : unit.model;
+        } 
+        // Handle existing S or C prefixed models
+        else if (unit?.model.startsWith("S")) {
+          type = "Split AC";
+          capacity =
+            unit.model === "S10"
+              ? "S10"
+              : unit.model === "S15"
+              ? "S15"
+              : unit.model === "S20"
+              ? "S20"
+              : unit.model;
+        } 
+        else if (unit?.model.startsWith("C")) {
+          type = "Cassette AC";
+          capacity =
+            unit.model === "C10"
+              ? "C10"
+              : unit.model === "C15"
+              ? "C15"
+              : unit.model === "C20"
+              ? "C20"
+              : unit.model === "C30"
+              ? "C30"
+              : unit.model;
+        } 
+        else {
+          // Fallback for any other model
+          type = "Split AC";
+          capacity = unit?.model;
+        }
+
+        return {
+          type,
+          capacity,
+          quantity: unit?.quantity,
+        };
+      })
+    : [
+        {
+          type: "Split AC",
+          capacity: "S10",
+          quantity: 1,
+        },
+      ];
 
   const handleAssignTask = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const servicingDateTime = mergeDateTimeToISO(servicingDate, servicingTime);
+    const timeIn24Hour = convertTo24HourFormat(servicingTime);
+    const servicingDateTime = mergeDateTimeToISO(servicingDate, timeIn24Hour);
     if (!servicingDateTime) {
-      toast.error("Invalid servicing date or time.");
+      alert("Invalid servicing date or time.");
       return;
     }
 
@@ -127,7 +250,7 @@ export default React.memo(function AssignTask({
       address: [{ location: addressDisplay }],
       client_number: clientNumber,
       client_name: clientName,
-      ac_units: transformedACUnits,
+      ac_units: transformedACUnit,
       taskType: "breakdown",
       complaintRaised,
       assignedTechnicians: selectedTechnicians.map((tech) => tech.name),
@@ -152,6 +275,27 @@ export default React.memo(function AssignTask({
       toast.error("Failed to assign task");
     }
   };
+
+  // Generate time options for the dropdown
+  const generateTimeOptions = (interval: number) => {
+    const options = [];
+    const startTime = new Date();
+    startTime.setHours(0, 0, 0, 0);
+
+    for (let i = 0; i < 24 * 60; i += interval) {
+      const time = new Date(startTime.getTime() + i * 60000);
+      const hours = time.getHours();
+      const minutes = time.getMinutes().toString().padStart(2, "0");
+      const period = hours < 12 ? "AM" : "PM";
+      const formattedHours = hours % 12 || 12;
+      options.push(`${formattedHours}:${minutes} ${period}`);
+    }
+
+    return options;
+  };
+
+  const timeOptions = generateTimeOptions(30); // 30-minute intervals
+
 
   return (
     <div className="flex w-full font-sans">
@@ -240,13 +384,29 @@ export default React.memo(function AssignTask({
                   <label className="block text-sm text-gray-700 mb-1">
                     Assigning Time
                   </label>
-                  <input
+                  {/* <input
                     type="time"
                     className="form-control w-full p-2 border rounded"
                     value={servicingTime}
                     onChange={(e) => setServicingTime(e.target.value)}
-                  />
+                  /> */}
+                  <select
+                    className="form-control w-full p-2 border rounded"
+                    value={servicingTime}
+                    onChange={(e) => setServicingTime(e.target.value)}
+                  >
+                    <option value="">Select Time</option>
+                    {timeOptions.map((time, index) => (
+                      <option key={index} value={time}>
+                        {time}
+                      </option>
+                    ))}
+                  </select>
                 </div>
+
+                <button onClick={refreshTechnicians} className="text-blue-500 hover:underline w-fit">
+                  Refresh Technicians
+                </button>
 
                 <div className="flex justify-center mt-8">
                   <button

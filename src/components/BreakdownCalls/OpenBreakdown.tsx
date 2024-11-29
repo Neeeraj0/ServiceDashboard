@@ -6,6 +6,7 @@ import { ACUnit, Order } from "@/types/breakdown/Order";
 import { ShippingAddress } from "@/types/breakdown/ShippingAddress";
 import AssignTask from "../Dialogs/AssignTask";
 import "./module.style.css";
+import Papa from "papaparse";
 
 const OpenBreakdown = () => {
   const [backendData, setBackendData] = useState<Order[]>([]);
@@ -111,6 +112,32 @@ const OpenBreakdown = () => {
     );
   };
 
+  const downloadCSV = () => {
+    // Transform data into a format suitable for CSV
+    const csvData = backendData.map((order) => ({
+      "Task ID": order._id,
+      "Contact Person": order.contactperson,
+      "Contact Number": order.contactnumber,
+      "Issue Reported": order.subject,
+      "Customer Address": shippingAddresses.find((address) => address._id === order._id)
+        ?.customerData?.shipping_address[0]?.line1 || "N/A",
+      "Date": new Date(order.TimeStamp).toLocaleString(),
+      "Device ID": order.deviceid,
+    }));
+
+    // Generate and download CSV
+    const csv = Papa.unparse(csvData);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "complaints.csv";
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Pagination logic
   const indexOfLastOrder = currentPage * itemsPerPage;
   const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
@@ -123,7 +150,16 @@ const OpenBreakdown = () => {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-left table-auto min-w-max">
+      <div className="flex absolute justify-end w-full mt-[-2vh] lg:mt-[-5vh] ml-[-5vw]">
+        <button
+          onClick={downloadCSV}
+          className="px-4 py-2 bg-green-500 text-white font-bold shadow-xl rounded hover:bg-green-600"
+        >
+          Download to Excel 📊
+        </button>
+      </div>
+
+      <table className="w-full text-left table-auto min-w-max mt-10">
         <thead>
           <tr>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Task ID</th>

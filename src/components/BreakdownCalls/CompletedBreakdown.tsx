@@ -145,7 +145,7 @@ materialsUsed: order.materialsUsed
                     "No Images"
                   )}
                 </td>
-              <td className="p-2 border-b border-blue-gray-50 text-sm">
+              <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
                 {order.assignedTechnicians.map(technician => technician.name)}
               </td>
               <td className="p-2 border-b border-blue-gray-50 text-sm">{order.issueReported || "N/A"}</td>
