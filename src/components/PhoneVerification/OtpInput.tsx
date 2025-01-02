@@ -43,7 +43,7 @@ export const OtpInputComponent = ({
         {loading ? 'Verifying...' : 'Verify Code'}
       </button>
       <div className="text-sm text-gray-500 mt-4">
-        Didn't receive code?{' '}
+        Didn&apos;t receive code?{' '}
         <button 
           className="font-medium text-blue-600 hover:text-blue-500 disabled:text-gray-400"
           onClick={onResend}

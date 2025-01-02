@@ -29,13 +29,14 @@ interface Order {
   assignedTechnicians: Technician[];
 }
 
-const AssignedBreakdown: React.FC = () => {
+const AssignedSetup: React.FC = () => {
   const [backendData, setBackendData] = useState<Order[]>([]);
 
   useEffect(() => {
     const fetchAssignedOrders = async () => {
       try {
-        const res = await axios.get('http://35.154.208.29:8080/api/breakdown/getAssigned');
+        const res = await axios.get('http://35.154.208.29:8080/api/setup/getAssigned');
+        // const res = await axios.get('http://35.154.208.29:8080/api/installation/getAssigned');
         const orders = res.data.map((order: any) => ({
           _id: order._id,
           task_id: order.task_id,
@@ -75,9 +76,9 @@ const AssignedBreakdown: React.FC = () => {
       <th className="p-2 border-b border-blue-gray-50 min-w-[180px]">
         <div className="font-semibold text-sm">Assigned Technicians</div>
       </th>
-      <th className="p-2 border-b border-blue-gray-50 min-w-[200px]">
+      {/* <th className="p-2 border-b border-blue-gray-50 min-w-[200px]">
         <div className="font-semibold text-sm">Issue Reported</div>
-      </th>
+      </th> */}
       <th className="p-2 border-b border-blue-gray-50 min-w-[120px]">
         <div className="font-semibold text-sm">Status</div>
       </th>
@@ -104,7 +105,7 @@ const AssignedBreakdown: React.FC = () => {
       backendData.map((order) => (
         <tr key={order._id} className="hover:bg-gray-50">
           <td className="p-2 border-b border-blue-gray-50 text-sm">{order.task_id || "N/A"}</td>
-          <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">{order.contactPerson || "N/A"}</td>
+          <td className="p-2 border-b border-blue-gray-50 text-sm">{order.contactPerson || "N/A"}</td>
           <td className="p-2 border-b border-blue-gray-50 text-sm">{order.customerDetails || "N/A"}</td>
           <td className="p-2 border-b border-blue-gray-50 text-sm">
             {order.assignedTechnicians?.length > 0 ? (
@@ -119,7 +120,7 @@ const AssignedBreakdown: React.FC = () => {
               "No technicians assigned"
             )}
           </td>
-          <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">{order.issueReported || "N/A"}</td>
+          {/* <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">{order.issueReported || "N/A"}</td> */}
           <td className="p-2 border-b border-blue-gray-50 text-sm">
             <span className={`px-5 py-2 rounded-full text-xs uppercase ${
               order.status === 'open' ? 'bg-red-100 text-red-800':
@@ -149,4 +150,4 @@ const AssignedBreakdown: React.FC = () => {
   );
 };
 
-export default AssignedBreakdown;
+export default AssignedSetup;

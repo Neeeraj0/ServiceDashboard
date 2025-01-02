@@ -25,11 +25,18 @@ export default function ReAssignTask({
   const [selectedTechnicians, setSelectedTechnicians] = useState<Technician[]>([]); // Track selected technicians
   useEffect(() => {
     const fetchTechnicians = async () => {
-      try {
-        const response = await axios.get(`http://35.154.208.29:8080/api/technicians/getTechnicians`);
-        setTechnicians(response.data); 
-      } catch (error) {
-        console.error("Error fetching technicians:", error);
+      const cachedTechnicians = JSON.parse(localStorage.getItem("technicians") || "[]");
+      setTechnicians(cachedTechnicians); // Serve cached data immediately
+      
+      if(!technicians){
+        try {
+          const response = await axios.get(`http://35.154.208.29:8080/api/technicians/getTechnicians`);
+          localStorage.setItem("technicians", JSON.stringify(response.data)); // Update cache
+          setTechnicians(response.data); // Update with fresh data
+        } catch (error) {
+          console.error("Error fetching technicians:", error);
+          toast.error("Failed to load technicians");
+        }
       }
     };
     fetchTechnicians();

@@ -1,9 +1,11 @@
+"use client"
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import PipingAssignTask from '../Dialogs/PipingAssignTask';
 import MoveToInstallation from '../Dialogs/MoveToInstallation';
-import './module.style.css'
-import SiteSurveyForm from './SiteSurveyForm/SiteSurveyForm';
+import AssignInstallation from '../Dialogs/AssignInstallation';
+import AssignSetup from '../Dialogs/AssignSetup';
 
 interface PreorderResponse {
   customer: {
@@ -62,23 +64,58 @@ interface SiteSurveyDetail {
   PreOrderId: string;
 }
 
-const OpenSiteSurvey = () => {
+// Updated interface to match the new data structure
+interface InstallationTask {
+  _id: string;
+  title: string;
+  description: string;
+  status: string;
+  taskType: string;
+  task_id: string;
+  client_name: string;
+  client_number: string;
+  address: { location: string }[];
+  ac_units: {
+    type: string;
+    capacity: string;
+    quantity: number;
+    model: string;
+    orderId: string;
+  }[];
+  servicingDate: string;
+  assignedDate: string;
+  quantity: number;
+  contactPerson: {
+    name: string;
+    phone_number: string;
+  };
+  assignedTechnicians: string[];
+}
+
+const OpenSetup = () => {
   let [preorderData, setPreorderData] = useState<PreorderResponse[]>([]);
   const [siteSurveyDetails, setSiteSurveyDetails] = useState<SiteSurveyDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<PreorderResponse | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  let [installationTasks, setInstallationTasks] = useState<InstallationTask[]>([]);
+  
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; 
 
   useEffect(() => {
     const fetchPreorderData = async () => {
       try {
-        const res = await axios.get('http://13.203.74.27:5000/api/preOrder/getall/preorders');
+        const res1 = await axios.get('http://13.203.74.27:5000/api/preOrder/getall/preorders');
         // const res = await axios.get('http://13.201.4.68:8080/api/preOrder/getall/preorders');
         // const res = await axios.get('https://salestrackbackend.circolife.vip/api/preOrder/getall/preorders');
-        setPreorderData(res.data);
+        const res2 = await axios.get("http://35.154.208.29:8080/api/setup");
+        const filteredTasks = res1.data.filter((task1: any) => 
+          !res2.data.some((task2: any) => task1._id === task2.preOrderId)
+        );
+        setPreorderData(filteredTasks);
       } catch (err: any) {
         console.error("Error fetching preorder data:", err);
         setError(err.message);
@@ -86,27 +123,11 @@ const OpenSiteSurvey = () => {
         setLoading(false);
       }
     };
-
-    const fetchSiteSurveyDetails = async () => {
-      try {
-        const res = await axios.get('http://35.154.208.29:8080/api/SiteSurveyDetails/preOrders/piping');
-        setSiteSurveyDetails(res.data);
-      } catch (err: any) {
-        console.error("Error fetching site survey details:", err);
-        setError(err.message);
-      }
-    };
-
     fetchPreorderData();
-    fetchSiteSurveyDetails();
   }, []);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>No Records found: {error}</div>;
-
-   preorderData = preorderData.filter(order => 
-    !siteSurveyDetails.some(detail => detail.PreOrderId === order._id)
-  );
 
 
   const modelToTonnage = {
@@ -145,12 +166,33 @@ const OpenSiteSurvey = () => {
     setSelectedOrder(null);
   };
 
+  const handleTaskAssigned = (id: string) => {
+    setRemovingId(id); // Start fade-out animation
+
+    console.log("inside the handle task assigned function", id);
+    setTimeout(() => {
+      setPreorderData((prevData) => prevData.filter((task) => task._id !== id));
+      setRemovingId(null); 
+    }, 300); // Match animation duration
+  };
+
+  preorderData = preorderData.filter((order) => order.orderingStatus);
+
   // Calculate the current orders to display
   const indexOfLastOrder = currentPage * itemsPerPage;
   const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
   const currentOrders = preorderData.slice(indexOfFirstOrder, indexOfLastOrder);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
+  const transformAcDetailsToAcUnits = (acDetails: PreorderResponse['AcDetails']) =>
+    acDetails.map((ac) => ({
+      type: ac.ac_type,
+      capacity: ac.model, // Assuming 'model' is equivalent to 'capacity'
+      quantity: ac.quantity,
+      model: "",
+      orderId: ac?._id,
+    }));
 
   return (
     <div>
@@ -162,7 +204,7 @@ const OpenSiteSurvey = () => {
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer Details</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">AC Details</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer Address</th>
-            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm max-w-40">Date of Site Survey</th>
+            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm max-w-40">Date of Installation</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Action</th>
           </tr>
         </thead>
@@ -174,16 +216,13 @@ const OpenSiteSurvey = () => {
           ) : (
             currentOrders.map((order, index) => {
               const serialNumber =  indexOfFirstOrder + index + 1; // Calculate serial number
-              const acUnits = order.AcDetails.map(ac => ({
-                type: ac.ac_type,
-                model: ac.model,
-                quantity: ac.quantity
-              }));
+              const acUnits = transformAcDetailsToAcUnits(order.AcDetails);
+
 
               const address = `${order.customer_shipping_address.address_line1}, ${order.customer_shipping_address.address_line2 || ''}, ${order.customer_shipping_address.city}, ${order.customer_shipping_address.state}, ${order.customer_shipping_address.pincode}`;
 
               return (
-                <tr key={order._id}>
+                <tr key={order._id} className={removingId === order._id ? "fade-out" : ""}>
                   {/* <td className="p-2 border-b border-blue-gray-50 text-sm">{order.customer.customer_id}</td>
                    */}
                   <td className="p-2 border-b border-blue-gray-50 text-sm">{serialNumber}</td>
@@ -214,12 +253,17 @@ const OpenSiteSurvey = () => {
                     )}
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm relative dropdown-container">
-                    <button 
-                      onClick={() => openModal(order)}
-                      className="text-red-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-                    >
-                      Mark as Completed
-                    </button>
+                    <AssignSetup
+                                          preOrderId={order._id}
+                                          clientName={order.customer.name}
+                                          clientNumber={order.customer.mobile}
+                                          description={"Setup Installation"}
+                                          addressDisplay={order.customer_shipping_address.address_line1 + order.customer_shipping_address.address_line2}
+                                          ac_units={acUnits}
+                                          contactNumber={order?.customer_shipping_address?.contactNumber}
+                                          contactName={order?.customer_shipping_address?.contactPerson}
+                                          onTaskAssigned={handleTaskAssigned} 
+                      />
                   </td>
                 </tr>
               );
@@ -253,12 +297,8 @@ const OpenSiteSurvey = () => {
           Next
         </button>
       </div>
-
-      {isModalOpen && (
-        <SiteSurveyForm closeModal={closeModal} orderData={selectedOrder} />
-      )}
     </div>
   );
 };
 
-export default OpenSiteSurvey;
+export default OpenSetup;

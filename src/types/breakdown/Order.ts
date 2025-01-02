@@ -9,6 +9,7 @@ export type Order = {
     contactnumber: string;
     summery: string;
     subject: string;
+    status: boolean,
     customerComplaint: string,
     TimeStamp: string;
     queryStatus: string;

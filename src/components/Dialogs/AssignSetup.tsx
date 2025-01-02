@@ -1,10 +1,17 @@
 import * as Dialog from "@radix-ui/react-dialog";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
-import { ACUnit } from "@/types/breakdown/Order";
 import toast from "react-hot-toast";
-import React from "react";
+import TimePicker from "../TimePicker/TimePicker";
 import '../BreakdownCalls/module.style.css';
+
+interface ACUnit {
+  type: string;
+  capacity: string;
+  quantity: number;
+  model: string;
+  orderId: string; // Make sure this matches the property you are using
+}
 
 interface Technician {
   name: string;
@@ -12,59 +19,43 @@ interface Technician {
 }
 
 interface AssignTaskProps {
-  orderId: string;
+  preOrderId: string;
   clientName: string;
   clientNumber: string;
   description: string;
-  complaintRaised: string;
   addressDisplay: string;
-  customerComplaint: string;
   ac_units: ACUnit[];
+  contactNumber: string;
+  contactName: string;
   onTaskAssigned: (id: string) => void; // Callback prop
 }
 
-// Cache for fetched technicians to avoid repeated API calls
-let techniciansCache: Technician[] | null = null;
+interface SiteSurveyDetail {
+  _id: string;
+  PreOrderId: string;
+}
 
-export default React.memo(function AssignTask({
-  orderId,
+export default function AssignSetup({
+  preOrderId,
   clientName,
   clientNumber,
-  description,
-  complaintRaised,
   addressDisplay,
-  customerComplaint,
   ac_units,
+  contactNumber,
+  contactName,
   onTaskAssigned
 }: AssignTaskProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [siteSurveyDetails, setSiteSurveyDetails] = useState<SiteSurveyDetail[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [technicianName, setTechnicianName] = useState("");
   const [servicingDate, setServicingDate] = useState("");
   const [servicingTime, setServicingTime] = useState("");
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [filteredTechnicians, setFilteredTechnicians] = useState<Technician[]>([]);
-  const [selectedTechnicians, setSelectedTechnicians] = useState<Technician[]>([]);
-  const [isAnimating, setIsAnimating] = useState(false);
-
-  // // Fetch technicians with caching
-  // useEffect(() => {
-  //   const fetchTechnicians = async () => {
-  //     if (techniciansCache) {
-  //       setTechnicians(techniciansCache);
-  //     } else {
-  //       try {
-  //         const response = await axios.get(`http://35.154.208.29:8080/api/technicians/getTechnicians`);
-  //         techniciansCache = response.data;
-  //         setTechnicians(response.data);
-  //       } catch (error) {
-  //         console.error("Error fetching technicians:", error);
-  //         toast.error("Failed to load technicians");
-  //       }
-  //     }
-  //   };
-  //   fetchTechnicians();
-  // }, []);
-
+  const [selectedTechnicians, setSelectedTechnicians] = useState<Technician[]>([]); // Track selected technicians
+    const [isAnimating, setIsAnimating] = useState(false);
+  console.log(ac_units);
   useEffect(() => {
     const fetchTechnicians = async () => {
       const cachedTechnicians = JSON.parse(localStorage.getItem("technicians") || "[]");
@@ -83,20 +74,6 @@ export default React.memo(function AssignTask({
     };
     fetchTechnicians();
   }, []);
-  
-  const refreshTechnicians = async () => {
-    try {
-      const response = await axios.get(`http://35.154.208.29:8080/api/technicians/getTechnicians`);
-      localStorage.setItem("technicians", JSON.stringify(response.data));
-      setTechnicians(response.data);
-      toast.success("Technicians list updated");
-    } catch (error) {
-      console.error("Error refreshing technicians:", error);
-      toast.error("Failed to refresh technicians");
-    }
-  };
-  
-
 
   const handleTechnicianInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
@@ -120,12 +97,11 @@ export default React.memo(function AssignTask({
   };
 
   const handleRemoveTechnician = (techId: string) => {
-    setSelectedTechnicians((prev) =>
-      prev.filter((tech) => tech.technician_id !== techId)
-    );
+    setSelectedTechnicians((prev) => prev.filter((tech) => tech.technician_id !== techId));
   };
 
   function mergeDateTimeToISO(servicingDate: string, servicingTime: string) {
+    console.log(servicingDate, servicingTime);
     if (!servicingDate || !servicingTime) {
       console.error(
         "Invalid input: servicingDate and servicingTime are required"
@@ -164,128 +140,7 @@ export default React.memo(function AssignTask({
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
   }
 
-  const transformedACUnit =
-  ac_units && ac_units.length > 0
-    ? ac_units.map((unit) => {
-        let type, capacity;
-        console.log("units", unit);
-
-        // If model is a standard ton size, set type to Split AC
-        if (
-          unit?.model === "1 Ton" ||
-          unit?.model === "1.5 Ton" ||
-          unit?.model === "2 Ton" ||
-          unit?.model === "3 Ton"
-        ) {
-          type = "Split AC";
-          capacity =
-            unit.model === "1 Ton"
-              ? "S10"
-              : unit.model === "1.5 Ton"
-              ? "S15"
-              : unit.model === "2 Ton"
-              ? "S20"
-              : unit.model === "3 Ton"
-              ? "S30"
-              : unit.model;
-        } 
-        // Handle existing S or C prefixed models
-        else if (unit?.model.startsWith("S")) {
-          type = "Split AC";
-          capacity =
-            unit.model === "S10"
-              ? "S10"
-              : unit.model === "S15"
-              ? "S15"
-              : unit.model === "S20"
-              ? "S20"
-              : unit.model;
-        } 
-        else if (unit?.model.startsWith("C")) {
-          type = "Cassette AC";
-          capacity =
-            unit.model === "C10"
-              ? "C10"
-              : unit.model === "C15"
-              ? "C15"
-              : unit.model === "C20"
-              ? "C20"
-              : unit.model === "C30"
-              ? "C30"
-              : unit.model;
-        } 
-        else {
-          // Fallback for any other model
-          type = "Split AC";
-          capacity = unit?.model;
-        }
-
-        return {
-          type,
-          capacity,
-          quantity: unit?.quantity,
-        };
-      })
-    : [
-        {
-          type: "Split AC",
-          capacity: "S10",
-          quantity: 1,
-        },
-      ];
-
-  const handleAssignTask = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsAnimating(true);
-    const timeIn24Hour = convertTo24HourFormat(servicingTime);
-    const servicingDateTime = mergeDateTimeToISO(servicingDate, timeIn24Hour);
-    if (!servicingDateTime) {
-      alert("Invalid servicing date or time.");
-      return;
-    }
-
-    const taskDataCreation = {
-      _id: orderId,
-      title: "Breakdown",
-      customerComplaint,
-      description,
-      servicingDate: servicingDateTime,
-      status: "open",
-      address: [{ location: addressDisplay }],
-      client_number: clientNumber,
-      client_name: clientName,
-      ac_units: transformedACUnit,
-      taskType: "breakdown",
-      complaintRaised,
-      assignedTechnicians: selectedTechnicians.map((tech) => tech.name),
-    };
-
-    try {
-      await axios.post(`http://35.154.208.29:8080/api/tasks`, taskDataCreation, {
-        headers: { "Content-Type": "application/json" },
-      });
-
-      // Update query status
-      await axios.put(
-        `http://devappapi.circolives.in/api/query/changeQueryStatus/${orderId}`,
-        { queryStatus: "assign" },
-        { headers: { "Content-Type": "application/json" } }
-      );
-
-      toast.success("Task assigned successfully");
-      setTimeout(() => {
-        onTaskAssigned(orderId); // Notify parent component
-        setIsOpen(false); // Close modal
-        setIsAnimating(false)
-      }, 5000); 
-    } catch (error) {
-      console.error("Error assigning task:", error);
-      toast.error("Failed to assign task");
-    }
-  };
-
-  // Generate time options for the dropdown
-  const generateTimeOptions = (interval: number) => {
+   const generateTimeOptions = (interval: number) => {
     const options = [];
     const startTime = new Date();
     startTime.setHours(0, 0, 0, 0);
@@ -302,8 +157,159 @@ export default React.memo(function AssignTask({
     return options;
   };
 
-  const timeOptions = generateTimeOptions(30); // 30-minute intervals
+  const timeOptions = generateTimeOptions(30); 
 
+  const transformedACUnits = ac_units;
+  const totalQuantity = transformedACUnits?.reduce((total, ac) => total + (ac.quantity || 1), 0);
+
+  const handleAssignTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsAnimating(true)
+    const timeIn24Hour = convertTo24HourFormat(servicingTime);
+    const servicingDateTime = mergeDateTimeToISO(servicingDate, timeIn24Hour);
+    if (!servicingDateTime) {
+      alert("Invalid servicing date or time.");
+      return;
+    }
+
+    const orderResponse = await axios.get(`http://13.203.74.27:5000/api/preOrder/orders/detail/${preOrderId}`);
+    const orders = orderResponse.data;
+
+    // const orderMap: { [key: string]: string[] } = {}; // key: model, value: array of order IDs
+    // const usedOrderIds = new Set();
+
+    // orders.forEach((order: any) => {
+    //     const model = order.model; 
+    //     if (!orderMap[model]) {
+    //         orderMap[model] = [];
+    //     }
+    //     orderMap[model].push(order._id);
+    // });
+
+    // const transformedAC = ac_units.flatMap((unit) => {
+    //     const modelCapacity = unit.capacity === "10" ? "1 Ton" : unit.capacity === "15" ? "1.5 Ton" : unit.capacity === "20" ? "2 Ton" : unit.capacity;
+    //     const orderIds = orderMap[unit.capacity] || []; 
+        
+    //     return Array.from({ length: unit.quantity }, (_, i) => {
+    //         console.log(unit.type);
+    //         const deviceName = unit.type === "Split AC" 
+    //             ? `S${unit.capacity}-${i + 1}` 
+    //             : unit.type === "Cassette AC" 
+    //             ? `C${unit.capacity}-${i + 1}` 
+    //             : `${unit.capacity}-${i + 1}`; // Default case if the type is neither Split nor Cassette
+    
+    //         return {
+    //             type: unit.type + " AC",
+    //             capacity: modelCapacity,
+    //             quantity: 1,
+    //             deviceName: deviceName,  // Correct dynamic device name
+    //             orderId: orderIds[i] || null
+    //         };
+    //     });
+    // });
+
+    const orderMap: { [key: string]: string[] } = {}; // key: model, value: array of order IDs
+    const usedOrderIds = new Set<string>(); // Track used order IDs
+    
+    orders.forEach((order: any) => {
+      const model = order.model; // Assuming 'model' is the key to match
+      if (!orderMap[model]) {
+        orderMap[model] = [];
+      }
+      orderMap[model].push(order._id);
+    });
+
+    const transformedAC = ac_units.flatMap((unit) => {
+      const modelCapacity =
+        unit.capacity === "10"
+          ? "1 Ton"
+          : unit.capacity === "15"
+          ? "1.5 Ton"
+          : unit.capacity === "20"
+          ? "2 Ton"
+          : unit.capacity;
+      const orderIds = orderMap[unit.capacity] || []; // Get all order IDs for this capacity
+    
+      return Array.from({ length: unit.quantity }, (_, i) => {
+        // Find the next unused orderId that matches the model
+        let orderId = null;
+        for (let j = 0; j < orderIds.length; j++) {
+          if (!usedOrderIds.has(orderIds[j])) {
+            orderId = orderIds[j];
+            usedOrderIds.add(orderId); // Mark this orderId as used
+            break;
+          }
+        }
+    
+        // Dynamically generate the device name
+        const deviceName =
+          unit.type === "Split AC"
+            ? `S${unit.capacity}-${i + 1}`
+            : unit.type === "Cassette AC"
+            ? `C${unit.capacity}-${i + 1}`
+            : `${unit.capacity}-${i + 1}`; // Default case if the type is neither Split nor Cassette
+    
+        return {
+          type: unit.type + " AC",
+          capacity: modelCapacity,
+          quantity: 1,
+          deviceName: deviceName, // Correct dynamic device name
+          orderId: orderId, // Assign the unique orderId or null if none are left
+        };
+      });
+    });
+
+    console.log('ac display', transformedACUnits);
+
+    const taskDataCreation = {
+      title: "Setup Installation Task",
+      // customerComplaint: customerComplaint,
+      description: "Setup task",
+      servicingDate: servicingDateTime,
+      status: "open",
+      address: [{ location: addressDisplay }],
+      client_number: clientNumber,
+      client_name: clientName,
+      ac_units: transformedAC,
+      quantity: totalQuantity,
+      taskType: "setup",
+      approvalPending: false,
+      preOrderId: preOrderId,
+      assignedTechnicians: selectedTechnicians.map((tech) => tech.name), // Send selected technician names
+      contactPerson: {
+        name: contactName,
+        phone_number: contactNumber
+      }
+    };
+
+    console.log(taskDataCreation);
+
+    try {
+      await axios.post(`http://35.154.208.29:8080/api/tasks`, taskDataCreation, {
+      //  await axios.post(`http://localhost:8000/api/tasks`, taskDataCreation, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then((res) => {
+          setTimeout(() => {
+            onTaskAssigned(preOrderId); // Notify parent component
+            toast.success("Setup Task assigned successfully");
+            setIsOpen(false); // Close modal
+            setIsAnimating(false)
+          }, 5000); 
+        })
+        .catch((err) => {
+          console.log(err);
+          toast.error("Error occured while assigning Task!", err);
+        });
+
+      // toast.success("Task assigned successfully");
+    } catch (error) {
+      console.error("Error assigning task:", error);
+      alert("Failed to assign task");
+    }
+  };
 
   return (
     <div className="flex w-full font-sans">
@@ -311,7 +317,7 @@ export default React.memo(function AssignTask({
         <Dialog.Trigger asChild>
           <button
             onClick={() => setIsOpen(true)}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded hover:bg-blue-600"
+            className="px-4 py-2 text-sm font-medium text-white hover:bg-blue-800  w-full border border-1 bg-blue-600 rounded-lg border-gray-200 text-center"
           >
             Assign Task
           </button>
@@ -319,8 +325,10 @@ export default React.memo(function AssignTask({
 
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/40" />
-          <Dialog.Content className="flex items-center justify-center fixed inset-0 w-full h-full bg-transparent">
-            <div className="w-[35%] h-auto bg-white rounded-lg p-8 shadow-lg relative">
+          <Dialog.Content className="flex items-center justify-center fixed inset-0 w-full h-full bg-transparent"   
+          onPointerDown={(e) => e.stopPropagation()} // Prevent click propagation
+          >
+            <div className="w-[35%] h-auto bg-white rounded-lg p-8 shadow-lg relative" onClick={(e) => e.stopPropagation()}>
               <Dialog.Title className="text-center font-sans text-lg font-medium">
                 Assign Task
               </Dialog.Title>
@@ -339,7 +347,7 @@ export default React.memo(function AssignTask({
 
               <form onSubmit={handleAssignTask} className="mt-4">
                 <div className="mb-6 relative">
-                  <label className="block text-sm text-gray-700 mb-1">
+                  <label className="block font-sans text-[14px] text-gray-700 mb-1">
                     Technician Name
                   </label>
                   <input
@@ -377,28 +385,28 @@ export default React.memo(function AssignTask({
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm text-gray-700 mb-1">
+                  <label className="block font-sans text-[14px] text-gray-700 mb-1">
                     Assigning Date
                   </label>
                   <input
                     type="date"
-                    className="form-control w-full p-2 border rounded"
+                    className="date-input rounded-md border w-full p-2"
                     value={servicingDate}
                     onChange={(e) => setServicingDate(e.target.value)}
                   />
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm text-gray-700 mb-1">
+                  <label className="block font-sans text-[14px] text-gray-700 mb-1">
                     Assigning Time
                   </label>
                   {/* <input
                     type="time"
-                    className="form-control w-full p-2 border rounded"
+                    className="time-input rounded-md border w-full p-2"
                     value={servicingTime}
                     onChange={(e) => setServicingTime(e.target.value)}
                   /> */}
-                  <select
+                   <select
                     className="form-control w-full p-2 border rounded"
                     value={servicingTime}
                     onChange={(e) => setServicingTime(e.target.value)}
@@ -412,25 +420,22 @@ export default React.memo(function AssignTask({
                   </select>
                 </div>
 
-                <button onClick={refreshTechnicians} className="text-blue-500 hover:underline w-fit">
-                  Refresh Technicians
-                </button>
-
                 {/* <div className="flex justify-center mt-8">
                   <button
                     type="submit"
-                    className={`bg-purple-600 text-white py-2 px-8 rounded text-sm hover:bg-purple-700 transition-transform ${isAnimating ? "order animate" : ""}`}
+                    className="bg-purple-600 text-white py-2 px-8 rounded text-[16px] hover:bg-purple-700"
                   >
                     Submit
                   </button>
                 </div> */}
+
                 <div className="flex justify-center mt-8">
                   <button
                     type="submit"
                     className={`order ${isAnimating ? "animate" : ""}`}
                   >
                     <span className="default">Submit</span>
-                    <span className="success">Task Assigned ✅</span>
+                    <span className="success">Installation will be done soon ✅</span>
                     <svg viewBox="0 0 12 10">
                       <polyline points="1.5 6 4.5 9 10.5 1" />
                     </svg>
@@ -453,4 +458,4 @@ export default React.memo(function AssignTask({
       </Dialog.Root>
     </div>
   );
-});
+}

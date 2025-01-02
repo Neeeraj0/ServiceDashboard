@@ -58,6 +58,7 @@ const ApprovalPending = () => {
     const fetchPipingData = async () => {
       try {
         const res = await axios.get('http://35.154.208.29:8080/api/piping/getApprovalPending');
+        // const res = await axios.get('http://localhost:8000/api/piping/getApprovalPending');
         setPipingData(res.data);
       } catch (err: any) {
         console.error("Error fetching piping data:", err);
@@ -123,7 +124,7 @@ const ApprovalPending = () => {
                       ac_units={task.ac_units}
                     /> */}
                     {/* <ReAssignTask orderId={task._id}/> */}
-                    <PipingApprove orderId={task.task_id}/>
+                    <PipingApprove orderId={task.task_id} taskDetails={task}/>
                   </td>
                 </tr>
               );

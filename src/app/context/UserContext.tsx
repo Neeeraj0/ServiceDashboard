@@ -7,9 +7,7 @@ interface UserContextType {
   userData: UserData;
   setUserData: (data: Partial<UserData> | ((prevUserData: UserData) => Partial<UserData>)) => void;
 }
-
 const UserContext = createContext<UserContextType | undefined>(undefined);
-
 export function UserProvider({ children }: { children: ReactNode }) {
   const [userData, setUserData] = useState<UserData>({});
 

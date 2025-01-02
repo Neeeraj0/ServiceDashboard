@@ -55,19 +55,33 @@ interface PreorderResponse {
   paymentStatusCustomPayment: string;
 }
 
+
 interface PreorderWithStatus extends PreorderResponse {
   status: "Order Created" | "No Order Created";
   orderId?: string; // Add optional orderId field
 }
 
+interface PreorderWithDetailedStatus extends PreorderWithStatus {
+  orderCount?: number;
+  totalAcUnits?: number;
+}
+
+interface PipingResponse {
+  _id: string;
+  client_name: string;
+  client_number: string;
+  address: { location: string }[];
+}
+
 const OpenPiping = () => {
-  const [preorderData, setPreorderData] = useState<PreorderWithStatus[]>([]);
+  const [preorderData, setPreorderData] = useState<PreorderWithDetailedStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null); // Track which dropdown is open
   const [isInstallationDialogOpen, setIsInstallationDialogOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [currentPreOrderId, setCurrentPreOrderId] = useState<string | null>(null);
+  const [orderCount, setOrderCount] = useState<PreorderWithDetailedStatus[]>([]);
 
   useEffect(() => {
     const fetchPreorderData = async () => {
@@ -75,7 +89,7 @@ const OpenPiping = () => {
         // Fetch preorders from the primary API
         const res = await axios.get("http://35.154.208.29:8080/api/SiteSurveyDetails/preOrders/piping");
         // const res = await axios.get("http://localhost:8000/api/SiteSurveyDetails/preOrders/piping");
-
+        
         if (res.status === 404) {
           // Handle 404 case, display custom message for 'No records found for piping installation'
           setError('No preorders available');
@@ -85,24 +99,45 @@ const OpenPiping = () => {
 
         const preorders: PreorderResponse[] = res.data;
   
-        // Fetch statuses from the secondary API for each PreOrderId
-        const updatedPreorders: PreorderWithStatus[] = await Promise.all(
-          preorders.map(async (preorder): Promise<PreorderWithStatus> => {
-            const statusRes = await axios.get(
-              `http://13.201.4.68:8080/api/preOrder/orders/detail/${preorder.PreOrderId}`
-              // `http://3.110.27.89:5000/api/preOrder/orders/detail/${preorder.PreOrderId}`
-            );
-            const isOrderCreated = Array.isArray(statusRes.data) && statusRes.data.length > 0;
-            const orderId = isOrderCreated ? statusRes.data[0]._id : undefined;
-            return {
-              ...preorder,
-              status: isOrderCreated ? "Order Created" : "No Order Created",
-              orderId,
-            };
+        const updatedPreorders: PreorderWithDetailedStatus[] = await Promise.all(
+          preorders.map(async (preorder): Promise<PreorderWithDetailedStatus> => {
+            const totalAcUnits = preorder.AcDetails.reduce((sum, ac) => sum + ac.quantity, 0);
+            
+            try {
+              const statusRes = await axios.get(
+                `http://13.203.74.27:5000/api/preOrder/orders/detail/${preorder.PreOrderId}`
+              );
+              
+              const isOrderCreated = Array.isArray(statusRes.data) && statusRes.data.length > 0;
+              const orderCount = isOrderCreated ? statusRes.data.length : 0;
+              
+              return {
+                ...preorder,
+                status: isOrderCreated ? "Order Created" : "No Order Created",
+                orderCount,
+                totalAcUnits,
+                orderId: isOrderCreated ? statusRes.data[0]._id : undefined,
+              };
+            } catch (err) {
+              return {
+                ...preorder,
+                status: "No Order Created",
+                orderCount: 0,
+                totalAcUnits,
+              };
+            }
           })
         );
-  
-        setPreorderData(updatedPreorders); // Now this will not throw a type error
+        
+       // Fetch piping data (tasks)
+      const pipingRes = await axios.get("http://35.154.208.29:8080/api/piping");
+      const piping: PipingResponse[] = pipingRes.data;
+
+      // Filter out preorders where PreOrderId matches _id in piping
+      const filteredPreorders = updatedPreorders.filter(
+        (preorder) => !piping.some((pipe) => pipe._id === preorder.PreOrderId)
+      );
+        setPreorderData(filteredPreorders);
       } catch (err: any) {
         console.error("Error fetching preorder data:", err);
          // If the error is from the backend with a custom message (e.g., "No records found")
@@ -159,7 +194,8 @@ const OpenPiping = () => {
       }
   
       const statusRes = await axios.get(
-        `http://13.201.4.68:8080/api/preOrder/orders/detail/${preOrderId}`
+        // `http://13.201.4.68:8080/api/preOrder/orders/detail/${preOrderId}`
+        `http://13.203.74.27:5000/api/preOrder/orders/detail/${preOrderId}`
       );
   
       if (!Array.isArray(statusRes.data) || statusRes.data.length === 0) {
@@ -172,6 +208,7 @@ const OpenPiping = () => {
       // Iterate over each order and send the installation payload
       for (const orderData of orders) {
         const installationPayload = {
+          _id: orderData._id,
           userid: orderData.userid,
           preorderid: preOrderId,
           Fullname: orderData.Fullname,
@@ -200,15 +237,15 @@ const OpenPiping = () => {
           shipping_address: orderDetails.customer_shipping_address[0],
         };
   
-        await axios.post(
-          // "http://35.154.208.29:8080/api/installation/saveInstallationDetails",
-          "http://localhost:8000/api/installation/saveInstallationDetails",
-          installationPayload
-        );
+        // await axios.post(
+        //   "http://35.154.208.29:8080/api/installation/saveInstallationDetails",
+        //   // "http://localhost:8000/api/installation/saveInstallationDetails",
+        //   installationPayload
+        // );
       }
   
-      // await axios.put(`http://35.154.208.29:8080/api/piping/moveToInstallation/${preOrderId}`);
-      await axios.put(`http://localhost:8000/api/piping/moveToInstallation/${preOrderId}`);
+      await axios.put(`http://35.154.208.29:8080/api/piping/moveToInstallation/${preOrderId}`);
+      // await axios.put(`http://localhost:8000/api/piping/moveToInstallation/${preOrderId}`);
 
       toast.success("Successfully moved to installation for all orders!");
     } catch (error) {
@@ -246,7 +283,7 @@ const OpenPiping = () => {
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer ID</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Contact Person</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Order Status</th>
-            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Payment Status</th>
+            {/* <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Payment Status</th> */}
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer Details</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer Address</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">PreOrder Date</th>
@@ -279,10 +316,39 @@ const OpenPiping = () => {
                 ? `${order.customer_shipping_address[0].address_line1}, ${order.customer_shipping_address[0].address_line2 || ''}, ${order.customer_shipping_address[0].city}, ${order.customer_shipping_address[0].state}, ${order.customer_shipping_address[0].pincode}`
                 : 'Address not available';
 
-              const paymentStatusColor = Number(order.PaymentStatus) < Number(order.materialTotalAmount)  ? "bg-green-200 text-green-800" : "bg-red-100 text-red-800";
-              const paymentStatusText = Number(order.PaymentStatus) < Number(order.materialTotalAmount) ? "Payment Completed" : "Payment Pending";
-
-
+                const renderOrderStatus = () => {
+                  if (order.status === "No Order Created") {
+                    return (
+                      <span className="inline-block px-2 py-1 font-sans text-xs font-bold rounded shadow-md text-red-700">
+                        No Order Created
+                      </span>
+                    );
+                  }
+          
+                  // If we have both order count and total AC units
+                  if (order.orderCount !== undefined && order.totalAcUnits !== undefined) {
+                    if (order.orderCount < order.totalAcUnits) {
+                      return (
+                        <span className="inline-block px-2 py-1 font-sans text-xs font-bold rounded shadow-md text-yellow-700">
+                          {`${order.orderCount}/${order.totalAcUnits} Orders Created`}
+                        </span>
+                      );
+                    }
+          
+                    if (order.orderCount === order.totalAcUnits) {
+                      return (
+                        <span className="inline-block px-2 py-1 font-sans text-xs font-bold rounded shadow-md text-green-700">
+                          All Orders Created
+                        </span>
+                      );
+                    }
+                  }
+                  return (
+                    <span className="inline-block px-2 py-1 font-sans text-xs font-bold rounded shadow-md text-gray-700">
+                      Status Unknown
+                    </span>
+                  );
+                };
               return (
                 <tr key={order._id}>
                   <td className="p-2 border-b border-blue-gray-50 text-sm">{order.customer.customer_id}</td>
@@ -291,16 +357,13 @@ const OpenPiping = () => {
                     {order.customer_shipping_address[0]?.contactNumber || ''}
                   </td>
                   <td className={`p-2 border-b border-blue-gray-50 text-sm`}>
-                      <span className={`inline-block px-2 py-1 font-sans text-xs font-bold rounded shadow-md  ${order.status === "Order Created" ? "text-green-700" : 
-                    "text-red-700"}`}>
-                      {order.status}
-                    </span>
+                      {renderOrderStatus()}
                   </td>
-                  <td className="p-2 border-b border-blue-gray-50 text-sm">
+                  {/* <td className="p-2 border-b border-blue-gray-50 text-sm">
                     <span className={`inline-block px-2 py-1 font-sans text-xs font-bold rounded shadow-md ${paymentStatusColor}`}>
                       {paymentStatusText}
                     </span>
-                  </td>
+                  </td> */}
                   <td className="p-2 border-b border-blue-gray-50 text-sm">{order.customer.name}</td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm whitespace-normal w-40">
                     {address}
@@ -354,7 +417,7 @@ const OpenPiping = () => {
                         </ul>
                       </div>
                     )}
-                     {/* <MoveToInstallation 
+                     <MoveToInstallation 
                       isOpen={isInstallationDialogOpen}
                       onClose={() => {
                         setIsInstallationDialogOpen(false);
@@ -363,7 +426,7 @@ const OpenPiping = () => {
                       onConfirm={() => handleMoveToInstallation(order.PreOrderId)}
                       title="Are you sure you want to move this task to Installation?"
                       description={`Moving order ${order.customer.customer_id} to Installation`}
-                    /> */}
+                    />
                   </td>
                 </tr>
               );

@@ -21,6 +21,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/piping/open/page.jsx", "src/app/firebase/firebase.js", "src/app/firebase/firebase.js", "src/app/firebase/firebase.js"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/routine/assigned/page.jsx", "src/app/routine/overdue/page.jsx", "src/components/BreakdownCalls/OpenBreakdown.jsx", "src/app/breakdown/assigned/page.jsx"],
   "exclude": ["node_modules"]
 }

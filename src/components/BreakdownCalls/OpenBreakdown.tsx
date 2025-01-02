@@ -9,12 +9,14 @@ import "./module.style.css";
 import Papa from "papaparse";
 
 const OpenBreakdown = () => {
-  const [backendData, setBackendData] = useState<Order[]>([]);
+  let [backendData, setBackendData] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [shippingAddresses, setShippingAddresses] = useState<ShippingAddress[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // Number of items per page
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [showAnimation, setShowAnimation] = useState(false);
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -59,7 +61,6 @@ const OpenBreakdown = () => {
     return acUnits;
   };
 
-  // Fetch shipping addresses
   useEffect(() => {
     const fetchShippingAddresses = async () => {
       try {
@@ -113,6 +114,7 @@ const OpenBreakdown = () => {
   };
 
   const downloadCSV = () => {
+    setShowAnimation(true);
     // Transform data into a format suitable for CSV
     const csvData = backendData.map((order) => ({
       "Task ID": order._id,
@@ -131,17 +133,34 @@ const OpenBreakdown = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "complaints.csv";
-    link.style.display = "none";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    setTimeout(() => {
+      link.download = "complaints.csv";
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }, 2000)
+    // Hide animation after 5 seconds
+    setTimeout(() => {
+      setShowAnimation(false);
+    }, 5000);
   };
 
-  // Pagination logic
   const indexOfLastOrder = currentPage * itemsPerPage;
   const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
+  backendData =backendData.filter(
+    (order) => !order.queryStatus && order.status === true
+  );
   const currentOrders = backendData.slice(indexOfFirstOrder, indexOfLastOrder);
+
+  // Function to handle task removal
+  const handleTaskAssigned = (id: string) => {
+    setRemovingId(id); // Start fade-out animation
+    setTimeout(() => {
+      setBackendData((prevData) => prevData.filter((task) => task._id !== id));
+      setRemovingId(null); // Clear the `removingId` after removal
+    }, 300); // Match animation duration
+  };
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
@@ -150,6 +169,11 @@ const OpenBreakdown = () => {
 
   return (
     <div className="overflow-x-auto">
+      {showAnimation && (
+        <div className="animation-overlay">
+          <img src={'/images/illustration/Animation - 1734419092020.gif'} alt="Loading..." className="animation-gif" />
+        </div>
+      )}
       <div className="flex absolute justify-end w-full mt-[-2vh] lg:mt-[-5vh] ml-[-5vw]">
         <button
           onClick={downloadCSV}
@@ -188,7 +212,7 @@ const OpenBreakdown = () => {
                 : "N/A";
 
               return (
-                <tr key={order._id}>
+                <tr key={order._id} className={removingId === order._id ? "fade-out" : ""}>
                   <td className="p-2 border-b border-blue-gray-50 text-sm">{index + 1}</td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
                     {order.contactperson} <br /> {order.contactnumber}
@@ -218,6 +242,7 @@ const OpenBreakdown = () => {
                           ? transformOrderModels(order.orderModels as (string | number | null)[])
                           : (order.orderModels as ACUnit[])
                       }
+                      onTaskAssigned={handleTaskAssigned} 
                     />
                   </td>
                 </tr>

@@ -32,7 +32,7 @@ interface Payload {
   materialsdetails?: MaterialDetail[];
   Ac_totalAmount: number;
   material_totalAmount: number;
-  pending_amount: number;
+  // pending_amount: number;
   with_material: boolean;
 }
 
@@ -430,77 +430,87 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
           with_material: withMaterial,
           Ac_totalAmount: acTotalAmount,
           material_totalAmount: materialTotalAmount,
-          pending_amount: (acTotalAmount + materialTotalAmount) - orderData.paidamount,
+          // pending_amount: (acTotalAmount + materialTotalAmount) - orderData.paidamount,
         };
 
         console.log('payload', payload);
-    
+
+        
         if (withMaterial) {
           payload.materialsdetails = updatedMaterials;
         }
 
-        const formData1 = new FormData();
+        const putResponse = await axios.put(
+          `http://13.203.74.27:5000/api/preOrder/updatebydashboard/${orderData._id}`, 
+          payload
+        );
 
-        const payload1 = {
-          customer: {
-            customer_id: orderData.customer.customer_id,
-            name: orderData.customer.name,
-            email: orderData.customer.email,
-            mobile: orderData.customer.mobile,
-          },
-          customer_shipping_address: {
-            address_line1: orderData.customer_shipping_address.address_line1,
-            address_line2: orderData.customer_shipping_address.address_line2,
-            pincode: orderData.customer_shipping_address.pincode,
-            city: orderData.customer_shipping_address.city,
-            country: orderData.customer_shipping_address.country,
-            state: orderData.customer_shipping_address.state,
-            contactPerson: orderData.customer_shipping_address.contactPerson,
-            contactNumber: orderData.customer_shipping_address.contactNumber,
-          },
-          PaymentStatus: orderData.pending_amount,
-          materialTotalAmount: orderData.material_totalAmount,
-          OrderDate: new Date(orderData.preOrdertimestamp).toISOString(),
-          installationType: formData.installationType,
-          uninstallationNeeded: formData.uninstallationNeeded,
-          MCBAvailable: formData.MCBAvailable,
-          EartingAvailable: formData.EartingAvailable,
-          Fabrication: formData.Fabrication,
-          CoreCutting: formData.CoreCutting,
-          CarpentryWork: formData.CarpentryWork,
-          OptionToStoreMaterial: formData.OptionToStoreMaterial,
-          UnloadingFacality: formData.UnloadingFacality,
-          LadderAvailable: formData.LadderAvailable,
-          SafetyPrecautionNeeded: formData.SafetyPrecautionNeeded,
-          safetyPrecautionDetails: formData.safetyPrecautionDetails,
-          RatBiteChances: formData.RatBiteChances,
-          PreOrderId: orderData._id,
-          AcDetails: updatedAcDetails,
-          materialsdetails: withMaterial ? updatedMaterials : [],
-          with_material: withMaterial,
-        };
-        formData1.append('payload', JSON.stringify(payload1));
-        formData.attachments.forEach((file) => {
-          formData1.append('attachments', file);
-        });
-        const [response, response1] = await Promise.all([
-          axios.put(
-            // `${process.env.NEXT_PUBLIC_SALES}${orderData._id}/updatedetails`, 
-            `http://3.110.115.219:5000/api/preOrder/${orderData._id}/updatedetails`, 
-            // `http://13.201.4.68:8080/api/preOrder/${orderData._id}/updatedetails`, 
-            payload
-          ),
-          axios.post(
+        console.log("put response", putResponse);
+
+        if (putResponse.status === 200) {
+          // Prepare FormData for the POST request
+          const formData1 = new FormData();
+          const payload1 = {
+            customer: {
+              customer_id: orderData.customer.customer_id,
+              name: orderData.customer.name,
+              email: orderData.customer.email,
+              mobile: orderData.customer.mobile,
+            },
+            customer_shipping_address: {
+              address_line1: orderData.customer_shipping_address.address_line1,
+              address_line2: orderData.customer_shipping_address.address_line2,
+              pincode: orderData.customer_shipping_address.pincode,
+              city: orderData.customer_shipping_address.city,
+              country: orderData.customer_shipping_address.country,
+              state: orderData.customer_shipping_address.state,
+              contactPerson: orderData.customer_shipping_address.contactPerson,
+              contactNumber: orderData.customer_shipping_address.contactNumber,
+            },
+            PaymentStatus: putResponse.data.order.pending_amount,
+            materialTotalAmount: putResponse.data.order.material_totalAmount,
+            OrderDate: new Date(orderData.preOrdertimestamp).toISOString(),
+            installationType: formData.installationType,
+            uninstallationNeeded: formData.uninstallationNeeded,
+            MCBAvailable: formData.MCBAvailable,
+            EartingAvailable: formData.EartingAvailable,
+            Fabrication: formData.Fabrication,
+            CoreCutting: formData.CoreCutting,
+            CarpentryWork: formData.CarpentryWork,
+            OptionToStoreMaterial: formData.OptionToStoreMaterial,
+            UnloadingFacality: formData.UnloadingFacality,
+            LadderAvailable: formData.LadderAvailable,
+            SafetyPrecautionNeeded: formData.SafetyPrecautionNeeded,
+            safetyPrecautionDetails: formData.safetyPrecautionDetails,
+            RatBiteChances: formData.RatBiteChances,
+            PreOrderId: orderData._id,
+            AcDetails: updatedAcDetails,
+            materialsdetails: withMaterial ? updatedMaterials : [],
+            with_material: withMaterial,
+          };
+          
+          formData1.append('payload', JSON.stringify(payload1));
+          formData.attachments.forEach((file) => {
+            formData1.append('attachments', file);
+          });
+
+          const postResponse = await axios.post(
             'http://35.154.208.29:8080/api/SiteSurveyDetails/SiteSurveyDetails',
-            // 'http://localhost:8000/api/SiteSurveyDetails/SiteSurveyDetails',
             formData1,
             {
               headers: { 'Content-Type': 'multipart/form-data' },
             }
-          )
-        ]);
-        toast.success('Data, images, and PDF uploaded successfully!');
-        closeModal();
+          );
+    
+          if (postResponse.status === 200 || postResponse.status === 201) {
+            toast.success('Data, images, and PDF uploaded successfully!');
+            closeModal();
+          } else {
+            throw new Error('POST request failed');
+          }
+        } else {
+          throw new Error('PUT request failed');
+        }
       } catch (error: any) {
         console.error('Error updating data:', error);
         toast.error('Failed to update data!', error);
@@ -515,7 +525,6 @@ const SiteSurveyForm: React.FC<SiteSurveyFormProps>  = ({closeModal, orderData})
                 <button onClick={closeModal} className="bg-red-500 text-white font-semibold p-2 rounded-xl text-sm">Close</button>
             </div>
           <div className='max-h-[80vh] overflow-y-auto px-4'>
-          {/* AC Details Section */}
             <div className="mb-8">
               <h3 className="text-lg font-medium mb-4">AC Details</h3>
               <div className="grid grid-cols-2 gap-6">

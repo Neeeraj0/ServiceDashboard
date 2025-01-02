@@ -190,7 +190,7 @@ export default function Login() {
               </button>
 
               <p className="text-sm mt-8 text-center text-gray-800">
-                Don't have an account?
+                Don&apos;t have an account?
                 <a href="/register" className="text-blue-600 font-semibold hover:underline ml-1">
                   Register here
                 </a>

@@ -4,6 +4,7 @@ import PipingAssignTask from '../Dialogs/PipingAssignTask';
 import MoveToInstallation from '../Dialogs/MoveToInstallation';
 import toast from 'react-hot-toast';
 import AssignTask from '../Dialogs/AssignTask';
+import AssignInstallation from '../Dialogs/AssignInstallation';
 
 // Updated interface to match the new data structure
 interface InstallationTask {
@@ -33,19 +34,18 @@ interface InstallationTask {
 }
 
 const OpenInstallation = () => {
-  const [installationTasks, setInstallationTasks] = useState<InstallationTask[]>([]);
+  let [installationTasks, setInstallationTasks] = useState<InstallationTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [isInstallationDialogOpen, setIsInstallationDialogOpen] = useState(false);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchInstallationTasks = async () => {
       try {
-        // Update the API endpoint to match your new backend route
-        // const res = await axios.get("http://localhost:8000/api/installation");
-        const res = await axios.get("http://35.154.208.29:8080/api/installation");
+        // const res = await axios.get("http://localhost:8000/api/piping/getApprovedPiping");
+        const res = await axios.get("http://35.154.208.29:8080/api/piping/getApprovedPiping");
         
         if (res.status === 404 || !res.data) {
           setError('No installation tasks available');
@@ -53,7 +53,17 @@ const OpenInstallation = () => {
           return;
         }
 
-        setInstallationTasks(res.data);
+        // const res2 = await axios.get("http://localhost:8000/api/installation/getAssigned");
+        const res2 = await axios.get("http://35.154.208.29:8080/api/installation/getAssigned");
+
+        console.log(res.data.map((prevData: any) => prevData._id))
+        console.log(res2.data.map((prevData: any) => prevData.preOrderId))
+        const filteredTasks = res.data.filter((task1: any) => 
+          !res2.data.some((task2: any) => task1._id === task2.preOrderId)
+        );
+        console.log('filtered tasks', filteredTasks);
+
+        setInstallationTasks(filteredTasks);
         setLoading(false);
       } catch (err: any) {
         console.error("Error fetching installation tasks:", err);
@@ -78,23 +88,15 @@ const OpenInstallation = () => {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  const toggleDropdown = (taskId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    setOpenDropdownId(openDropdownId === taskId ? null : taskId);
+  // Function to handle task removal
+  const handleTaskAssigned = (id: string) => {
+    setRemovingId(id); // Start fade-out animation
+    setTimeout(() => {
+      setInstallationTasks((prevData) => prevData.filter((task) => task._id !== id));
+      setRemovingId(null); 
+    }, 300); // Match animation duration
   };
 
-  const handleMoveToInstallation = async () => {
-    if (!selectedTaskId) return;
-    try {
-      // Implement your move to installation logic here
-      setIsInstallationDialogOpen(false);
-      setSelectedTaskId(null);
-      toast.success('Task processed successfully! 🎉');
-    } catch (error) {
-      console.error('Error processing task:', error);
-      toast.error('Failed to process task');
-    }
-  };
 
   return (
     <div>
@@ -107,7 +109,7 @@ const OpenInstallation = () => {
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Contact Person</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Address</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Servicing Date</th>
-            {/* <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Action</th> */}
+            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -130,7 +132,7 @@ const OpenInstallation = () => {
               ).join(', ');
 
               return (
-                <tr key={task._id}>
+                <tr key={task._id} className={removingId === task._id ? "fade-out" : ""}>
                   <td className="p-2 border-b border-blue-gray-50 text-sm">{task.task_id}</td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm">{task.client_name}</td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm">
@@ -141,7 +143,7 @@ const OpenInstallation = () => {
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm">
                     {task.contactPerson?.name} <br />
-                    {task.contactPerson?.phone_number}
+                    {task?.contactPerson?.phone_number}
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm whitespace-normal w-40">
                     {task.address[0]?.location || 'No address provided'}
@@ -153,6 +155,29 @@ const OpenInstallation = () => {
                       month: '2-digit',
                       year: 'numeric',
                     })}
+                  </td>
+                  <td className="p-2 border-b border-blue-gray-50 mt-[5vh] text-sm">
+                    {/* <AssignInstallation
+                      orderId={task._id}
+                      clientName={task.contactPerson.name}
+                      clientNumber={task.contactPerson.phone_number}
+                      description={task.description}
+                      addressDisplay={task.address[0].location}
+                      ac_units={
+                        task.ac_units
+                      }
+                    /> */}
+                    <AssignInstallation
+                      preOrderId={task._id}
+                      clientName={task.client_name}
+                      clientNumber={task.client_number}
+                      description={task.description}
+                      addressDisplay={task.address[0]?.location || 'No address provided'}
+                      ac_units={task.ac_units}
+                      contactNumber={task.contactPerson?.phone_number}
+                      contactName={task.contactPerson?.name}
+                      onTaskAssigned={handleTaskAssigned} 
+                    />
                   </td>
                 </tr>
               );

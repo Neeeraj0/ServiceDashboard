@@ -6,20 +6,23 @@ import toast from "react-hot-toast";
 interface CompletedApproveTaskProps {
   orderId: string;
   taskDetails: any; // Replace 'any' with the actual type if known
+  onApprove: (orderId: string) => void;
 }
 
-export default function PipingApprove({
+export default function InstallationApprove({
   orderId,
-  taskDetails
+  taskDetails,
+  onApprove
 }: CompletedApproveTaskProps) {
   const [isOpen, setIsOpen] = useState(false);
   const modalRef = useRef(null);
   const [showAnimation, setShowAnimation] = useState(false);
   const [taskApproved, setTaskApproved] = useState(false);
+  const [isApproving, setIsApproving] = useState(false); // New state to track approval process
 
   const handleApproveTask = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    setIsApproving(true);
     setShowAnimation(true); // Start showing animation
     setTaskApproved(false); // Reset task approval state
 
@@ -29,7 +32,8 @@ export default function PipingApprove({
         await new Promise((resolve) => setTimeout(resolve, 5000));
 
         // Approve the task after the delay
-        await axios.put(`http://35.154.208.29:8080/api/routine/approveTask/${orderId}`, {
+        // await axios.put(`http://35.154.208.29:8080/api/routine/approveTask/${orderId}`, {
+          await axios.put(`http://localhost:8000/api/routine/approveTask/${orderId}`, {
           headers: {
             "Content-Type": "application/json",
           },
@@ -46,6 +50,7 @@ export default function PipingApprove({
         //     "Content-Type": "application/json",
         //   },
         // });
+        onApprove(orderId);
 
         setTaskApproved(true); // Mark task as approved
         toast.success("Task approved and installation task created successfully");
@@ -55,6 +60,7 @@ export default function PipingApprove({
       } finally {
         setShowAnimation(false); // Hide animation after the task is done
         setIsOpen(false); // Close the modal
+        setIsApproving(false); // Reset the approval process state
       }
     } else {
       alert("No corresponding task ID for selected task");
@@ -77,8 +83,8 @@ export default function PipingApprove({
           <Dialog.Overlay className="fixed inset-0 bg-black/40" />
           <Dialog.Content className="flex items-center justify-center fixed inset-0 w-full h-full bg-transparent">
             <div className="w-[35%] h-auto bg-white rounded-lg p-8 shadow-lg relative" ref={modalRef}>
-              <Dialog.Title className="text-center font-sans text-lg font-medium">
-                Approve Task
+              <Dialog.Title className="text-center font-sans text-lg font-bold">
+                  {isApproving ? "Approving Task..." : "Approve Task"}
               </Dialog.Title>
 
               <Dialog.Close asChild>
@@ -95,7 +101,7 @@ export default function PipingApprove({
                   <div className="flex justify-center">
                     {/* GIF animation */}
                     <img
-                      src="/images/approve/Checklist.gif"
+                      src="/images/approve/SuccessfullyDone.gif"
                       alt="Loading animation"
                       width="150"
                       height="150"

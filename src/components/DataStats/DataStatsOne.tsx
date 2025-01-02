@@ -85,7 +85,7 @@ function Dashboard() {
             <h2 className="text-xl font-semibold text-gray-800 mb-4 dark:text-white">Routine Servicing</h2>
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-lg shadow-md bg-white border-b border-gray-500 p-4">
-                <p className="text-gray-700 font-medium">Today's tasks</p>
+                <p className="text-gray-700 font-medium">Today&apos;s tasks</p>
                 <div className="mt-2 flex items-center justify-center rounded-full bg-pink-100 text-pink-700 font-bold text-sm w-16 h-16">
                   1 (dummy)
                 </div>
@@ -117,7 +117,7 @@ function Dashboard() {
             <h2 className="text-xl font-semibold text-gray-800 mb-4 dark:text-white">Breakdown Call</h2>
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-lg shadow-md bg-white border-b border-gray-500 p-4">
-                <p className="text-gray-700 font-medium">Today's tasks</p>
+                <p className="text-gray-700 font-medium">Today&apos;s tasks</p>
                 <div className="mt-2 flex items-center justify-center rounded-full bg-pink-100 text-pink-700 font-bold text-sm w-16 h-16">
                   {counts.today}
                 </div>
