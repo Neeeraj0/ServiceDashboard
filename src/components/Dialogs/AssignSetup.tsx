@@ -59,9 +59,10 @@ export default function AssignSetup({
   useEffect(() => {
     const fetchTechnicians = async () => {
       const cachedTechnicians = JSON.parse(localStorage.getItem("technicians") || "[]");
-      setTechnicians(cachedTechnicians); // Serve cached data immediately
-      
-      if(!technicians){
+  
+      if (cachedTechnicians.length > 0) {
+        setTechnicians(cachedTechnicians); // Serve cached data immediately
+      } else {
         try {
           const response = await axios.get(`http://35.154.208.29:8080/api/technicians/getTechnicians`);
           localStorage.setItem("technicians", JSON.stringify(response.data)); // Update cache
@@ -72,6 +73,7 @@ export default function AssignSetup({
         }
       }
     };
+  
     fetchTechnicians();
   }, []);
 
