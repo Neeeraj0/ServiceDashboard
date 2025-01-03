@@ -3,13 +3,10 @@ import "@/css/satoshi.css";
 import "@/css/style.css";
 import React, { useEffect, useState } from "react";
 import Loader from "@/components/common/Loader";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Toaster } from "react-hot-toast";
-import Sidebar from "@/components/Sidebar";
 import { UserProvider } from "./context/UserContext";
-// import jwt from 'jsonwebtoken';
-
-import ProtectedRoute from "@/components/ProtectedRoutes/ProtectedRoutes";
+import jwt from "jsonwebtoken";
 import { ReactQueryProvider } from "@/providers/ReactQueryProvider";
 
 export default function RootLayout({
@@ -18,51 +15,79 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const router = useRouter();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname(); // Use Next.js hook to get the current path
   const [loading, setLoading] = useState<boolean>(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   const publicRoutes = ["/login", "/register"]; // Define public routes
-  const isPublicRoute =
-    typeof window !== "undefined" && publicRoutes.includes(window.location.pathname);
+  const isPublicRoute = pathname ? publicRoutes.includes(pathname) : false; // Use pathname for route checking
 
   useEffect(() => {
-    setTimeout(() => setLoading(false), 1000);
-  }, []);
+    console.log("Running Authentication Check");
+    const checkAuth = () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        console.log("Token:", token);
 
-  // const pathname = usePathname();
+        if (!token) {
+          setIsAuthenticated(false);
+          if (!isPublicRoute) {
+            console.log("Redirecting to /login (No Token)");
+            router.push("/login");
+          }
+          return;
+        }
 
-  useEffect(() => {
-    setTimeout(() => setLoading(false), 1000);
-  }, []);
+        const decodedToken = jwt.decode(token);
+        console.log("Decoded Token:", decodedToken);
 
-  // useEffect(() => {
-  //   const checkTokenExpiry = () => {
-  //     const token = localStorage.getItem('token');
-  //     if (token) {
-  //       const decodedToken = jwt.decode(token);
-  //       if (decodedToken.exp * 1000 < Date.now()) {
-  //         localStorage.removeItem('token'); // Remove expired token
-  //         router.push('/login'); // Redirect to login
-  //       }
-  //     }
-  //   };
-  
-  //   // Run check every 5 minutes
-  //   const intervalId = setInterval(checkTokenExpiry, 300000);
-  //   return () => clearInterval(intervalId); // Cleanup on component unmount
-  // }, []);
+        if (
+          decodedToken &&
+          typeof decodedToken !== "string" &&
+          decodedToken.exp &&
+          decodedToken.exp * 1000 < Date.now()
+        ) {
+          localStorage.removeItem("authToken"); // Remove expired token
+          setIsAuthenticated(false);
+          if (!isPublicRoute) {
+            console.log("Redirecting to /login (Token Expired)");
+            router.push("/login");
+          }
+        } else {
+          console.log("User Authenticated");
+          setIsAuthenticated(true); // User is authenticated
+        }
+      } catch (error) {
+        console.error("Error in checkAuth:", error);
+        setIsAuthenticated(false);
+        if (!isPublicRoute) {
+          router.push("/login");
+        }
+      }
+    };
+
+    checkAuth();
+    setLoading(false); // Ensure loading is set to false
+  }, [router, isPublicRoute]);
+
+  // Show loader while checking authentication
+  if (loading) {
+    console.log("Loading...");
+    return <Loader />;
+  }
+
+  console.log("Render Children or Redirect");
+  console.log("isPublicRoute:", isPublicRoute, "isAuthenticated:", isAuthenticated);
 
   return (
     <html lang="en">
       <body suppressHydrationWarning={true}>
         <ReactQueryProvider>
           <UserProvider>
-            {loading ? ( 
-              <Loader /> 
-            ): isPublicRoute ? (
+            {isPublicRoute || isAuthenticated ? (
               children
             ) : (
-              <ProtectedRoute>{children}</ProtectedRoute>
+              <Loader /> // Fallback loader while waiting for redirect
             )}
           </UserProvider>
         </ReactQueryProvider>

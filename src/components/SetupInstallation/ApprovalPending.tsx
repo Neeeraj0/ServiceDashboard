@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import InstallationApprove from '../Dialogs/InstallationApprove';
 import './module.style.css';
+import { formatDate } from '../utils/dateUtils';
 
 interface ACUnit{
   type: string;
@@ -134,37 +135,74 @@ const ApprovalPending = () => {
           </tr>
         </thead>
         <tbody>
-          {
-            pipingData.map((task) => (
-              <tr 
-                key={task._id} 
-                className={removingIds.has(task.task_id) ? "fade-out" : ""}
-              >
-                <td className="p-2 border-b border-blue-gray-50 text-sm">{task.task_id}</td>
-                <td className="p-2 border-b border-blue-gray-50 text-sm">{task.status}</td>
-                <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
-                  {`${task.assignedTechnicians.map(technician => technician.name)}`}
+            {pipingData.length === 0 ? (
+                <tr>
+                <td colSpan={7} className="text-center p-4">
+                    No tasks available
                 </td>
-                <td className="p-2 border-b border-blue-gray-50 text-sm">
-                  {new Date(task.assignedDate).toLocaleString()}
-                </td>
-                <td className="p-2 border-b border-blue-gray-50 text-sm">
-                  {task.contactPerson.name} <br /> {task.contactPerson.phone_number}
-                </td>
-                <td className="p-2 border-b border-blue-gray-50 text-sm whitespace-normal w-40">
-                  {task.client_name} <br /> {task.client_number}
-                </td>
-                <td className="p-2 border-b border-blue-gray-50 text-sm">
-                  <InstallationApprove 
-                    orderId={task.task_id} 
-                    taskDetails={task}
-                    onApprove={() => handleTaskApproval(task.task_id)} 
-                  />
-                </td>
-              </tr>
-            ))
-          }
-        </tbody>
+                </tr>
+            ) : (
+                pipingData.map((task) => {
+                const formattedDateTime = formatDate(task.assignedDate); // Assuming a formatDate function exists
+                return (
+                    <tr
+                    key={task._id}
+                    className={`hover:bg-gray-50 ${removingIds.has(task.task_id) ? "fade-out" : ""}`}
+                    >
+                    <td className="p-2 border-b border-blue-gray-50 text-sm">
+                        {task.task_id || "N/A"}
+                    </td>
+                    <td className="p-2 border-b border-blue-gray-50 text-sm">
+                        <span
+                        className={`px-5 py-2 rounded-full text-xs uppercase ${
+                            task.status === "open"
+                            ? "bg-red-100 text-red-800"
+                            : task.status === "pending"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : task.status === "Completed"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                        >
+                        {task.status || "N/A"}
+                        </span>
+                    </td>
+                    <td className="p-2 border-b border-blue-gray-50 text-sm">
+                        {task.assignedTechnicians?.length > 0 ? (
+                        <ul className="list-none">
+                            {task.assignedTechnicians.map((technician) => (
+                            <li key={technician._id} className="mb-1">
+                                {technician.name}
+                            </li>
+                            ))}
+                        </ul>
+                        ) : (
+                        "No technicians assigned"
+                        )}
+                    </td>
+                    <td className="p-2 border-b border-blue-gray-50 text-sm">
+                        <div>{formattedDateTime.date}</div>
+                        <div className="text-gray-600">{formattedDateTime.time}</div>
+                    </td>
+                    <td className="p-2 border-b border-blue-gray-50 text-sm">
+                        {task.contactPerson?.name || "N/A"} <br />{" "}
+                        {task.contactPerson?.phone_number || "N/A"}
+                    </td>
+                    <td className="p-2 border-b border-blue-gray-50 text-sm">
+                        {task.client_name || "N/A"} <br /> {task.client_number || "N/A"}
+                    </td>
+                    <td className="p-2 border-b border-blue-gray-50">
+                        <InstallationApprove
+                        orderId={task.task_id}
+                        taskDetails={task}
+                        onApprove={() => handleTaskApproval(task.task_id)}
+                        />
+                    </td>
+                    </tr>
+                );
+                })
+            )}
+            </tbody>
       </table>
     </div>
   );

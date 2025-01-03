@@ -17,7 +17,7 @@ interface LoginFormData {
 
 declare global {
   interface Window {
-    recaptchaVerifier: RecaptchaVerifier;
+    recaptchaVerifier?: RecaptchaVerifier;
     confirmationResult: any;
   }
 }
@@ -36,7 +36,10 @@ export default function Login() {
     // Cleanup function for recaptcha
     return () => {
       if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
+        console.log("Cleaning up reCAPTCHA verifier");
+        window.recaptchaVerifier = undefined; // Clear the property safely
+      } else {
+        console.log("No reCAPTCHA verifier to clean up");
       }
     };
   }, []);
@@ -105,7 +108,7 @@ export default function Login() {
       const data = await response.json();
 
       if (response.ok && data.exists) {
-        localStorage.setItem('token', data.token);
+        localStorage.setItem('authToken', data.token);
         toast.success(`${formData.role === 'servicehead' ? 'Service Head' : 'Technician'} authenticated successfully!`);
         router.push('/');
       } else {

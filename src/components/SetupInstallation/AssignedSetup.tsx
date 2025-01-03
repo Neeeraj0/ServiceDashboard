@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import ReAssignTask from '../Dialogs/ReAssignTask';
+import { formatDate } from '../utils/dateUtils';
 
 interface Address {
   location: string;
@@ -45,7 +46,7 @@ const AssignedSetup: React.FC = () => {
           issueReported: order.description,
           status: order.status,
           address: order.address.map((addr: Address) => addr.location).join(", ") || "N/A",
-          date: new Date(order.servicingDate).toLocaleDateString(),
+          date: order.assignedDate,
           deviceId: order.ac_units?.map((unit: any) => `${unit.type} (${unit.capacity})`).join(", ") || "N/A",
           assignedTechnicians: order.assignedTechnicians || []
         }));
@@ -82,9 +83,9 @@ const AssignedSetup: React.FC = () => {
       <th className="p-2 border-b border-blue-gray-50 min-w-[120px]">
         <div className="font-semibold text-sm">Status</div>
       </th>
-      {/* <th className="p-2 border-b border-blue-gray-50 min-w-[250px]">
+      <th className="p-2 border-b border-blue-gray-50 min-w-[250px]">
         <div className="font-semibold text-sm">Customer Address</div>
-      </th> */}
+      </th>
       <th className="p-2 border-b border-blue-gray-50 min-w-[120px]">
         <div className="font-semibold text-sm">Date</div>
       </th>
@@ -102,48 +103,49 @@ const AssignedSetup: React.FC = () => {
         <td colSpan={10} className="text-center p-4">No tasks available</td>
       </tr>
     ) : (
-      backendData.map((order) => (
-        <tr key={order._id} className="hover:bg-gray-50">
-          <td className="p-2 border-b border-blue-gray-50 text-sm">{order.task_id || "N/A"}</td>
-          <td className="p-2 border-b border-blue-gray-50 text-sm">{order.contactPerson || "N/A"}</td>
-          <td className="p-2 border-b border-blue-gray-50 text-sm">{order.customerDetails || "N/A"}</td>
-          <td className="p-2 border-b border-blue-gray-50 text-sm">
-            {order.assignedTechnicians?.length > 0 ? (
-              <ul className="list-none">
-                {order.assignedTechnicians.map((technician) => (
-                  <li key={technician._id} className="mb-1">
-                    {technician.name}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              "No technicians assigned"
-            )}
-          </td>
-          {/* <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">{order.issueReported || "N/A"}</td> */}
-          <td className="p-2 border-b border-blue-gray-50 text-sm">
-            <span className={`px-5 py-2 rounded-full text-xs uppercase ${
-              order.status === 'open' ? 'bg-red-100 text-red-800':
-              order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-              order.status === 'Completed' ? 'bg-green-100 text-green-800' : 
-              'bg-gray-100 text-gray-800'
-            }`}>
-              {order.status || "N/A"}
-            </span>
-          </td>
-          {/* <td className="p-2 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs">
-            {order.address || "N/A"}
-          </td> */}
-          <td className="p-2 border-b border-blue-gray-50 text-sm">{order.date || "N/A"}</td>
-          {/* <td className="p-2 border-b border-blue-gray-50 text-sm">{order.deviceId || "N/A"}</td> */}
-          <td className="p-2 border-b border-blue-gray-50">
-            {/* <button className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:underline">
-              Action
-            </button> */}
-            <ReAssignTask orderId={order._id}/>
-          </td>
-        </tr>
-      ))
+        backendData.map((order) => {
+          const formattedDateTime = formatDate(order.date);
+          return (
+            <tr key={order._id} className="hover:bg-gray-50">
+              <td className="p-2 border-b border-blue-gray-50 text-sm">{order.task_id || "N/A"}</td>
+              <td className="p-2 border-b border-blue-gray-50 text-sm">{order.contactPerson || "N/A"}</td>
+              <td className="p-2 border-b border-blue-gray-50 text-sm">{order.customerDetails || "N/A"}</td>
+              <td className="p-2 border-b border-blue-gray-50 text-sm">
+                {order.assignedTechnicians?.length > 0 ? (
+                  <ul className="list-none">
+                    {order.assignedTechnicians.map((technician) => (
+                      <li key={technician._id} className="mb-1">
+                        {technician.name}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  "No technicians assigned"
+                )}
+              </td>
+              <td className="p-2 border-b border-blue-gray-50 text-sm">
+                <span className={`px-5 py-2 rounded-full text-xs uppercase ${
+                  order.status === 'open' ? 'bg-red-100 text-red-800':
+                  order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                  order.status === 'Completed' ? 'bg-green-100 text-green-800' : 
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {order.status || "N/A"}
+                </span>
+              </td>
+              <td className="p-2 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs">
+                {order.address || "N/A"}
+              </td>
+              <td className="p-2 border-b border-blue-gray-50 text-sm">
+                <div>{formattedDateTime.date}</div>
+                <div className="text-gray-600">{formattedDateTime.time}</div>
+              </td>
+              <td className="p-2 border-b border-blue-gray-50">
+                <ReAssignTask orderId={order._id}/>
+              </td>
+            </tr>
+          );
+        })
     )}
   </tbody>
 </table>
