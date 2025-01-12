@@ -108,8 +108,7 @@ const OpenSetup = () => {
   useEffect(() => {
     const fetchPreorderData = async () => {
       try {
-        const res1 = await axios.get('http://13.203.74.27:5000/api/preOrder/getall/preorders');
-        // const res = await axios.get('http://13.201.4.68:8080/api/preOrder/getall/preorders');
+        const res1 = await axios.get(`${process.env.NEXT_PUBLIC_SALES_BACKEND_API}/api/preOrder/getall/preorders`);
         // const res = await axios.get('https://salestrackbackend.circolife.vip/api/preOrder/getall/preorders');
         const res2 = await axios.get("http://35.154.208.29:8080/api/setup");
         const filteredTasks = res1.data.filter((task1: any) => 

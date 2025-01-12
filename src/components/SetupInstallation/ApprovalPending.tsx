@@ -3,6 +3,8 @@ import axios from 'axios';
 import InstallationApprove from '../Dialogs/InstallationApprove';
 import './module.style.css';
 import { formatDate } from '../utils/dateUtils';
+import PipingModal from '../Modal/PipingModal';
+import Pagination from '../Pagination';
 
 interface ACUnit{
   type: string;
@@ -17,6 +19,15 @@ interface AssignedTechnicians{
     role: string,
     phone: string,
     technician_id: string,
+}
+
+interface Photo {
+  url: string;
+  servicePhase: string; 
+  presignedUrl: string;
+  s3Key: string;
+  serialId: string;
+  type: string;
 }
 
 interface PipingResponse {
@@ -42,6 +53,7 @@ interface PipingResponse {
     quantity: number;
   }[];
   servicingDate: string;
+  photos: Photo[];
   assignedDate: string;
   customerComplaint: string;
   contactPerson: {
@@ -55,14 +67,15 @@ const ApprovalPending = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
-  
-  // Track approved tasks to prevent them from reappearing
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalImages, setModalImages] = useState<Photo[]>([]);
   const [approvedTasks] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const fetchPipingData = async () => {
     try {
-    //   const res = await axios.get('http://35.154.208.29:8080/api/installation/getApprovalPending');
-    const res = await axios.get('http://35.154.208.29:8080/api/setup/getApprovalPending');
+    const res = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/setup/getApprovalPending`);
       // Filter out any previously approved tasks
       const filteredData = res.data.filter((task: PipingResponse) => !approvedTasks.has(task.task_id));
       setPipingData(filteredData);
@@ -110,14 +123,25 @@ const ApprovalPending = () => {
   if (pipingData.length === 0) {
     return (
       <div className="full-page">
-        <img
+        {/* <img
           src="/images/NoTask/NoTask.gif"
           alt="No tasks available"
           className="w-30 h-30 mx-auto text-center"
-        />
+        /> */}
+        <h1>No Completed Preorders</h1>
       </div>
     );
   }
+  const handleViewImages = (photos: Photo[]) => {
+    setModalImages(photos);
+    setIsModalOpen(true);
+  };
+
+  const indexOfLastOrder = currentPage * itemsPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
+  const currentOrders = pipingData.slice(indexOfFirstOrder, indexOfLastOrder);
+
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
   if (error) return <div>Error fetching data: {error}</div>;
 
   return (
@@ -126,6 +150,7 @@ const ApprovalPending = () => {
         <thead>
           <tr>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Task ID</th>
+            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Photos</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Status</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Technician Name</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Assigned Date & Time</th>
@@ -142,7 +167,7 @@ const ApprovalPending = () => {
                 </td>
                 </tr>
             ) : (
-                pipingData.map((task) => {
+                currentOrders.map((task) => {
                 const formattedDateTime = formatDate(task.assignedDate); // Assuming a formatDate function exists
                 return (
                     <tr
@@ -152,6 +177,18 @@ const ApprovalPending = () => {
                     <td className="p-2 border-b border-blue-gray-50 text-sm">
                         {task.task_id || "N/A"}
                     </td>
+                    <td className="p-4 border-b border-blue-gray-50">
+                  {task.photos?.length > 0 ? (
+                    <button
+                      className="underline text-blue-600"
+                      onClick={() => handleViewImages(task.photos)}
+                    >
+                      View Images
+                    </button>
+                  ) : (
+                    "No Images"
+                  )}
+                </td>
                     <td className="p-2 border-b border-blue-gray-50 text-sm">
                         <span
                         className={`px-5 py-2 rounded-full text-xs uppercase ${
@@ -204,6 +241,16 @@ const ApprovalPending = () => {
             )}
             </tbody>
       </table>
+      {isModalOpen && (
+                <PipingModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} images={modalImages} taskName="Setup"/>
+        )}
+
+        <Pagination
+          currentPage={currentPage}
+          totalItems={pipingData.length}
+          itemsPerPage={itemsPerPage}
+          paginate={paginate}
+        />
     </div>
   );
 };

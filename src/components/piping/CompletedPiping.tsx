@@ -188,7 +188,7 @@ const CompletedPiping: React.FC = () => {
       </tbody>
     </table>
         {isModalOpen && (
-                <PipingModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} images={modalImages} />
+                <PipingModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} images={modalImages} taskName={"Piping"}/>
         )}
     </div>
   );

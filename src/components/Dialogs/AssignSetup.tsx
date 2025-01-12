@@ -437,7 +437,7 @@ export default function AssignSetup({
                     className={`order ${isAnimating ? "animate" : ""}`}
                   >
                     <span className="default">Submit</span>
-                    <span className="success">Installation will be done soon ✅</span>
+                    <span className="success p-5">Installation will be done soon ✅</span>
                     <svg viewBox="0 0 12 10">
                       <polyline points="1.5 6 4.5 9 10.5 1" />
                     </svg>

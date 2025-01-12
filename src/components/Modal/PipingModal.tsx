@@ -10,17 +10,18 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   images?: Image[];
+  taskName?: String;
   children?: ReactNode;
 }
 
-const PipingModal: React.FC<ModalProps> = ({ isOpen, onClose, images, children }) => {
+const PipingModal: React.FC<ModalProps> = ({ isOpen, onClose, images, taskName, children}) => {
   if (!isOpen) return null;
-
+  console.log(taskName, 'line 19');
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-999999">
       <div className="bg-white p-4 rounded max-w-2xl w-full max-h-[90vh] flex flex-col">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Piping Images</h2>
+          <h2 className="text-xl font-bold">{taskName} Images</h2>
           <button
             onClick={onClose}
             className="text-white hover:text-white bg-red-600 p-2 rounded-md shadow-lg font-semibold"

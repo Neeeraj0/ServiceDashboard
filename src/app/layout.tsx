@@ -1,4 +1,5 @@
 "use client";
+
 import "@/css/satoshi.css";
 import "@/css/style.css";
 import React, { useEffect, useState } from "react";
@@ -15,31 +16,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const router = useRouter();
-  const pathname = usePathname(); // Use Next.js hook to get the current path
+  const pathname = usePathname();
   const [loading, setLoading] = useState<boolean>(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-  const publicRoutes = ["/login", "/register"]; // Define public routes
-  const isPublicRoute = pathname ? publicRoutes.includes(pathname) : false; // Use pathname for route checking
+  const publicRoutes = ["/login", "/register"];
+  const isPublicRoute = pathname ? publicRoutes.includes(pathname) : false;
 
   useEffect(() => {
-    console.log("Running Authentication Check");
     const checkAuth = () => {
       try {
         const token = localStorage.getItem("authToken");
-        console.log("Token:", token);
 
         if (!token) {
           setIsAuthenticated(false);
           if (!isPublicRoute) {
-            console.log("Redirecting to /login (No Token)");
             router.push("/login");
           }
           return;
         }
 
         const decodedToken = jwt.decode(token);
-        console.log("Decoded Token:", decodedToken);
 
         if (
           decodedToken &&
@@ -47,15 +44,13 @@ export default function RootLayout({
           decodedToken.exp &&
           decodedToken.exp * 1000 < Date.now()
         ) {
-          localStorage.removeItem("authToken"); // Remove expired token
+          localStorage.removeItem("authToken");
           setIsAuthenticated(false);
           if (!isPublicRoute) {
-            console.log("Redirecting to /login (Token Expired)");
             router.push("/login");
           }
         } else {
-          console.log("User Authenticated");
-          setIsAuthenticated(true); // User is authenticated
+          setIsAuthenticated(true);
         }
       } catch (error) {
         console.error("Error in checkAuth:", error);
@@ -63,35 +58,29 @@ export default function RootLayout({
         if (!isPublicRoute) {
           router.push("/login");
         }
+      } finally {
+        setLoading(false);
       }
     };
 
     checkAuth();
-    setLoading(false); // Ensure loading is set to false
   }, [router, isPublicRoute]);
-
-  // Show loader while checking authentication
-  if (loading) {
-    console.log("Loading...");
-    return <Loader />;
-  }
-
-  console.log("Render Children or Redirect");
-  console.log("isPublicRoute:", isPublicRoute, "isAuthenticated:", isAuthenticated);
 
   return (
     <html lang="en">
       <body suppressHydrationWarning={true}>
-        <ReactQueryProvider>
-          <UserProvider>
-            {isPublicRoute || isAuthenticated ? (
-              children
-            ) : (
-              <Loader /> // Fallback loader while waiting for redirect
-            )}
-          </UserProvider>
-        </ReactQueryProvider>
-        <Toaster position="top-center" />
+        <div id="app-root">
+          <ReactQueryProvider>
+            <UserProvider>
+              {loading ? (
+                <Loader />
+              ) : isPublicRoute || isAuthenticated ? (
+                children
+              ) : null}
+            </UserProvider>
+          </ReactQueryProvider>
+          <Toaster position="top-center" />
+        </div>
       </body>
     </html>
   );

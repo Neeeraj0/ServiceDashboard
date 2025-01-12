@@ -168,28 +168,56 @@ export default function AssignInstallation({
     const orders = orderResponse.data;
 
     const orderMap: { [key: string]: string[] } = {}; // key: model, value: array of order IDs
-
+    const usedOrderIds = new Set<string>(); // Track used order IDs
+    
     orders.forEach((order: any) => {
-        const model = order.model; // Assuming 'model' is the key to match
-        if (!orderMap[model]) {
-            orderMap[model] = [];
-        }
-        orderMap[model].push(order._id);
+      const model = order.model; // Assuming 'model' is the key to match
+      if (!orderMap[model]) {
+        orderMap[model] = [];
+      }
+      orderMap[model].push(order._id);
     });
 
     const transformedAC = ac_units.flatMap((unit) => {
-        const modelCapacity = unit.capacity === "10" ? "1 Ton" : unit.capacity === "15" ? "1.5 Ton" : unit.capacity === "20" ? "2 Ton" : unit.capacity;
-        const orderIds = orderMap[unit.capacity] || []; // Get order IDs for the current unit's capacity
-
-        return Array.from({ length: unit.quantity }, (_, i) => ({
-            type: unit.type,
-            capacity: modelCapacity,
-            quantity: 1,
-            deviceName: `${unit.capacity}-${i + 1}`,
-            orderId: orderIds[i] || null // Attach the corresponding order ID
-        }));
+      const modelCapacity =
+        unit.capacity === "10"
+          ? "1 Ton"
+          : unit.capacity === "15"
+          ? "1.5 Ton"
+          : unit.capacity === "20"
+          ? "2 Ton"
+          : unit.capacity;
+      const orderIds = orderMap[unit.capacity] || []; // Get all order IDs for this capacity
+    
+      return Array.from({ length: unit.quantity }, (_, i) => {
+        // Find the next unused orderId that matches the model
+        let orderId = null;
+        for (let j = 0; j < orderIds.length; j++) {
+          if (!usedOrderIds.has(orderIds[j])) {
+            orderId = orderIds[j];
+            usedOrderIds.add(orderId); // Mark this orderId as used
+            break;
+          }
+        }
+    
+        // Dynamically generate the device name
+        const deviceName =
+          unit.type === "Split AC"
+            ? `${unit.capacity}-${i + 1}`
+            : unit.type === "Cassette AC"
+            ? `${unit.capacity}-${i + 1}`
+            : `${unit.capacity}-${i + 1}`; // Default case if the type is neither Split nor Cassette
+    
+        return {
+          type: unit.type,
+          capacity: modelCapacity,
+          quantity: 1,
+          deviceName: deviceName, // Correct dynamic device name
+          orderId: orderId, // Assign the unique orderId or null if none are left
+        };
+      });
     });
-
+    
     console.log('ac display', transformedACUnits);
 
     const taskDataCreation = {

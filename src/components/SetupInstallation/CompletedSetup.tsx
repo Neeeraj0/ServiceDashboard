@@ -6,6 +6,7 @@ import RoutineAssignTask from '../Dialogs/RoutineAssignTask';
 import RoutineApproveTask from '../Dialogs/RoutineApprove';
 import PipingModal from '../Modal/PipingModal';
 import ReAssignTask from '../Dialogs/ReAssignTask';
+import Pagination from '../Pagination';
 
 interface Address {
   location: string;
@@ -58,17 +59,17 @@ const CompletedSetup: React.FC = () => {
   const [backendData, setBackendData] = useState<Order[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalImages, setModalImages] = useState<Photo[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const handleApproveTaskSuccess = (approvedTaskId: string) => {
-    // Filter out tasks with `approvalPending` set to true
     setBackendData((prevData) => prevData.filter((order) => order._id !== approvedTaskId));
   };
 
   useEffect(() => {
     const fetchCompletedOrders = async () => {
       try {
-        // const res = await axios.get('http://35.154.208.29:8080/api/piping/getCompleted/setup');
-        const res = await axios.get('http://35.154.208.29:8080/api/setup/getCompleted/setup');
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/setup/getCompleted/setup`);
         const orders = res.data.map((order: any) => ({
           _id: order._id,
           task_id: order.task_id,
@@ -105,9 +106,11 @@ const CompletedSetup: React.FC = () => {
     setIsModalOpen(true);
   };
   
+  const indexOfLastOrder = currentPage * itemsPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
+  const currentOrders = backendData.slice(indexOfFirstOrder, indexOfLastOrder);
 
-  console.log(backendData);
-  console.log(modalImages);
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
   return (
     <div>
     <table className="w-full text-left table-auto min-w-max">
@@ -131,7 +134,7 @@ const CompletedSetup: React.FC = () => {
             <td colSpan={9} className="text-center p-4">No tasks available</td>
           </tr>
         ) : (
-          backendData.map((order) => (
+          currentOrders.map((order) => (
             <tr key={order._id} className="hover:bg-gray-50">
               <td className="p-4 border-b border-blue-gray-50">{order.task_id || "N/A"}</td>
               <td className="p-4 border-b border-blue-gray-50">
@@ -189,8 +192,16 @@ const CompletedSetup: React.FC = () => {
       </tbody>
     </table>
         {isModalOpen && (
-                <PipingModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} images={modalImages} />
+                <PipingModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} images={modalImages} taskName={"Setup"}/>
         )}
+
+
+        <Pagination 
+          currentPage={currentPage}
+          totalItems={backendData.length}
+          itemsPerPage={itemsPerPage}
+          paginate={paginate}
+        />
     </div>
   );
 };
