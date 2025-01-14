@@ -92,8 +92,8 @@ export default function Login() {
       const user = result.user;
       
       const endpoint = formData.role === 'servicehead'
-        ? 'http://35.154.208.29:8080/api/users/checkUser'
-        : 'http://35.154.208.29:8080/api/technicians/checkTechnician';
+        ? 'https://servicebackend.circolife.vip/api/users/checkUser'
+        : 'https://servicebackend.circolife.vip/api/technicians/checkTechnician';
 
       const response = await fetch(endpoint, {
         method: 'POST',

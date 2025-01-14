@@ -110,7 +110,7 @@ const OpenSetup = () => {
       try {
         const res1 = await axios.get(`${process.env.NEXT_PUBLIC_SALES_BACKEND_API}/api/preOrder/getall/preorders`);
         // const res = await axios.get('https://salestrackbackend.circolife.vip/api/preOrder/getall/preorders');
-        const res2 = await axios.get("http://35.154.208.29:8080/api/setup");
+        const res2 = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/setup`);
         const filteredTasks = res1.data.filter((task1: any) => 
           !res2.data.some((task2: any) => task1._id === task2.preOrderId)
         );

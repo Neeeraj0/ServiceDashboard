@@ -30,7 +30,7 @@ export default function ReAssignTask({
       
       if(!technicians){
         try {
-          const response = await axios.get(`http://35.154.208.29:8080/api/technicians/getTechnicians`);
+          const response = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/technicians/getTechnicians`);
           localStorage.setItem("technicians", JSON.stringify(response.data)); // Update cache
           setTechnicians(response.data); // Update with fresh data
         } catch (error) {
@@ -114,7 +114,7 @@ export default function ReAssignTask({
       };
 
     try {
-      await axios.put(`http://35.154.208.29:8080/api/tasks/reAssignTask/${orderId}`, taskDataCreation, {
+      await axios.put(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/tasks/reAssignTask/${orderId}`, taskDataCreation, {
         headers: {
           "Content-Type": "application/json",
         },

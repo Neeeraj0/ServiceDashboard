@@ -45,7 +45,7 @@ const OpenInstallation = () => {
     const fetchInstallationTasks = async () => {
       try {
         // const res = await axios.get("http://localhost:8000/api/piping/getApprovedPiping");
-        const res = await axios.get("http://35.154.208.29:8080/api/piping/getApprovedPiping");
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_NEXT_SERVICE_BACKEND_API}/api/piping/getApprovedPiping`);
         
         if (res.status === 404 || !res.data) {
           setError('No installation tasks available');
@@ -54,7 +54,7 @@ const OpenInstallation = () => {
         }
 
         // const res2 = await axios.get("http://localhost:8000/api/installation/getAssigned");
-        const res2 = await axios.get("http://35.154.208.29:8080/api/installation/getAssigned");
+        const res2 = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/installation/getAssigned`);
 
         console.log(res.data.map((prevData: any) => prevData._id))
         console.log(res2.data.map((prevData: any) => prevData.preOrderId))

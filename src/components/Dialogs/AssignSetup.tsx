@@ -64,7 +64,7 @@ export default function AssignSetup({
         setTechnicians(cachedTechnicians); // Serve cached data immediately
       } else {
         try {
-          const response = await axios.get(`http://35.154.208.29:8080/api/technicians/getTechnicians`);
+          const response = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/technicians/getTechnicians`);
           localStorage.setItem("technicians", JSON.stringify(response.data)); // Update cache
           setTechnicians(response.data); // Update with fresh data
         } catch (error) {
@@ -287,7 +287,7 @@ export default function AssignSetup({
     console.log(taskDataCreation);
 
     try {
-      await axios.post(`http://35.154.208.29:8080/api/tasks`, taskDataCreation, {
+      await axios.post(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/tasks`, taskDataCreation, {
       //  await axios.post(`http://localhost:8000/api/tasks`, taskDataCreation, {
         headers: {
           "Content-Type": "application/json",

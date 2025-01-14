@@ -9,7 +9,7 @@ import OpenSetup from "@/components/SetupInstallation/OpenSetup";
 
 export const metadata: Metadata = {
   title:
-    "Operation Tool Circolife",
+    "Airexpert Service tool",
   description: "This is a operation tool of Circolife",
 };
 
@@ -19,7 +19,7 @@ export default function Home() {
     <UserProvider>
         <DefaultLayout>
           {/* <OpenBreakdown /> */}
-          <OpenSetup />
+          <OpenSetup /> 
         </DefaultLayout>
     </UserProvider>
     </>

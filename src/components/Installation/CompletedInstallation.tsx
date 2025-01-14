@@ -67,7 +67,7 @@ const CompletedInstallation: React.FC = () => {
   useEffect(() => {
     const fetchCompletedOrders = async () => {
       try {
-        const res = await axios.get('http://35.154.208.29:8080/api/piping/getCompleted/installation');
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/installation/getCompleted/installation`);
         // const res = await axios.get('http://localhost:8000/api/installation/getCompleted/installation');
         const orders = res.data.map((order: any) => ({
           _id: order._id,
