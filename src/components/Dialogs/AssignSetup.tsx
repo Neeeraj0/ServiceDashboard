@@ -54,7 +54,10 @@ export default function AssignSetup({
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [filteredTechnicians, setFilteredTechnicians] = useState<Technician[]>([]);
   const [selectedTechnicians, setSelectedTechnicians] = useState<Technician[]>([]); // Track selected technicians
-    const [isAnimating, setIsAnimating] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const isFormValid = servicingDate && servicingTime && selectedTechnicians.length > 0;
+
   console.log(ac_units);
   useEffect(() => {
     const fetchTechnicians = async () => {
@@ -174,7 +177,7 @@ export default function AssignSetup({
       return;
     }
 
-    const orderResponse = await axios.get(`http://13.203.74.27:5000/api/preOrder/orders/detail/${preOrderId}`);
+    const orderResponse = await axios.get(`${process.env.NEXT_PUBLIC_SALES_BACKEND_API}/api/preOrder/orders/detail/${preOrderId}`);
     const orders = orderResponse.data;
 
     // const orderMap: { [key: string]: string[] } = {}; // key: model, value: array of order IDs
@@ -314,7 +317,7 @@ export default function AssignSetup({
   };
 
   return (
-    <div className="flex w-full font-sans">
+    <div className="flex w-full font-sans z-9999">
       <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
         <Dialog.Trigger asChild>
           <button
@@ -375,11 +378,28 @@ export default function AssignSetup({
                   )}
                 </div>
 
-                <div className="mb-4">
+                {/* <div className="mb-4 flex gap-5">
                   {selectedTechnicians.map((tech) => (
-                    <div key={tech.technician_id} className="bg-blue-100 text-blue-800 px-3 py-2 rounded-md flex items-center justify-between mb-2">
+                    <div key={tech.technician_id} className="bg-blue-100 w-fit text-blue-800 px-3 py-2 rounded-md flex items-center justify-between mb-2">
                       {tech.name}
                       <button onClick={() => handleRemoveTechnician(tech.technician_id)} className="text-red-500 font-bold">
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div> */}
+
+                <div className="mb-4 flex flex-wrap gap-2">
+                  {selectedTechnicians.map((tech) => (
+                    <div 
+                      key={tech.technician_id} 
+                      className="bg-blue-100 text-blue-800 px-3 py-2 rounded-md flex items-center gap-2"
+                    >
+                      <span>{tech.name}</span>
+                      <button 
+                        onClick={() => handleRemoveTechnician(tech.technician_id)}
+                        className="text-red-500 hover:text-red-700 font-bold ml-1"
+                      >
                         ×
                       </button>
                     </div>
@@ -435,6 +455,7 @@ export default function AssignSetup({
                   <button
                     type="submit"
                     className={`order ${isAnimating ? "animate" : ""}`}
+                    disabled={!isFormValid}
                   >
                     <span className="default">Submit</span>
                     <span className="success p-5">Installation will be done soon ✅</span>

@@ -9,6 +9,7 @@ import { Toaster } from "react-hot-toast";
 import { UserProvider } from "./context/UserContext";
 import jwt from "jsonwebtoken";
 import { ReactQueryProvider } from "@/providers/ReactQueryProvider";
+import "./module.style.css";
 
 export default function RootLayout({
   children,

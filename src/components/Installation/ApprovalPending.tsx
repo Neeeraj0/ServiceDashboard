@@ -1,12 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import InstallationApprove from '../Dialogs/InstallationApprove';
+import { formatDate } from '../utils/dateUtils';
 import './module.style.css';
+import PipingModal from '../Modal/PipingModal';
+import Pagination from '../Pagination';
 
 interface ACUnit{
   type: string;
   model: string;
   quantity: number;
+}
+
+interface Photo {
+  url: string;
+  servicePhase: string; 
+  presignedUrl: string;
+  s3Key: string;
+  serialId: string;
+  type: string;
 }
 
 interface AssignedTechnicians{
@@ -41,6 +53,7 @@ interface PipingResponse {
     quantity: number;
   }[];
   servicingDate: string;
+  photos: Photo[];
   assignedDate: string;
   customerComplaint: string;
   contactPerson: {
@@ -54,9 +67,12 @@ const ApprovalPending = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
-  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalImages, setModalImages] = useState<Photo[]>([]);
   // Track approved tasks to prevent them from reappearing
   const [approvedTasks] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const fetchPipingData = async () => {
     try {
@@ -104,6 +120,17 @@ const ApprovalPending = () => {
     }, 3000);
   };
 
+  const handleViewImages = (photos: Photo[]) => {
+    setModalImages(photos);
+    setIsModalOpen(true);
+  };
+
+  const indexOfLastOrder = currentPage * itemsPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
+  const currentOrders = pipingData.slice(indexOfFirstOrder, indexOfLastOrder);
+
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error fetching data: {error}</div>;
 
@@ -113,6 +140,7 @@ const ApprovalPending = () => {
         <thead>
           <tr>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Task ID</th>
+            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Photos</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Status</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Technician Name</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Assigned Date & Time</th>
@@ -127,18 +155,33 @@ const ApprovalPending = () => {
               <td colSpan={7} className="text-center">No tasks available</td>
             </tr>
           ) : (
-            pipingData.map((task) => (
+            currentOrders.map((task) => {
+              const formattedDateTime = formatDate(task.assignedDate); 
+              return (
               <tr 
                 key={task._id} 
                 className={removingIds.has(task.task_id) ? "fade-out" : ""}
               >
                 <td className="p-2 border-b border-blue-gray-50 text-sm">{task.task_id}</td>
+                <td className="p-4 border-b border-blue-gray-50">
+                  {task.photos?.length > 0 ? (
+                    <button
+                      className="underline text-blue-600"
+                      onClick={() => handleViewImages(task.photos)}
+                    >
+                      View Images
+                    </button>
+                  ) : (
+                    "No Images"
+                  )}
+                </td>
                 <td className="p-2 border-b border-blue-gray-50 text-sm">{task.status}</td>
                 <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
                   {`${task.assignedTechnicians.map(technician => technician.name)}`}
                 </td>
                 <td className="p-2 border-b border-blue-gray-50 text-sm">
-                  {new Date(task.assignedDate).toLocaleString()}
+                  <div>{formattedDateTime.date}</div>
+                  <div className="text-gray-600">{formattedDateTime.time}</div>
                 </td>
                 <td className="p-2 border-b border-blue-gray-50 text-sm">
                   {task.contactPerson.name} <br /> {task.contactPerson.phone_number}
@@ -154,10 +197,21 @@ const ApprovalPending = () => {
                   />
                 </td>
               </tr>
-            ))
+              );
+            })
           )}
         </tbody>
       </table>
+      {isModalOpen && (
+                <PipingModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} images={modalImages} taskName="Setup"/>
+        )}
+
+      <Pagination
+          currentPage={currentPage}
+          totalItems={pipingData.length}
+          itemsPerPage={itemsPerPage}
+          paginate={paginate}
+        />
     </div>
   );
 };

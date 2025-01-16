@@ -6,6 +6,7 @@ import RoutineAssignTask from '../Dialogs/RoutineAssignTask';
 import RoutineApproveTask from '../Dialogs/RoutineApprove';
 import PipingModal from '../Modal/PipingModal';
 import ReAssignTask from '../Dialogs/ReAssignTask';
+import Pagination from '../Pagination';
 
 interface Address {
   location: string;
@@ -58,6 +59,8 @@ const CompletedInstallation: React.FC = () => {
   const [backendData, setBackendData] = useState<Order[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalImages, setModalImages] = useState<Photo[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const handleApproveTaskSuccess = (approvedTaskId: string) => {
     // Filter out tasks with `approvalPending` set to true
@@ -100,11 +103,13 @@ const CompletedInstallation: React.FC = () => {
   }, []);
 
   const handleViewImages = (photos: Photo[]) => {
-    // Set all photos directly without filtering
     setModalImages(photos);
     setIsModalOpen(true);
   };
-  
+  const indexOfLastOrder = currentPage * itemsPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
+  const currentOrders = backendData.slice(indexOfFirstOrder, indexOfLastOrder);
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   console.log(backendData);
   console.log(modalImages);
@@ -131,7 +136,7 @@ const CompletedInstallation: React.FC = () => {
             <td colSpan={9} className="text-center p-4">No tasks available</td>
           </tr>
         ) : (
-          backendData.map((order) => (
+          currentOrders.map((order) => (
             <tr key={order._id} className="hover:bg-gray-50">
               <td className="p-4 border-b border-blue-gray-50">{order.task_id || "N/A"}</td>
               <td className="p-4 border-b border-blue-gray-50">
@@ -191,6 +196,13 @@ const CompletedInstallation: React.FC = () => {
         {isModalOpen && (
                 <PipingModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} images={modalImages} />
         )}
+
+        <Pagination
+          currentPage={currentPage}
+          totalItems={backendData.length}
+          itemsPerPage={itemsPerPage}
+          paginate={paginate}
+        />
     </div>
   );
 };

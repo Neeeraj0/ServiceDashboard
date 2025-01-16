@@ -10,7 +10,7 @@ const Header = (props: {
   setSidebarOpen: (arg0: boolean) => void;
 }) => {
   return (
-    <header className="sticky top-0 z-10 flex lg:w-full bg-white shadow-md m-2 rounded-full dark:border-stroke-dark dark:bg-gray-dark w-[95vw]">
+    <header className="sticky top-0 z-10 flex lg:w-full m-2 rounded-full dark:border-stroke-dark dark:bg-gray-dark w-[95vw]">
       <div className="flex flex-grow items-center justify-between px-4 py-5  md:px-5 2xl:px-10">
         <div className="flex items-center gap-2 sm:gap-4 lg:hidden">
           <button
@@ -19,7 +19,7 @@ const Header = (props: {
               e.stopPropagation();
               props.setSidebarOpen(!props.sidebarOpen);
             }}
-            className="z-99999 block rounded-sm bg-white p-1.5 shadow-sm dark:border-dark-3 dark:bg-dark-2 lg:hidden"
+            className="z-1 block rounded-sm bg-white p-1.5 shadow-sm dark:border-dark-3 dark:bg-dark-2 lg:hidden"
           >
             <span className="relative block h-5.5 w-5.5 cursor-pointer">
               <span className="du-block absolute right-0 h-full w-full">
@@ -65,9 +65,9 @@ const Header = (props: {
           </Link>
         </div>
 
-        <div className="hidden xl:block">
+        <div className="hidden xl:block w-[70vw]">
           <div>
-            <h1 className="mb-0.5 text-heading-5 font-bold text-dark dark:text-white">
+            <h1 className="mb-0.5 text-heading-5  w-[100%] p-2 rounded-xl font-bold text-dark dark:text-white">
                Operation Tool
             </h1>
           </div>

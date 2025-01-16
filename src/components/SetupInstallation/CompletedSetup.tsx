@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import Modal from '../Modal/Modal';
-import CompletedApproveTask from '../Dialogs/ApproveTask';
-import RoutineAssignTask from '../Dialogs/RoutineAssignTask';
-import RoutineApproveTask from '../Dialogs/RoutineApprove';
 import PipingModal from '../Modal/PipingModal';
 import ReAssignTask from '../Dialogs/ReAssignTask';
 import Pagination from '../Pagination';
+import { formatDate } from '../utils/dateUtils';
+import './module.style.css'
 
 interface Address {
   location: string;
@@ -44,8 +42,8 @@ interface Order {
   issueReported: string;
   status: string;
   address: string;
-  date: string;
-  closureDate: string;
+  assignedDate: string;
+  endDate: string;
   deviceId: string;
   isPeriodicService: boolean;
   assignedTechnicians: Technician[];
@@ -85,8 +83,8 @@ const CompletedSetup: React.FC = () => {
           TAT1: order.TAT1,
           TAT2: order.TAT2,
           address: order.address.map((addr: Address) => addr.location).join(", ") || "N/A",
-          date: new Date(order.assignedDate).toLocaleDateString(),
-          closureDate: new Date(order.endDate).toLocaleDateString(),
+          assignedDate: order.assignedDate,
+          endDate: order.endDate,
           deviceId: order.deviceId || "N/A",
           assignedTechnicians: order.assignedTechnicians || [],
           photos: order.photos || [] // Assuming photos are included in the API response
@@ -134,7 +132,10 @@ const CompletedSetup: React.FC = () => {
             <td colSpan={9} className="text-center p-4">No tasks available</td>
           </tr>
         ) : (
-          currentOrders.map((order) => (
+          currentOrders.map((order) => {
+              const formattedDateTime = formatDate(order.assignedDate); 
+              const formatClosureDateTime = formatDate(order.endDate);
+            return (
             <tr key={order._id} className="hover:bg-gray-50">
               <td className="p-4 border-b border-blue-gray-50">{order.task_id || "N/A"}</td>
               <td className="p-4 border-b border-blue-gray-50">
@@ -178,8 +179,14 @@ const CompletedSetup: React.FC = () => {
                   "No Materials Used"
                 )}
               </td>
-              <td className="p-4 border-b border-blue-gray-50">{order.date || "N/A"}</td>
-              <td className="p-4 border-b border-blue-gray-50">{order.closureDate || "N/A"}</td>
+              <td className="p-4 border-b border-blue-gray-50 max-w-[60vw]">
+                <div>{formattedDateTime.date}</div>
+                <div className="text-gray-600">{formattedDateTime.time}</div>
+              </td>
+              <td className="p-4 border-b border-blue-gray-50">
+                <div>{formatClosureDateTime.date}</div>
+                <div className="text-gray-600">{formatClosureDateTime.time}</div>
+              </td>
               <td className="p-4 border-b border-blue-gray-50">{order.TAT1 ? order.TAT1 : "0"}</td>
               <td className="p-4 border-b border-blue-gray-50">{order.TAT2 ? order.TAT2 : "0"}</td>
               <td className="p-4 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs z-99999">
@@ -187,12 +194,13 @@ const CompletedSetup: React.FC = () => {
                 <ReAssignTask orderId={order._id}/>
               </td>
             </tr>
-          ))
+            );
+          })
         )}
       </tbody>
     </table>
         {isModalOpen && (
-                <PipingModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} images={modalImages} taskName={"Setup"}/>
+                <PipingModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} images={modalImages} taskName="Setup"/>
         )}
 
 

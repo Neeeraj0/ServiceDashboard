@@ -100,7 +100,7 @@ export default function ReAssignTask({
     e.preventDefault();
     const servicingDateTime = mergeDateTimeToISO(servicingDate, servicingTime);
     if (!servicingDateTime) {
-      alert("Invalid servicing date or time.");
+      toast.error("no servicing date or time specified.");
       return;
     }
 
@@ -140,6 +140,10 @@ export default function ReAssignTask({
       console.error("Error assigning task:", error);
       alert("Failed to assign task");
     }
+  };
+
+  const isFormValid = () => {
+    return selectedTechnicians.length > 0 && servicingDate && servicingTime;
   };
 
   return (
@@ -241,6 +245,7 @@ export default function ReAssignTask({
                   <button
                     type="submit"
                     className="bg-purple-600 text-white py-2 px-8 rounded text-[16px] hover:bg-purple-700"
+                    disabled={!isFormValid}
                   >
                     Submit
                   </button>

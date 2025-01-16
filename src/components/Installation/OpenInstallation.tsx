@@ -5,6 +5,7 @@ import MoveToInstallation from '../Dialogs/MoveToInstallation';
 import toast from 'react-hot-toast';
 import AssignTask from '../Dialogs/AssignTask';
 import AssignInstallation from '../Dialogs/AssignInstallation';
+import Pagination from '../Pagination';
 
 // Updated interface to match the new data structure
 interface InstallationTask {
@@ -40,7 +41,8 @@ const OpenInstallation = () => {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [isInstallationDialogOpen, setIsInstallationDialogOpen] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   useEffect(() => {
     const fetchInstallationTasks = async () => {
       try {
@@ -97,6 +99,11 @@ const OpenInstallation = () => {
     }, 300); // Match animation duration
   };
 
+  const indexOfLastOrder = currentPage * itemsPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
+  const currentOrders = installationTasks.slice(indexOfFirstOrder, indexOfLastOrder);
+
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   return (
     <div>
@@ -126,7 +133,7 @@ const OpenInstallation = () => {
               <td colSpan={8} className="text-center">No installation tasks available</td>
             </tr>
           ) : (
-            installationTasks.map((task) => {
+            currentOrders.map((task) => {
               const acUnitsDisplay = task.ac_units.map(unit => 
                 `${unit.quantity}x ${unit.type} (${unit.capacity})`
               ).join(', ');
@@ -185,6 +192,13 @@ const OpenInstallation = () => {
           )}
         </tbody>
       </table>
+
+      <Pagination
+          currentPage={currentPage}
+          totalItems={installationTasks.length}
+          itemsPerPage={itemsPerPage}
+          paginate={paginate}
+        />
     </div>
   );
 };

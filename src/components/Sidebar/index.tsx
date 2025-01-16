@@ -16,7 +16,7 @@ interface SidebarProps {
 
 const menuGroups = [
   {
-    name: "MAIN MENU",
+    // name: "MAIN MENU",
     menuItems: [
       // {
       //   icon: (
@@ -273,8 +273,8 @@ const menuGroups = [
         children: [
           { label: "Open", route: "/installation/open"},
           { label: "Assigned", route: "/installation/assigned"},
-          { label: "Completed", route: "/installation/completed"},
-          { label: "Approval Pending", route: "/installation/approvalPending"}
+          { label: "Approval Pending", route: "/installation/approvalPending"},
+          { label: "Completed", route: "/installation/completed"}
         ],
       },
       {
@@ -376,13 +376,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
         <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5 xl:py-10">
           <Link href="/">
             <Image
-              width={156}
-              height={32}
+              width={90}
+              height={52}
               src={"/images/logo/circolifeLogo.png"}
               alt="Logo"
               priority
-              className="dark:hidden"
-              style={{ width: "auto", height: "auto" }}
+              className="dark:hidden mx-[5vw]"
             />
             <Image
               width={156}
@@ -421,7 +420,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             {menuGroups.map((group, groupIndex) => (
               <div key={groupIndex}>
                 <h3 className="mb-5 text-sm font-medium text-dark-4 dark:text-dark-6">
-                  {group.name}
+                  {/* {group.name} */}
                 </h3>
 
                 <ul className="mb-6 flex flex-col gap-2">
