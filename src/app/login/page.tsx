@@ -132,6 +132,7 @@ export default function Login() {
 
   return (
     <div className="font-sans bg-white">
+      <img src={"/images/logo/airexpert_logo.svg"} width={200} height={200 }/>
       <div className="min-h-screen flex items-center justify-center py-6 px-4">
         <div className="grid md:grid-cols-2 items-center gap-4 max-w-6xl w-full">
           <div className="rounded-lg p-6 max-w-md shadow-lg max-md:mx-auto">
@@ -191,13 +192,6 @@ export default function Login() {
               >
                 {showOtp ? 'Verify OTP' : 'Send OTP'}
               </button>
-
-              <p className="text-sm mt-8 text-center text-gray-800">
-                Don&apos;t have an account?
-                <a href="/register" className="text-blue-600 font-semibold hover:underline ml-1">
-                  Register here
-                </a>
-              </p>
             </form>
           </div>
 

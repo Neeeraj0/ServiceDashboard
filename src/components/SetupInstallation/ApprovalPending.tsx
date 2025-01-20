@@ -242,7 +242,7 @@ const ApprovalPending = () => {
             </tbody>
       </table>
       {isModalOpen && (
-                <PipingModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} images={modalImages} taskName="Setup"/>
+                <PipingModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} images={modalImages} taskName="Installation"/>
         )}
 
         <Pagination

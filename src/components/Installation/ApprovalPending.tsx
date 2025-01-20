@@ -6,12 +6,6 @@ import './module.style.css';
 import PipingModal from '../Modal/PipingModal';
 import Pagination from '../Pagination';
 
-interface ACUnit{
-  type: string;
-  model: string;
-  quantity: number;
-}
-
 interface Photo {
   url: string;
   servicePhase: string; 
@@ -29,7 +23,13 @@ interface AssignedTechnicians{
     phone: string,
     technician_id: string,
 }
-
+interface MaterialsUsed{
+  materialId: string,
+  materialName: string,
+  quantityUsed: string,
+  QuantityInFt: string,
+  sizeUsed:string
+}
 interface PipingResponse {
   approvalPending: any;
   _id: string;
@@ -56,10 +56,12 @@ interface PipingResponse {
   photos: Photo[];
   assignedDate: string;
   customerComplaint: string;
+  materialsUsed: MaterialsUsed[],
   contactPerson: {
     name: string,
     phone_number: string
-  }
+  },
+  endDate: string;
 }
 
 const ApprovalPending = () => {
@@ -73,6 +75,9 @@ const ApprovalPending = () => {
   const [approvedTasks] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [selectedTask, setSelectedTask] = useState<PipingResponse | null>(null);
+
+
 
   const fetchPipingData = async () => {
     try {
@@ -120,8 +125,9 @@ const ApprovalPending = () => {
     }, 3000);
   };
 
-  const handleViewImages = (photos: Photo[]) => {
+  const handleViewImages = (photos: Photo[], task: PipingResponse) => {
     setModalImages(photos);
+    setSelectedTask(task);
     setIsModalOpen(true);
   };
 
@@ -144,7 +150,7 @@ const ApprovalPending = () => {
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Status</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Technician Name</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Assigned Date & Time</th>
-            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Contact Person</th>
+            {/* <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Contact Person</th> */}
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer Details</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Action</th>
           </tr>
@@ -167,7 +173,7 @@ const ApprovalPending = () => {
                   {task.photos?.length > 0 ? (
                     <button
                       className="underline text-blue-600"
-                      onClick={() => handleViewImages(task.photos)}
+                      onClick={() => handleViewImages(task.photos, task)}
                     >
                       View Images
                     </button>
@@ -183,9 +189,9 @@ const ApprovalPending = () => {
                   <div>{formattedDateTime.date}</div>
                   <div className="text-gray-600">{formattedDateTime.time}</div>
                 </td>
-                <td className="p-2 border-b border-blue-gray-50 text-sm">
+                {/* <td className="p-2 border-b border-blue-gray-50 text-sm">
                   {task.contactPerson.name} <br /> {task.contactPerson.phone_number}
-                </td>
+                </td> */}
                 <td className="p-2 border-b border-blue-gray-50 text-sm whitespace-normal w-40">
                   {task.client_name} <br /> {task.client_number}
                 </td>
@@ -202,8 +208,15 @@ const ApprovalPending = () => {
           )}
         </tbody>
       </table>
-      {isModalOpen && (
-                <PipingModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} images={modalImages} taskName="Setup"/>
+      {isModalOpen && selectedTask &&(
+                <PipingModal isOpen={isModalOpen} 
+                onClose={() => {
+                  setIsModalOpen(false);
+                  setSelectedTask(null);
+                }}  
+                images={modalImages} 
+                taskName="Installation" 
+                taskDetails={selectedTask}/>
         )}
 
       <Pagination

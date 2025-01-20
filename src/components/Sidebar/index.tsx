@@ -376,17 +376,17 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
         <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5 xl:py-10">
           <Link href="/">
             <Image
-              width={90}
+              width={260}
               height={52}
-              src={"/images/logo/circolifeLogo.png"}
+              src={"/images/logo/airexpert_logo.svg"}
               alt="Logo"
               priority
-              className="dark:hidden mx-[5vw]"
+              className="dark:hidden "
             />
             <Image
               width={156}
               height={32}
-              src={"/images/logo/circolifeLogo.png"}
+              src={"/images/logo/airexpert_logo.svg"}
               alt="Logo"
               priority
               className="hidden dark:block"

@@ -1,16 +1,12 @@
 import Link from "next/link";
-import DarkModeSwitcher from "./DarkModeSwitcher";
-import DropdownNotification from "./DropdownNotification";
-import DropdownUser from "./DropdownUser";
 import Image from "next/image";
-import SearchForm from "@/components/Header/SearchForm";
-
+import './module.style.css'
 const Header = (props: {
   sidebarOpen: string | boolean | undefined;
   setSidebarOpen: (arg0: boolean) => void;
 }) => {
   return (
-    <header className="sticky top-0 z-10 flex lg:w-full m-2 rounded-full dark:border-stroke-dark dark:bg-gray-dark w-[95vw]">
+    <header className="sticky-header">
       <div className="flex flex-grow items-center justify-between px-4 py-5  md:px-5 2xl:px-10">
         <div className="flex items-center gap-2 sm:gap-4 lg:hidden">
           <button
@@ -19,7 +15,7 @@ const Header = (props: {
               e.stopPropagation();
               props.setSidebarOpen(!props.sidebarOpen);
             }}
-            className="z-1 block rounded-sm bg-white p-1.5 shadow-sm dark:border-dark-3 dark:bg-dark-2 lg:hidden"
+            className="z-1 block rounded-sm  p-1.5 shadow-sm dark:border-dark-3 dark:bg-dark-2 lg:hidden"
           >
             <span className="relative block h-5.5 w-5.5 cursor-pointer">
               <span className="du-block absolute right-0 h-full w-full">
@@ -57,9 +53,9 @@ const Header = (props: {
 
           <Link className="block flex-shrink-0 lg:hidden" href="/">
             <Image
-              width={100}
+              width={270}
               height={100}
-              src={"/images/logo/circolifeLogo.png"}
+              src={"/images/logo/airexpert_logo.svg"}
               alt="Logo"
             />
           </Link>
