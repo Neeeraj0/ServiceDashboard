@@ -8,6 +8,7 @@ import Pagination from '../Pagination';
 
 interface Photo {
   url: string;
+  orderId: string;
   servicePhase: string; 
   presignedUrl: string;
   s3Key: string;
@@ -54,6 +55,7 @@ interface PipingResponse {
   }[];
   servicingDate: string;
   photos: Photo[];
+  quantity: string;
   assignedDate: string;
   customerComplaint: string;
   materialsUsed: MaterialsUsed[],

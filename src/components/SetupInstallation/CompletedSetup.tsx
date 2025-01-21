@@ -22,6 +22,7 @@ interface Technician {
 
 interface Photo {
     url: string;
+    orderId: string;
     servicePhase: string; 
     presignedUrl: string;
     s3Key: string;

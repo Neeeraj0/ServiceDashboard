@@ -26,6 +26,7 @@ interface Photo {
     servicePhase: string; 
     presignedUrl: string;
     s3Key: string;
+    orderId: string;
     serialId: string;
     type: string;
 }

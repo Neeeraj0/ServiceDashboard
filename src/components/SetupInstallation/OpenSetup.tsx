@@ -221,7 +221,7 @@ const OpenSetup = () => {
               const address = `${order.customer_shipping_address.address_line1}, ${order.customer_shipping_address.address_line2 || ''}, ${order.customer_shipping_address.city}, ${order.customer_shipping_address.state}, ${order.customer_shipping_address.pincode}`;
 
               return (
-                <tr key={order._id} className={removingId === order._id ? "fade-out" : ""} style={{scrollbarColor: "red"}}>
+                <tr key={order._id} className={removingId === order._id ? "fade-out" : ""} >
                   {/* <td className="p-2 border-b border-blue-gray-50 text-sm">{order.customer.customer_id}</td>
                    */}
                   <td className="p-2 border-b border-blue-gray-50 text-sm">{serialNumber}</td>

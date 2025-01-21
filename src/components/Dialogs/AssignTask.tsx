@@ -284,7 +284,6 @@ export default React.memo(function AssignTask({
     }
   };
 
-  // Generate time options for the dropdown
   const generateTimeOptions = (interval: number) => {
     const options = [];
     const startTime = new Date();
@@ -311,7 +310,7 @@ export default React.memo(function AssignTask({
         <Dialog.Trigger asChild>
           <button
             onClick={() => setIsOpen(true)}
-            className="px-4 py-2 text-sm font-medium text-white bg-[#A14996] rounded hover:bg-[#A14996]-600"
+            className="px-4 py-2 text-sm font-medium text-white bg-[#A14996] rounded hover:bg-[#A14996]"
           >
             Assign Task
           </button>
