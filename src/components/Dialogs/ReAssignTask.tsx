@@ -206,7 +206,7 @@ export default function ReAssignTask({
                   )}
                 </div>
 
-                <div className="mb-4">
+                <div className="mb-4 max-h-[90px] overflow-y-scroll border rounded-md p-2 flex flex-wrap gap-2">
                   {selectedTechnicians.map((tech) => (
                     <div key={tech.technician_id} className="bg-blue-100 text-blue-800 px-3 py-2 rounded-md flex items-center justify-between mb-2">
                       {tech.name}

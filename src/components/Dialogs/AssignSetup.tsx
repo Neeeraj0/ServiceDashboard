@@ -333,7 +333,7 @@ export default function AssignSetup({
           <Dialog.Content className="flex items-center justify-center fixed inset-0 w-full h-full bg-transparent"   
           onPointerDown={(e) => e.stopPropagation()} // Prevent click propagation
           >
-            <div className="w-[35%] h-auto bg-white rounded-lg p-8 shadow-lg relative" onClick={(e) => e.stopPropagation()}>
+            <div className="w-[35%] h-auto  bg-white rounded-lg p-8 shadow-lg relative" onClick={(e) => e.stopPropagation()}>
               <Dialog.Title className="text-center font-sans text-lg font-medium">
                 Assign Task
               </Dialog.Title>
@@ -389,7 +389,7 @@ export default function AssignSetup({
                   ))}
                 </div> */}
 
-                <div className="mb-4 flex flex-wrap gap-2">
+                <div className="mb-4 max-h-[90px] overflow-y-scroll border rounded-md p-2 flex flex-wrap gap-2">
                   {selectedTechnicians.map((tech) => (
                     <div 
                       key={tech.technician_id} 

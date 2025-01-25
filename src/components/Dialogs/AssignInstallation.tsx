@@ -283,9 +283,9 @@ export default function AssignInstallation({
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/40" />
           <Dialog.Content className="flex items-center justify-center fixed inset-0 w-full h-full bg-transparent"   
-          onPointerDown={(e) => e.stopPropagation()} // Prevent click propagation
+          onPointerDown={(e) => e.stopPropagation()} 
           >
-            <div className="w-[35%] h-auto bg-white rounded-lg p-8 shadow-lg relative" onClick={(e) => e.stopPropagation()}>
+            <div className="w-[35%] h-auto max-h-[90vh] bg-white rounded-lg p-8 shadow-lg relative" onClick={(e) => e.stopPropagation()}>
               <Dialog.Title className="text-center font-sans text-lg font-medium">
                 Assign Task
               </Dialog.Title>
@@ -330,7 +330,7 @@ export default function AssignInstallation({
                   )}
                 </div>
 
-                <div className="mb-4">
+                <div className="mb-4 max-h-[40px] overflow-y-scroll border rounded-md p-2">
                   {selectedTechnicians.map((tech) => (
                     <div key={tech.technician_id} className="bg-blue-100 text-blue-800 px-3 py-2 rounded-md flex items-center justify-between mb-2">
                       {tech.name}

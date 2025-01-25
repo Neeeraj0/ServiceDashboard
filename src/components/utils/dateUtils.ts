@@ -1,4 +1,8 @@
-export const formatDate = (dateString: string) => {
+export const formatDate = (dateString?: string) => {
+  console.log(dateString);
+  if (!dateString) {
+    return { date: "N/A", time: "N/A" };
+}
     // Split the ISO string at 'T' to separate date and time
     const [date, timeWithOffset] = dateString.split('T');
     

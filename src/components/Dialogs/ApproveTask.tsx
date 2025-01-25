@@ -5,17 +5,19 @@ import toast from "react-hot-toast";
 
 interface CompletedApproveTaskProps {
   orderId: string;
+  onTaskApproved?: () => void;
 }
 
 export default function CompletedApproveTask({
   orderId,
+  onTaskApproved
 }: CompletedApproveTaskProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [issueFound, setIssueFound] = useState("");
   const [correctiveAction, setCorrectiveAction] = useState("");
   const selectedOrderId = localStorage.getItem("selectedOrderId");
   const modalRef = useRef(null);
-
+  
   const taskDataCreation = {
     _id: orderId,
     issueFound: issueFound,
@@ -39,6 +41,7 @@ export default function CompletedApproveTask({
             "Content-Type": "application/json",
           },
         });
+        onTaskApproved?.();
         toast.success("Task approved and query status changed successfully");
         setIssueFound("");
         setCorrectiveAction("");

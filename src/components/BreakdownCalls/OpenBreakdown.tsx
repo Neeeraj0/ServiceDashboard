@@ -21,7 +21,7 @@ const OpenBreakdown = () => {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const res = await axios.get("http://devappapi.circolives.in/api/query/queries/all", {
+        const res = await axios.get("https://production.circolife.vip/api/query/queries/all", {
           headers: {
             "Content-Type": "application/json",
           },

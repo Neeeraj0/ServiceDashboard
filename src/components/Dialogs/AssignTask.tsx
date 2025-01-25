@@ -44,26 +44,7 @@ export default React.memo(function AssignTask({
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [filteredTechnicians, setFilteredTechnicians] = useState<Technician[]>([]);
   const [selectedTechnicians, setSelectedTechnicians] = useState<Technician[]>([]);
-  const [isAnimating, setIsAnimating] = useState(false);
-
-  // // Fetch technicians with caching
-  // useEffect(() => {
-  //   const fetchTechnicians = async () => {
-  //     if (techniciansCache) {
-  //       setTechnicians(techniciansCache);
-  //     } else {
-  //       try {
-  //         const response = await axios.get(`http://35.154.208.29:8080/api/technicians/getTechnicians`);
-  //         techniciansCache = response.data;
-  //         setTechnicians(response.data);
-  //       } catch (error) {
-  //         console.error("Error fetching technicians:", error);
-  //         toast.error("Failed to load technicians");
-  //       }
-  //     }
-  //   };
-  //   fetchTechnicians();
-  // }, []);
+  const [isButtonClicked, setIsButtonClicked] = useState(false);
 
   useEffect(() => {
     const fetchTechnicians = async () => {
@@ -72,7 +53,7 @@ export default React.memo(function AssignTask({
       
       if(!technicians){
         try {
-          const response = await axios.get(`http://35.154.208.29:8080/api/technicians/getTechnicians`);
+          const response = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/technicians/getTechnicians`);
           localStorage.setItem("technicians", JSON.stringify(response.data)); // Update cache
           setTechnicians(response.data); // Update with fresh data
         } catch (error) {
@@ -86,7 +67,7 @@ export default React.memo(function AssignTask({
   
   const refreshTechnicians = async () => {
     try {
-      const response = await axios.get(`http://35.154.208.29:8080/api/technicians/getTechnicians`);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/technicians/getTechnicians`);
       localStorage.setItem("technicians", JSON.stringify(response.data));
       setTechnicians(response.data);
       toast.success("Technicians list updated");
@@ -236,7 +217,6 @@ export default React.memo(function AssignTask({
 
   const handleAssignTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsAnimating(true);
     const timeIn24Hour = convertTo24HourFormat(servicingTime);
     const servicingDateTime = mergeDateTimeToISO(servicingDate, timeIn24Hour);
     if (!servicingDateTime) {
@@ -261,7 +241,7 @@ export default React.memo(function AssignTask({
     };
 
     try {
-      await axios.post(`http://35.154.208.29:8080/api/tasks`, taskDataCreation, {
+      await axios.post(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/tasks`, taskDataCreation, {
         headers: { "Content-Type": "application/json" },
       });
 
@@ -276,7 +256,6 @@ export default React.memo(function AssignTask({
       setTimeout(() => {
         onTaskAssigned(orderId); // Notify parent component
         setIsOpen(false); // Close modal
-        setIsAnimating(false)
       }, 5000); 
     } catch (error) {
       console.error("Error assigning task:", error);
@@ -303,7 +282,13 @@ export default React.memo(function AssignTask({
 
   const timeOptions = generateTimeOptions(30); // 30-minute intervals
 
-
+  useEffect(() => {
+    setIsButtonClicked(
+      selectedTechnicians.length > 0 &&
+      servicingDate !== "" &&
+      servicingTime !== ""
+    );
+  }, [selectedTechnicians, servicingDate, servicingTime]);
   return (
     <div className="flex w-full font-sans">
       <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
@@ -415,15 +400,16 @@ export default React.memo(function AssignTask({
                   Refresh Technicians
                 </button>
 
-                {/* <div className="flex justify-center mt-8">
+                <div className="flex justify-center mt-8">
                   <button
                     type="submit"
-                    className={`bg-purple-600 text-white py-2 px-8 rounded text-sm hover:bg-purple-700 transition-transform ${isAnimating ? "order animate" : ""}`}
+                    disabled={!isButtonClicked}
+                    className={`bg-purple-600 text-white py-2 px-8 rounded text-sm hover:bg-purple-700`}
                   >
                     Submit
                   </button>
-                </div> */}
-                <div className="flex justify-center mt-8">
+                </div>
+                {/* <div className="flex justify-center mt-8">
                   <button
                     type="submit"
                     className={`order ${isAnimating ? "animate" : ""}`}
@@ -444,7 +430,7 @@ export default React.memo(function AssignTask({
                     </div>
                     <div className="lines"></div>
                   </button>
-                </div>
+                </div> */}
               </form>
             </div>
           </Dialog.Content>

@@ -29,6 +29,7 @@ export default function Login() {
   });
   const [otp, setOtp] = useState('');
   const [showOtp, setShowOtp] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // New loading state
   const router = useRouter();
   const { setUserData } = useUser();
 
@@ -60,7 +61,7 @@ export default function Login() {
       toast.error('Please select a role');
       return;
     }
-
+    setIsLoading(true); 
     try {
       setupRecaptcha();
       const phoneNumber = `+91${formData.phone}`;
@@ -75,6 +76,7 @@ export default function Login() {
         role: formData.role // Now this is type-safe
       });
       toast.success('OTP sent successfully!');
+      setIsLoading(false);
     } catch (error) {
       console.error('Error sending OTP:', error);
       toast.error('Failed to send OTP. Please try again.');
@@ -190,8 +192,8 @@ export default function Login() {
                 onClick={showOtp ? verifyOtp : sendOtp}
                 disabled={!isFormValid || (showOtp && !otp)}
               >
-                {showOtp ? 'Verify OTP' : 'Send OTP'}
-              </button>
+                {isLoading ? 'Sending...' : (showOtp ? 'Verify OTP' : 'Send OTP')}
+                </button>
             </form>
           </div>
 

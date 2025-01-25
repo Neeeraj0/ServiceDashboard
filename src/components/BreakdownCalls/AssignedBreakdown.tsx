@@ -35,7 +35,7 @@ const AssignedBreakdown: React.FC = () => {
   useEffect(() => {
     const fetchAssignedOrders = async () => {
       try {
-        const res = await axios.get('http://35.154.208.29:8080/api/breakdown/getAssigned');
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/breakdown/getAssigned`);
         const orders = res.data.map((order: any) => ({
           _id: order._id,
           task_id: order.task_id,

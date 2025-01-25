@@ -254,8 +254,8 @@ const PipingModal: React.FC<ModalProps> = ({ isOpen, onClose, images, taskName, 
             currentY += 10;
   
             try {
-              doc.addImage(image.presignedUrl, "JPEG", margin, currentY, pageWidth - 2 * margin, 80);
-              currentY += 90;
+              doc.addImage(image.presignedUrl, "JPEG", margin, currentY, pageWidth - 6 * margin, 90);
+              currentY += 100;
             } catch (error) {
               console.error("Error adding image to PDF:", error);
               doc.text("Error loading image", margin, currentY);
