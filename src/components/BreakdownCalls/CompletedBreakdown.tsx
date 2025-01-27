@@ -90,7 +90,8 @@ const CompletedBreakdown: React.FC = () => {
         }));
   
         const resQueries = await axios.get('https://production.circolife.vip/api/query/queries/all');
-        const completedQueryIds = resQueries.data
+        console.log('line 93', resQueries);
+        const completedQueryIds = resQueries?.data.data
           .filter((query: any) => query.queryStatus === 'complete')
           .map((query: any) => query._id);
   

@@ -80,7 +80,7 @@ const OpenBreakdown = () => {
         const token = loginResponse.data.token;
         console.log("token", token);
 
-        const res = await axios.get("http://35.154.208.29:5000/api/summary/address", {
+        const res = await axios.get("https://testing.backend.summary.circolife.vip/api/summary/address", {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -115,7 +115,6 @@ const OpenBreakdown = () => {
 
   const downloadCSV = () => {
     setShowAnimation(true);
-    // Transform data into a format suitable for CSV
     const csvData = backendData.map((order) => ({
       "Task ID": order._id,
       "Contact Person": order.contactperson,
@@ -153,7 +152,6 @@ const OpenBreakdown = () => {
   );
   const currentOrders = backendData.slice(indexOfFirstOrder, indexOfLastOrder);
 
-  // Function to handle task removal
   const handleTaskAssigned = (id: string) => {
     setRemovingId(id); // Start fade-out animation
     setTimeout(() => {

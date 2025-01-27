@@ -9,7 +9,7 @@ interface ACUnit {
   type: string;
   capacity: string;
   quantity: number;
-  orderId: string; // Make sure this matches the property you are using
+  orderId?: string; // Make sure this matches the property you are using
 }
 
 interface Technician {
@@ -46,7 +46,8 @@ export default function AssignInstallation({
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [filteredTechnicians, setFilteredTechnicians] = useState<Technician[]>([]);
   const [selectedTechnicians, setSelectedTechnicians] = useState<Technician[]>([]); // Track selected technicians
-    const [isAnimating, setIsAnimating] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);  
   console.log(ac_units);
   useEffect(() => {
     const fetchTechnicians = async () => {
@@ -95,17 +96,17 @@ export default function AssignInstallation({
   function mergeDateTimeToISO(servicingDate: string, servicingTime: string) {
     console.log(servicingDate, servicingTime);
     if (!servicingDate || !servicingTime) {
-      console.error(
+      toast.error(
         "Invalid input: servicingDate and servicingTime are required"
       );
       return null;
     }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(servicingDate)) {
-      console.error("Invalid servicingDate format. Expected YYYY-MM-DD");
+      toast.error("Invalid servicingDate format. Expected YYYY-MM-DD");
       return null;
     }
     if (!/^\d{2}:\d{2}$/.test(servicingTime)) {
-      console.error("Invalid servicingTime format. Expected HH:MM");
+      toast.error("Invalid servicingTime format. Expected HH:MM");
       return null;
     }
 
@@ -164,7 +165,7 @@ export default function AssignInstallation({
       return;
     }
 
-    const orderResponse = await axios.get(`http://13.203.74.27:5000/api/preOrder/orders/detail/${preOrderId}`);
+    const orderResponse = await axios.get(`https://salestrackbackend.circolife.vip/api/preOrder/orders/detail/${preOrderId}`);
     const orders = orderResponse.data;
 
     const orderMap: { [key: string]: string[] } = {}; // key: model, value: array of order IDs
@@ -242,7 +243,7 @@ export default function AssignInstallation({
     };
 
     try {
-      await axios.post(`http://35.154.208.29:8080/api/tasks`, taskDataCreation, {
+      await axios.post(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/tasks`, taskDataCreation, {
       //  await axios.post(`http://localhost:8000/api/tasks`, taskDataCreation, {
         headers: {
           "Content-Type": "application/json",
@@ -267,6 +268,7 @@ export default function AssignInstallation({
       alert("Failed to assign task");
     }
   };
+
 
   return (
     <div className="flex w-full font-sans">
@@ -392,7 +394,7 @@ export default function AssignInstallation({
                     className={`order ${isAnimating ? "animate" : ""}`}
                   >
                     <span className="default">Submit</span>
-                    <span className="success">Installation will be done soon ✅</span>
+                    <span className="success">Installation will be done ✅</span>
                     <svg viewBox="0 0 12 10">
                       <polyline points="1.5 6 4.5 9 10.5 1" />
                     </svg>

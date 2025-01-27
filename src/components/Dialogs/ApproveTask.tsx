@@ -31,12 +31,12 @@ export default function CompletedApproveTask({
     e.preventDefault();
     if (orderId) {
       try {
-        await axios.post("http://devappapi.circolives.in/api/query/resolveQuery", taskDataCreation, {
+        await axios.post("https://production.circolife.vip/api/query/resolveQuery", taskDataCreation, {
           headers: {
             "Content-Type": "application/json",
           },
         });
-        await axios.put(`http://devappapi.circolives.in/api/query/changeQueryStatus/${orderId}`, queryData, {
+        await axios.put(`https://production.circolife.vip/api/query/changeQueryStatus/${orderId}`, queryData, {
           headers: {
             "Content-Type": "application/json",
           },

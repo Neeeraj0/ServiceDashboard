@@ -1,109 +1,181 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
-import PipingAssignTask from '../Dialogs/PipingAssignTask';
-import MoveToInstallation from '../Dialogs/MoveToInstallation';
-import toast from 'react-hot-toast';
-import AssignTask from '../Dialogs/AssignTask';
+import './module.style.css'
 import AssignInstallation from '../Dialogs/AssignInstallation';
-import Pagination from '../Pagination';
 
-// Updated interface to match the new data structure
-interface InstallationTask {
+interface PreorderResponse {
   _id: string;
-  title: string;
-  description: string;
-  status: string;
-  taskType: string;
-  task_id: string;
-  client_name: string;
-  client_number: string;
-  address: { location: string }[];
-  ac_units: {
-    type: string;
-    capacity: string;
-    quantity: number;
-    orderId: string;
-  }[];
-  servicingDate: string;
-  assignedDate: string;
-  quantity: number;
-  contactPerson: {
+  customer: {
+    customer_id: string;
     name: string;
-    phone_number: string;
+    email: string;
+    mobile: string;
   };
-  assignedTechnicians: string[];
+  superAdmin: string;
+  brandName: string;
+  AcDetails: {
+    ac_type: string;
+    subscription_price: number;
+    fixedPriceAfter3Years: number;
+    model: string;
+    installation_price: number;
+    plan_year: string;
+    deposit: number;
+    quantity: number;
+    _id: string;
+  }[];
+  Ac_totalAmount: number;
+  materialsdetails: {
+    material_name: string;
+    material_price: number;
+    quantity: number;
+    _id: string;
+  }[];
+  material_totalAmount: number;
+  status: string;
+  with_material: boolean;
+  pending_amount: number;
+  executive_id: string;
+  customer_shipping_address: {
+    address_line1: string;
+    address_line2: string;
+    pincode: string;
+    city: string;
+    country: string;
+    state: string;
+    contactPerson: string;
+    contactNumber: string;
+  };
+  customer_billing_address: {
+    gst_number: string;
+    address_line1: string;
+    address_line2: string;
+    pincode: string;
+    city: string;
+    country: string;
+    state: string;
+  };
+  orderingStatus: boolean;
+  preOrdertimestamp: string;
+  paidamount: number;
+  DateofSiteSurvey?: string;
+  DateofInstallation?: string;
+  TimeofInstallation?: string;
+}
+
+interface SiteSurveyDetail {
+  _id: string;
+  PreOrderId: string;
 }
 
 const OpenInstallation = () => {
-  let [installationTasks, setInstallationTasks] = useState<InstallationTask[]>([]);
+  const [allPreorderData, setAllPreorderData] = useState<PreorderResponse[]>([]);
+  const [filteredPreorders, setFilteredPreorders] = useState<PreorderResponse[]>([]);
+  const [siteSurveyDetails, setSiteSurveyDetails] = useState<SiteSurveyDetail[]>([]);
+  const [assignedTasks, setAssignedTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
-  const [isInstallationDialogOpen, setIsInstallationDialogOpen] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  useEffect(() => {
-    const fetchInstallationTasks = async () => {
-      try {
-        // const res = await axios.get("http://localhost:8000/api/piping/getApprovedPiping");
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_NEXT_SERVICE_BACKEND_API}/api/piping/getApprovedPiping`);
-        
-        if (res.status === 404 || !res.data) {
-          setError('No installation tasks available');
-          setLoading(false);
-          return;
-        }
 
-        // const res2 = await axios.get("http://localhost:8000/api/installation/getAssigned");
-        const res2 = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/installation/getAssigned`);
+  const modelToTonnage: { [key: string]: string } = {
+    "S10": "1T",
+    "S15": "1.5T",
+    "S20": "2T",
+    "S30": "3T",
+  };
 
-        console.log(res.data.map((prevData: any) => prevData._id))
-        console.log(res2.data.map((prevData: any) => prevData.preOrderId))
-        const filteredTasks = res.data.filter((task1: any) => 
-          !res2.data.some((task2: any) => task1._id === task2.preOrderId)
-        );
-        console.log('filtered tasks', filteredTasks);
-
-        setInstallationTasks(filteredTasks);
-        setLoading(false);
-      } catch (err: any) {
-        console.error("Error fetching installation tasks:", err);
-        setError(err.response?.data?.message || 'Error fetching data');
-        setLoading(false);
-      }
-    };
+  const fetchData = async () => {
+    try {
+      const [preordersRes, assignedTasksRes] = await Promise.all([
+        axios.get('https://salestrackbackend.circolife.vip/api/preOrder/getall/preorders', {
+          headers: {
+            Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NzM2Y2ZhNWFlYzUzYzUzNjM5NTU1OWEiLCJlbWFpbCI6ImppdHUueWFkYXZAY2lyY29saWZlLmNvbSIsImlhdCI6MTczNzcxNjY2NX0.Cm2fJgKtSYG_estAgae8BU9KwQ63og3efWkDuHmuKBA`,
+          },
+        }),
+        axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/installation/getAssigned`),
+      ]);
   
-    fetchInstallationTasks();
-  }, []);  
+      // Filter orders where orderingStatus is true
+      const ordersWithOrderingStatus = preordersRes.data.filter(
+        (order: PreorderResponse) => order.orderingStatus === true
+      );
+  
+      // Extract assigned task `preOrderId` for filtering
+      const assignedPreorderIds = new Set(
+        assignedTasksRes.data.map((task: { preOrderId: string }) => task.preOrderId)
+      );
+  
+      // Filter orders that are not assigned
+      const unassignedOrders = ordersWithOrderingStatus.filter(
+        (order: PreorderResponse) => !assignedPreorderIds.has(order._id)
+      );
+  
+      setAllPreorderData(ordersWithOrderingStatus);
+      setAssignedTasks(assignedTasksRes.data);
+      setFilteredPreorders(unassignedOrders);
+    } catch (err: any) {
+      console.error('Error fetching data:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };  
 
-  // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.dropdown-container')) {
-        setOpenDropdownId(null);
-      }
-    };
-
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    fetchData();
   }, []);
 
-  // Function to handle task removal
-  const handleTaskAssigned = (id: string) => {
-    setRemovingId(id); // Start fade-out animation
-    setTimeout(() => {
-      setInstallationTasks((prevData) => prevData.filter((task) => task._id !== id));
-      setRemovingId(null); 
-    }, 300); // Match animation duration
+  useEffect(() => {
+    const assignedPreorderIds = new Set(
+      assignedTasks.map((task: { preOrderId: string }) => task.preOrderId)
+    );
+  
+    const unassignedOrders = allPreorderData.filter(
+      (order: PreorderResponse) => !assignedPreorderIds.has(order._id)
+    );
+  
+    setFilteredPreorders(unassignedOrders);
+  }, [allPreorderData, assignedTasks]);
+
+  const formatACDetails = (acDetails: PreorderResponse['AcDetails']) => {
+    const groupedDetails: Record<string, string[]> = {};
+  
+    acDetails.forEach((ac) => {
+      const tonnage = modelToTonnage[ac.model] || ac.model;
+      const formattedAC = `${tonnage} (${ac.quantity})`;
+  
+      if (!groupedDetails[ac.ac_type]) {
+        groupedDetails[ac.ac_type] = [];
+      }
+      groupedDetails[ac.ac_type].push(formattedAC);
+    });
+  
+    return Object.entries(groupedDetails)
+      .map(([type, details]) => `${type}: ${details.join(', ')}`)
+      .join('\n');
   };
+
+  const handleTaskAssigned = useCallback((id: string) => {
+    setRemovingId(id);
+    setTimeout(() => {
+      setFilteredPreorders(prev => prev.filter(task => task._id !== id));
+      setRemovingId(null);
+    }, 300);
+  }, []);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>No Records found: {error}</div>;
 
   const indexOfLastOrder = currentPage * itemsPerPage;
   const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
-  const currentOrders = installationTasks.slice(indexOfFirstOrder, indexOfLastOrder);
+  const currentOrders = filteredPreorders.slice(indexOfFirstOrder, indexOfLastOrder);
+  const totalPages = Math.ceil(filteredPreorders.length / itemsPerPage);
 
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  const paginate = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+  };
 
   return (
     <div>
@@ -111,79 +183,69 @@ const OpenInstallation = () => {
         <thead>
           <tr>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Task ID</th>
-            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer Details</th>
-            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Status</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Contact Person</th>
-            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Address</th>
-            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Servicing Date</th>
+            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer Details</th>
+            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">AC Details</th>
+            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer Address</th>
+            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm max-w-40">Installation Date & Time</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Action</th>
           </tr>
         </thead>
         <tbody>
-          {loading ? (
+          {currentOrders.length === 0 ? (
             <tr>
-              <td colSpan={8} className="text-center">Loading...</td>
-            </tr>
-          ) : error ? (
-            <tr>
-              <td colSpan={8} className="text-center">{error}</td>
-            </tr>
-          ) : installationTasks.length === 0 ? (
-            <tr>
-              <td colSpan={8} className="text-center">No installation tasks available</td>
+              <td colSpan={9} className="text-center">No preorders available</td>
             </tr>
           ) : (
-            currentOrders.map((task) => {
-              const acUnitsDisplay = task.ac_units.map(unit => 
-                `${unit.quantity}x ${unit.type} (${unit.capacity})`
-              ).join(', ');
+            currentOrders.map((order, index) => {
+              const serialNumber = indexOfFirstOrder + index + 1;
+              const acUnits = order.AcDetails.map(ac => ({
+                type: ac.ac_type + " AC",
+                capacity: ac.model,
+                quantity: ac.quantity
+              }));
+
+              const address = `${order.customer_shipping_address.address_line1}, ${order.customer_shipping_address.address_line2 || ''}, ${order.customer_shipping_address.city}, ${order.customer_shipping_address.state}, ${order.customer_shipping_address.pincode}`;
 
               return (
-                <tr key={task._id} className={removingId === task._id ? "fade-out" : ""}>
-                  <td className="p-2 border-b border-blue-gray-50 text-sm">{task.task_id}</td>
-                  <td className="p-2 border-b border-blue-gray-50 text-sm">{task.client_name}</td>
+                <tr key={order._id} className={removingId === order._id ? 'fade-out' : ''}>
+                  <td className="p-2 border-b border-blue-gray-50 text-sm">{serialNumber}</td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm">
-                    <span className={`inline-block px-2 py-1 font-sans text-xs font-bold rounded shadow-md 
-                      ${task.status === 'open' ? 'bg-green-200 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      {task.status}
-                    </span>
+                    {order.customer_shipping_address.contactPerson && order.customer_shipping_address.contactNumber
+                      ? (
+                        <>
+                          {order.customer_shipping_address.contactPerson} <br />
+                          {order.customer_shipping_address.contactNumber}
+                        </>
+                      )
+                      : "N/A"}
                   </td>
-                  <td className="p-2 border-b border-blue-gray-50 text-sm">
-                    {task.contactPerson?.name} <br />
-                    {task?.contactPerson?.phone_number}
+                  <td className="p-2 border-b border-blue-gray-50 text-sm whitespace-normal w-50">{order.customer.name}</td>
+                  <td className="p-2 border-b border-blue-gray-50 text-sm whitespace-pre-line w-40">
+                    {formatACDetails(order.AcDetails)}
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm whitespace-normal w-40">
-                    {task.address[0]?.location || 'No address provided'}
+                    {address}
                   </td>
-                  {/* <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">{acUnitsDisplay}</td> */}
                   <td className="p-2 border-b border-blue-gray-50 text-sm">
-                    {new Date(task.servicingDate).toLocaleDateString('en-IN', {
+                    {order.DateofInstallation ? new Date(order.DateofInstallation).toLocaleDateString('en-IN', {
                       day: '2-digit',
                       month: '2-digit',
                       year: 'numeric',
-                    })}
+                    }) : "Not Provided"}
+                    {order.TimeofInstallation}
                   </td>
-                  <td className="p-2 border-b border-blue-gray-50 mt-[5vh] text-sm">
-                    {/* <AssignInstallation
-                      orderId={task._id}
-                      clientName={task.contactPerson.name}
-                      clientNumber={task.contactPerson.phone_number}
-                      description={task.description}
-                      addressDisplay={task.address[0].location}
-                      ac_units={
-                        task.ac_units
-                      }
-                    /> */}
-                    <AssignInstallation
-                      preOrderId={task._id}
-                      clientName={task.client_name}
-                      clientNumber={task.client_number}
-                      description={task.description}
-                      addressDisplay={task.address[0]?.location || 'No address provided'}
-                      ac_units={task.ac_units}
-                      contactNumber={task.contactPerson?.phone_number}
-                      contactName={task.contactPerson?.name}
-                      onTaskAssigned={handleTaskAssigned} 
+                  <td className="p-2 border-b border-blue-gray-50 text-sm relative dropdown-container">
+                    <AssignInstallation 
+                      preOrderId={order._id}
+                      clientName={order.customer.name}
+                      clientNumber={order.customer.mobile}
+                      description=""
+                      onTaskAssigned={handleTaskAssigned}
+                      ac_units={acUnits}
+                      addressDisplay={address}
+                      contactName={order.customer_shipping_address.contactPerson}
+                      contactNumber={order.customer_shipping_address.contactNumber}
                     />
                   </td>
                 </tr>
@@ -193,12 +255,31 @@ const OpenInstallation = () => {
         </tbody>
       </table>
 
-      <Pagination
-          currentPage={currentPage}
-          totalItems={installationTasks.length}
-          itemsPerPage={itemsPerPage}
-          paginate={paginate}
-        />
+      <div className="pagination flex flex-wrap justigy-center gap-2">
+        <button
+          className={`pagination-button ${currentPage === 1 ? 'disabled' : ''}`}
+          onClick={() => paginate(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          Previous
+        </button>
+        {Array.from({ length: totalPages }, (_, index) => (
+          <button
+            key={index + 1}
+            onClick={() => paginate(index + 1)}
+            className={`pagination-button ${currentPage === index + 1 ? 'active' : ''}`}
+          >
+            {index + 1}
+          </button>
+        ))}
+        <button
+          className={`pagination-button ${currentPage === totalPages ? 'disabled' : ''}`}
+          onClick={() => paginate(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 };

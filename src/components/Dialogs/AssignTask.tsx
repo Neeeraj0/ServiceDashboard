@@ -247,7 +247,7 @@ export default React.memo(function AssignTask({
 
       // Update query status
       await axios.put(
-        `http://devappapi.circolives.in/api/query/changeQueryStatus/${orderId}`,
+        `https://production.circolife.vip/api/query/changeQueryStatus/${orderId}`,
         { queryStatus: "assign" },
         { headers: { "Content-Type": "application/json" } }
       );
@@ -409,28 +409,6 @@ export default React.memo(function AssignTask({
                     Submit
                   </button>
                 </div>
-                {/* <div className="flex justify-center mt-8">
-                  <button
-                    type="submit"
-                    className={`order ${isAnimating ? "animate" : ""}`}
-                  >
-                    <span className="default">Submit</span>
-                    <span className="success">Task Assigned ✅</span>
-                    <svg viewBox="0 0 12 10">
-                      <polyline points="1.5 6 4.5 9 10.5 1" />
-                    </svg>
-                    <div className="box"></div>
-                    <div className="truck">
-                      <div className="back"></div>
-                      <div className="front">
-                        <div className="window"></div>
-                      </div>
-                      <div className="light top"></div>
-                      <div className="light bottom"></div>
-                    </div>
-                    <div className="lines"></div>
-                  </button>
-                </div> */}
               </form>
             </div>
           </Dialog.Content>

@@ -85,9 +85,7 @@ const AssignedInstallation: React.FC = () => {
           <th className="p-2 border-b border-blue-gray-50 min-w-[180px]">
             <div className="font-semibold text-sm">Assigned Technicians</div>
           </th>
-          <th className="p-2 border-b border-blue-gray-50 min-w-[200px]">
-            <div className="font-semibold text-sm">Issue Reported</div>
-          </th>
+          
           <th className="p-2 border-b border-blue-gray-50 min-w-[120px]">
             <div className="font-semibold text-sm">Status</div>
           </th>
@@ -129,7 +127,7 @@ const AssignedInstallation: React.FC = () => {
                   "No technicians assigned"
                 )}
               </td>
-              <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">{order.issueReported || "N/A"}</td>
+              {/* <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">{order.issueReported || "N/A"}</td> */}
               <td className="p-2 border-b border-blue-gray-50 text-sm">
                 <span className={`px-5 py-2 rounded-full text-xs uppercase ${
                   order.status === 'open' ? 'bg-red-100 text-red-800':

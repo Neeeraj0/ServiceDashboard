@@ -11,7 +11,7 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalItems, itemsP
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   return (
-    <div className="pagination">
+    <div className="pagination flex flex-wrap justify-center gap-2">
       <button
         className={`pagination-button ${currentPage === 1 ? 'disabled' : ''}`}
         onClick={() => paginate(currentPage - 1)}
