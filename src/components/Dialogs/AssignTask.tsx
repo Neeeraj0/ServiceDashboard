@@ -48,22 +48,31 @@ export default React.memo(function AssignTask({
 
   useEffect(() => {
     const fetchTechnicians = async () => {
+      // Check if technicians exist in localStorage
       const cachedTechnicians = JSON.parse(localStorage.getItem("technicians") || "[]");
-      setTechnicians(cachedTechnicians); // Serve cached data immediately
-      
-      if(!technicians){
+  
+      // If we find cached data, set it immediately
+      if (cachedTechnicians.length > 0) {
+        setTechnicians(cachedTechnicians);
+      }
+  
+      // If cached technicians is empty or not available, fetch from API
+      if (cachedTechnicians.length === 0) {
         try {
-          const response = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/technicians/getTechnicians`);
-          localStorage.setItem("technicians", JSON.stringify(response.data)); // Update cache
-          setTechnicians(response.data); // Update with fresh data
+          const response = await axios.get('https://servicebackend.circolife.vip/api/technicians/getTechnicians');
+          localStorage.setItem("technicians", JSON.stringify(response.data)); // Cache the data
+          setTechnicians(response.data); // Update state with fresh data
+          console.log('Fetched technicians:', response);
         } catch (error) {
-          console.error("Error fetching technicians:", error);
-          toast.error("Failed to load technicians");
+          console.error('Error fetching technicians:', error);
+          toast.error('Failed to load technicians');
         }
       }
     };
+  
     fetchTechnicians();
   }, []);
+  
   
   const refreshTechnicians = async () => {
     try {
