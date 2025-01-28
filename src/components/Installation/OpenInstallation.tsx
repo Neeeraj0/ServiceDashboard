@@ -77,6 +77,7 @@ const OpenInstallation = () => {
   const [error, setError] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
   const itemsPerPage = 10;
 
   const modelToTonnage: { [key: string]: string } = {
@@ -91,7 +92,7 @@ const OpenInstallation = () => {
       const [preordersRes, assignedTasksRes] = await Promise.all([
         axios.get('https://salestrackbackend.circolife.vip/api/preOrder/getall/preorders', {
           headers: {
-            Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NzM2Y2ZhNWFlYzUzYzUzNjM5NTU1OWEiLCJlbWFpbCI6ImppdHUueWFkYXZAY2lyY29saWZlLmNvbSIsImlhdCI6MTczNzcxNjY2NX0.Cm2fJgKtSYG_estAgae8BU9KwQ63og3efWkDuHmuKBA`,
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_SALES_BACKEND_TOKEN}`,
           },
         }),
         axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/installation/getAssigned`),
@@ -135,9 +136,15 @@ const OpenInstallation = () => {
     const unassignedOrders = allPreorderData.filter(
       (order: PreorderResponse) => !assignedPreorderIds.has(order._id)
     );
+    
+    // Apply search filter
+    const searchFiltered = unassignedOrders.filter(order => 
+      order.customer.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
   
-    setFilteredPreorders(unassignedOrders);
-  }, [allPreorderData, assignedTasks]);
+    setFilteredPreorders(searchFiltered);
+    setCurrentPage(1); // Reset to first page when search changes
+  }, [allPreorderData, assignedTasks, searchQuery]);
 
   const formatACDetails = (acDetails: PreorderResponse['AcDetails']) => {
     const groupedDetails: Record<string, string[]> = {};
@@ -179,6 +186,22 @@ const OpenInstallation = () => {
 
   return (
     <div>
+        <div className="flex m-5 rounded-md border-2 border-[#A14996] overflow-hidden w-[fit-content] p-2 justify-start">
+        <input
+            type="text"
+            className="outline-none focus:outline-none border-none focus:ring-0 bg-transparente"
+            placeholder="Search by customer name"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        <button type='button' className="flex items-center justify-center bg-[#A14996] px-5 rounded-xl">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192.904 192.904" width="16px" className="fill-white">
+            <path
+              d="m190.707 180.101-47.078-47.077c11.702-14.072 18.752-32.142 18.752-51.831C162.381 36.423 125.959 0 81.191 0 36.422 0 0 36.423 0 81.193c0 44.767 36.422 81.187 81.191 81.187 19.688 0 37.759-7.049 51.831-18.751l47.079 47.078a7.474 7.474 0 0 0 5.303 2.197 7.498 7.498 0 0 0 5.303-12.803zM15 81.193C15 44.694 44.693 15 81.191 15c36.497 0 66.189 29.694 66.189 66.193 0 36.496-29.692 66.187-66.189 66.187C44.693 147.38 15 117.689 15 81.193z">
+            </path>
+          </svg>
+        </button>
+      </div>
       <table className="w-full text-left table-auto min-w-max">
         <thead>
           <tr>

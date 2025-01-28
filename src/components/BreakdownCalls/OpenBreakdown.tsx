@@ -157,7 +157,7 @@ const OpenBreakdown = () => {
     setTimeout(() => {
       setBackendData((prevData) => prevData.filter((task) => task._id !== id));
       setRemovingId(null); // Clear the `removingId` after removal
-    }, 300); // Match animation duration
+    }, 500); // Match animation duration
   };
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
