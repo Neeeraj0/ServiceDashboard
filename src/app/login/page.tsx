@@ -93,9 +93,14 @@ export default function Login() {
       const result = await window.confirmationResult.confirm(otp);
       const user = result.user;
       
-      const endpoint = formData.role === 'servicehead'
-        ? 'https://servicebackend.circolife.vip/api/users/checkUser'
-        : 'https://servicebackend.circolife.vip/api/technicians/checkTechnician';
+      let endpoint;
+      if (formData.role === 'servicehead') {
+          endpoint = 'https://servicebackend.circolife.vip/api/users/checkUser';
+      } else if (formData.role === 'viewAccess') {
+          endpoint = 'https://servicebackend.circolife.vip/api/users/checkUser';
+      } else {
+          endpoint = 'https://servicebackend.circolife.vip/api/technicians/checkTechnician';
+      }
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -111,7 +116,7 @@ export default function Login() {
 
       if (response.ok && data.exists) {
         localStorage.setItem('authToken', data.token);
-        toast.success(`${formData.role === 'servicehead' ? 'Service Head' : 'Technician'} authenticated successfully!`);
+        toast.success(`Service Head authenticated successfully!`);
         router.push('/');
       } else {
         toast.error(`${formData.role === 'servicehead' ? 'Service Head' : 'Technician'} not found`);
@@ -123,7 +128,7 @@ export default function Login() {
   };
 
   const handleRoleChange = (selectedRole: string) => {
-    if (selectedRole === 'serviceengineer' || selectedRole === 'servicehead') {
+    if (selectedRole === 'viewAccess' || selectedRole === 'servicehead') {
       setFormData(prev => ({ ...prev, role: selectedRole }));
     } else {
       setFormData(prev => ({ ...prev, role: null }));
@@ -154,6 +159,7 @@ export default function Login() {
                 >
                   <option value="">Select Role</option>
                   <option value="servicehead">Service Head</option>
+                  <option value="viewAccess">View Access</option>
                 </select>
               </div>
 

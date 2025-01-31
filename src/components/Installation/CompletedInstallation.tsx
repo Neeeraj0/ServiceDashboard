@@ -61,7 +61,33 @@ const CompletedInstallation: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalImages, setModalImages] = useState<Photo[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [hasAssignAccess, setHasAssignAccess] = useState(true);
   const itemsPerPage = 10;
+
+    //checktoken
+    useEffect(() => {
+      const checkUserAccess = () => {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+          try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            
+            const decodedToken = JSON.parse(jsonPayload);
+            
+            setHasAssignAccess(decodedToken.role !== "viewAccess");
+          } catch (err) {
+            console.error("Error decoding token:", err);
+            setHasAssignAccess(false); // Default to no access if token is invalid
+          }
+        }
+      };
+  
+      checkUserAccess();
+    }, []);
 
   const handleApproveTaskSuccess = (approvedTaskId: string) => {
     // Filter out tasks with `approvalPending` set to true
@@ -128,7 +154,9 @@ const CompletedInstallation: React.FC = () => {
           <th className="p-4 border-b border-blue-gray-50 min-w-[120px] whitespace-normal w-25">Closure Date & Time</th>
           <th className="p-4 border-b border-blue-gray-50 min-w-[120px] whitespace-normal w-25">TAT1</th>
           <th className="p-4 border-b border-blue-gray-50 min-w-[150px]">TAT2</th>
-          <th className="p-4 border-b border-blue-gray-50 min-w-[150px]">Action</th>
+          {hasAssignAccess && (
+            <th className="p-4 border-b border-blue-gray-50 min-w-[150px]">Action</th>
+          )}
         </tr>
       </thead>
       <tbody>
@@ -187,7 +215,9 @@ const CompletedInstallation: React.FC = () => {
               <td className="p-4 border-b border-blue-gray-50">{order.TAT2 ? order.TAT2 : "0"}</td>
               <td className="p-4 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs z-99999">
                 {/* <RoutineApproveTask orderId={order._id} /> */}
-                <ReAssignTask orderId={order._id}/>
+                {hasAssignAccess && (
+                  <ReAssignTask orderId={order._id}/>
+                )}
               </td>
             </tr>
           ))

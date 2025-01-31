@@ -78,6 +78,7 @@ const OpenInstallation = () => {
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [hasAssignAccess, setHasAssignAccess] = useState(true);
   const itemsPerPage = 10;
 
   const modelToTonnage: { [key: string]: string } = {
@@ -86,6 +87,32 @@ const OpenInstallation = () => {
     "S20": "2T",
     "S30": "3T",
   };
+
+  //checktoken
+    //checktoken
+    useEffect(() => {
+      const checkUserAccess = () => {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+          try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            
+            const decodedToken = JSON.parse(jsonPayload);
+            
+            setHasAssignAccess(decodedToken.role !== "viewAccess");
+          } catch (err) {
+            console.error("Error decoding token:", err);
+            setHasAssignAccess(false); // Default to no access if token is invalid
+          }
+        }
+      };
+  
+      checkUserAccess();
+    }, []);
 
   const fetchData = async () => {
     try {
@@ -211,7 +238,9 @@ const OpenInstallation = () => {
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">AC Details</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer Address</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm max-w-40">Installation Date & Time</th>
-            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Action</th>
+            {hasAssignAccess && (
+              <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Action</th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -258,19 +287,21 @@ const OpenInstallation = () => {
                     }) : "Not Provided"}
                     {order.TimeofInstallation}
                   </td>
-                  <td className="p-2 border-b border-blue-gray-50 text-sm relative dropdown-container">
-                    <AssignInstallation 
-                      preOrderId={order._id}
-                      clientName={order.customer.name}
-                      clientNumber={order.customer.mobile}
-                      description=""
-                      onTaskAssigned={handleTaskAssigned}
-                      ac_units={acUnits}
-                      addressDisplay={address}
-                      contactName={order.customer_shipping_address.contactPerson}
-                      contactNumber={order.customer_shipping_address.contactNumber}
-                    />
-                  </td>
+                  {hasAssignAccess && (
+                    <td className="p-2 border-b border-blue-gray-50 text-sm relative dropdown-container">
+                      <AssignInstallation 
+                        preOrderId={order._id}
+                        clientName={order.customer.name}
+                        clientNumber={order.customer.mobile}
+                        description=""
+                        onTaskAssigned={handleTaskAssigned}
+                        ac_units={acUnits}
+                        addressDisplay={address}
+                        contactName={order.customer_shipping_address.contactPerson}
+                        contactNumber={order.customer_shipping_address.contactNumber}
+                      />
+                    </td>
+                  )}
                 </tr>
               );
             })

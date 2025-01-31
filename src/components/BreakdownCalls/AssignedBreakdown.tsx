@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import ReAssignTask from '../Dialogs/ReAssignTask';
+import Pagination from '../Pagination';
 
 interface Address {
   location: string;
@@ -30,7 +31,34 @@ interface Order {
 }
 
 const AssignedBreakdown: React.FC = () => {
-  const [backendData, setBackendData] = useState<Order[]>([]);
+  let [backendData, setBackendData] = useState<Order[]>([]);
+  const [hasAssignAccess, setHasAssignAccess] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // Number of items per page
+  //checktoken
+    useEffect(() => {
+      const checkUserAccess = () => {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+          try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            
+            const decodedToken = JSON.parse(jsonPayload);
+            
+            setHasAssignAccess(decodedToken.role !== "viewAccess");
+          } catch (err) {
+            console.error("Error decoding token:", err);
+            setHasAssignAccess(false); // Default to no access if token is invalid
+          }
+        }
+      };
+  
+      checkUserAccess();
+    }, []);
 
   useEffect(() => {
     const fetchAssignedOrders = async () => {
@@ -59,7 +87,13 @@ const AssignedBreakdown: React.FC = () => {
 
   console.log(backendData);
 
+  const indexOfLastOrder = currentPage * itemsPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
+  const currentOrders = backendData.slice(indexOfFirstOrder, indexOfLastOrder);
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
   return (
+    <div>
     <table className="w-full text-left table-auto min-w-max">
   <thead>
     <tr className="bg-gray-50">
@@ -90,9 +124,9 @@ const AssignedBreakdown: React.FC = () => {
       {/* <th className="p-2 border-b border-blue-gray-50 min-w-[150px]">
         <div className="font-semibold text-sm">Device ID</div>
       </th> */}
-      <th className="p-2 border-b border-blue-gray-50 min-w-[100px]">
+      {hasAssignAccess && ( <th className="p-2 border-b border-blue-gray-50 min-w-[100px]">
         <div className="font-semibold text-sm">Action</div>
-      </th>
+      </th> )}
     </tr>
   </thead>
   <tbody>
@@ -101,7 +135,7 @@ const AssignedBreakdown: React.FC = () => {
         <td colSpan={10} className="text-center p-4">No tasks available</td>
       </tr>
     ) : (
-      backendData.map((order) => (
+      currentOrders.map((order) => (
         <tr key={order._id} className="hover:bg-gray-50">
           <td className="p-2 border-b border-blue-gray-50 text-sm">{order.task_id || "N/A"}</td>
           <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">{order.contactPerson || "N/A"}</td>
@@ -139,13 +173,24 @@ const AssignedBreakdown: React.FC = () => {
             {/* <button className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:underline">
               Action
             </button> */}
-            <ReAssignTask orderId={order._id}/>
+            {hasAssignAccess && (
+              <ReAssignTask orderId={order._id}/>
+            )}
           </td>
         </tr>
       ))
     )}
   </tbody>
 </table>
+
+<Pagination
+          currentPage={currentPage}
+          totalItems={backendData.length}
+          itemsPerPage={itemsPerPage}
+          paginate={paginate}
+        />
+
+  </div>
   );
 };
 

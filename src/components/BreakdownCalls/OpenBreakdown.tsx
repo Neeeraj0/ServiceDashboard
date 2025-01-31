@@ -17,6 +17,32 @@ const OpenBreakdown = () => {
   const itemsPerPage = 10; // Number of items per page
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [showAnimation, setShowAnimation] = useState(false);
+  const [hasAssignAccess, setHasAssignAccess] = useState(true);
+
+  //check token
+  useEffect(() => {
+    const checkUserAccess = () => {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        try {
+          const base64Url = token.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          }).join(''));
+          
+          const decodedToken = JSON.parse(jsonPayload);
+          
+          setHasAssignAccess(decodedToken.role !== "viewAccess");
+        } catch (err) {
+          console.error("Error decoding token:", err);
+          setHasAssignAccess(false); // Default to no access if token is invalid
+        }
+      }
+    };
+
+    checkUserAccess();
+  }, []);
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -191,7 +217,7 @@ const OpenBreakdown = () => {
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer Address</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Date</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Device ID</th>
-            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Action</th>
+            {hasAssignAccess && <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Assign Task</th>}
           </tr>
         </thead>
         <tbody>
@@ -226,6 +252,7 @@ const OpenBreakdown = () => {
                   <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
                     {order.deviceid && order.deviceid !== "Select Device" ? order.deviceid : "N/A"}
                   </td>
+                  {hasAssignAccess && (
                   <td className="p-2 border-b border-blue-gray-50 mt-[5vh] text-sm">
                     <AssignTask
                       orderId={order._id}
@@ -243,6 +270,7 @@ const OpenBreakdown = () => {
                       onTaskAssigned={handleTaskAssigned} 
                     />
                   </td>
+                  )}
                 </tr>
               );
             })

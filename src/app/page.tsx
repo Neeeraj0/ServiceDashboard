@@ -19,7 +19,7 @@ export default function Home() {
     <UserProvider>
         <DefaultLayout>
           {/* <OpenBreakdown /> */}
-          <OpenSetup /> 
+          <OpenBreakdown /> 
         </DefaultLayout>
     </UserProvider>
     </>

@@ -3,6 +3,7 @@ import axios from 'axios';
 import Modal from '../Modal/Modal';
 import CompletedApproveTask from '../Dialogs/ApproveTask';
 import { formatDate } from '../utils/dateUtils';
+import Pagination from '../Pagination';
 
 interface Address {
   location: string;
@@ -61,6 +62,33 @@ const CompletedBreakdown: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalImages, setModalImages] = useState<Photo[]>([]);
   const [selectedTask, setSelectedTask] = useState<Order | null>(null);
+  const [hasAssignAccess, setHasAssignAccess] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // Number of items per page
+    //checktoken
+    useEffect(() => {
+        const checkUserAccess = () => {
+          const token = localStorage.getItem('authToken');
+          if (token) {
+            try {
+              const base64Url = token.split('.')[1];
+              const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+              const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+              }).join(''));
+              
+              const decodedToken = JSON.parse(jsonPayload);
+              
+              setHasAssignAccess(decodedToken.role !== "viewAccess");
+            } catch (err) {
+              console.error("Error decoding token:", err);
+              setHasAssignAccess(false); // Default to no access if token is invalid
+            }
+          }
+        };
+    
+        checkUserAccess();
+    }, []);
 
   useEffect(() => {
     const fetchCompletedOrders = async () => {
@@ -119,16 +147,19 @@ const CompletedBreakdown: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  console.log(backendData);
-  console.log(modalImages);
+  const indexOfLastOrder = currentPage * itemsPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
+  const currentOrders = backendData.slice(indexOfFirstOrder, indexOfLastOrder);
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
   return (
     <div>
     <table className="w-full text-left table-auto min-w-max">
       <thead>
         <tr className="bg-gray-50">
           <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Task ID</th>
-          <th className="p-2 border-b border-blue-gray-50 w-25 min-w-[70px] text-sm whitespace-normal">Before & After Images</th>
+          <th className="p-2 border-b border-blue-gray-50 w-45 min-w-[70px] text-sm whitespace-normal">Before & After Images</th>
           <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Technician Names</th>
+          <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Customer Details</th>
           <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Issue Reported</th>
           <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Issue Found</th>
           <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Material Used</th>
@@ -137,7 +168,7 @@ const CompletedBreakdown: React.FC = () => {
           <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm w-25 whitespace-normal">Routine Services Completed</th>
           <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">TAT 1</th>
           <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">TAT 2</th>
-          <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Action</th>
+          {hasAssignAccess && <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Action</th>}
         </tr>
       </thead>
       <tbody>
@@ -146,7 +177,7 @@ const CompletedBreakdown: React.FC = () => {
             <td colSpan={9} className="text-center p-4">No tasks available</td>
           </tr>
         ) : (
-          backendData.map((order) => {
+          currentOrders.map((order) => {
             const formattedAssignedDate = formatDate(order?.assignedDate);
             const formattedClosureDate = formatDate(order?.endDate);
             return(
@@ -165,7 +196,22 @@ const CompletedBreakdown: React.FC = () => {
                   )}
                 </td>
               <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
-                {order.assignedTechnicians.map(technician => technician.name)}
+              {order.assignedTechnicians?.length > 0 ? (
+                  <ul className="list-none">
+                    {order.assignedTechnicians.map((technician) => (
+                      <li key={technician._id} className="mb-1">
+                        {technician.name}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  "No technicians assigned"
+                )}
+              </td>
+              <td className="p-2 border-b border-blue-gray-50 text-sm">
+                {order.contactPerson || "N/A"}
+                <br />
+                {order.customerDetails || "N/A"}
               </td>
               <td className="p-2 border-b border-blue-gray-50 text-sm">{order.issueReported || "N/A"}</td>
               <td className="p-2 border-b border-blue-gray-50 text-sm max-w-40 flex-wrap">{order.issueObserved || "N/A"}</td>
@@ -209,10 +255,12 @@ const CompletedBreakdown: React.FC = () => {
                 Action
                 </button> */}
                 {/* <ActionButton orderId={order._id}/> */}
-                <CompletedApproveTask 
-                  orderId={order._id}
-                  onTaskApproved={() => removeCompletedTask(order._id)}
-                />
+                {hasAssignAccess && (
+                  <CompletedApproveTask 
+                    orderId={order._id}
+                    onTaskApproved={() => removeCompletedTask(order._id)}
+                  />
+                )}
                </td>
             </tr>
             );
@@ -223,6 +271,13 @@ const CompletedBreakdown: React.FC = () => {
         {isModalOpen && (
                 <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} images={modalImages} />
         )}
+
+        <Pagination
+                  currentPage={currentPage}
+                  totalItems={backendData.length}
+                  itemsPerPage={itemsPerPage}
+                  paginate={paginate}
+          />
     </div>
   );
 };

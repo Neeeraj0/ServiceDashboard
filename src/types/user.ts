@@ -1,4 +1,4 @@
-export type UserRole = 'serviceengineer' | 'servicehead';
+export type UserRole = 'serviceengineer' | 'servicehead' | 'viewAccess';
 
 export interface UserData {
   email?: string;
