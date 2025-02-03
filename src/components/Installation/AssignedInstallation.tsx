@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import ReAssignTask from '../Dialogs/ReAssignTask';
 import Pagination from '../Pagination';
+import SearchBox from '../SearchBox/SearchBox';
 
 interface Address {
   location: string;
@@ -34,6 +35,7 @@ const AssignedInstallation: React.FC = () => {
   const [backendData, setBackendData] = useState<Order[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasAssignAccess, setHasAssignAccess] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const itemsPerPage = 10;
 
     //checktoken
@@ -86,17 +88,35 @@ const AssignedInstallation: React.FC = () => {
 
     fetchAssignedOrders();
   }, []);
+  
 
   console.log(backendData);
 
   const indexOfLastOrder = currentPage * itemsPerPage;
   const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
-  const currentOrders = backendData.slice(indexOfFirstOrder, indexOfLastOrder);
+  // const currentOrders = backendData.slice(indexOfFirstOrder, indexOfLastOrder);
+  const filteredOrders = backendData.filter((order) =>
+    order.contactPerson.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  let currentOrders = filteredOrders.slice(
+    indexOfFirstOrder,
+    indexOfLastOrder
+  );
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
+  useEffect(() => {
+      setCurrentPage(1);
+  }, [searchQuery]);
+
   return (
     <div>
+    <SearchBox 
+      placeholder="Search by customer name"
+      value={searchQuery}
+      onChange={setSearchQuery}
+    />
     <table className="w-full text-left table-auto min-w-max">
       <thead>
         <tr className="bg-gray-50">

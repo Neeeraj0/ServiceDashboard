@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import './module.style.css'
 import AssignInstallation from '../Dialogs/AssignInstallation';
+import SearchBox from '../SearchBox/SearchBox';
 
 interface PreorderResponse {
   _id: string;
@@ -213,7 +214,7 @@ const OpenInstallation = () => {
 
   return (
     <div>
-        <div className="flex m-5 rounded-md border-2 border-[#A14996] overflow-hidden w-[fit-content] p-2 justify-start">
+        {/* <div className="flex m-5 rounded-md border-2 border-[#A14996] overflow-hidden w-[fit-content] p-2 justify-start">
         <input
             type="text"
             className="outline-none focus:outline-none border-none focus:ring-0 bg-transparente"
@@ -228,7 +229,12 @@ const OpenInstallation = () => {
             </path>
           </svg>
         </button>
-      </div>
+      </div> */}
+      <SearchBox 
+        placeholder="Search by customer name"
+        value={searchQuery}
+        onChange={setSearchQuery}
+      />
       <table className="w-full text-left table-auto min-w-max">
         <thead>
           <tr>

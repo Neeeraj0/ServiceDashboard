@@ -7,6 +7,7 @@ import { ShippingAddress } from "@/types/breakdown/ShippingAddress";
 import AssignTask from "../Dialogs/AssignTask";
 import "./module.style.css";
 import Papa from "papaparse";
+import SearchBox from "../SearchBox/SearchBox";
 
 const OpenBreakdown = () => {
   let [backendData, setBackendData] = useState<Order[]>([]);
@@ -18,6 +19,7 @@ const OpenBreakdown = () => {
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [showAnimation, setShowAnimation] = useState(false);
   const [hasAssignAccess, setHasAssignAccess] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   //check token
   useEffect(() => {
@@ -176,7 +178,15 @@ const OpenBreakdown = () => {
   backendData =backendData.filter(
     (order) => !order.queryStatus && order.status === true
   );
-  const currentOrders = backendData.slice(indexOfFirstOrder, indexOfLastOrder);
+  const filteredOrders = backendData.filter((order) =>
+    order.contactperson.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  let currentOrders = filteredOrders.slice(
+    indexOfFirstOrder,
+    indexOfLastOrder
+  );
+
 
   const handleTaskAssigned = (id: string) => {
     setRemovingId(id); // Start fade-out animation
@@ -186,6 +196,11 @@ const OpenBreakdown = () => {
     }, 500); // Match animation duration
   };
 
+  useEffect(() => {
+    // Update current page when filteredData changes (e.g., after deleting a task)
+    setCurrentPage(1);
+  }, [currentOrders]);
+
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   if (loading) return <div>Loading...</div>;
@@ -193,6 +208,10 @@ const OpenBreakdown = () => {
 
   return (
     <div className="overflow-x-auto">
+      <SearchBox 
+      placeholder="Search by customer name"
+      value={searchQuery}
+      onChange={setSearchQuery} />
       {showAnimation && (
         <div className="animation-overlay">
           <img src={'/images/illustration/Animation - 1734419092020.gif'} alt="Loading..." className="animation-gif" />

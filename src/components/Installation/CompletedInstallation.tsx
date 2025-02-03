@@ -7,6 +7,7 @@ import RoutineApproveTask from '../Dialogs/RoutineApprove';
 import PipingModal from '../Modal/PipingModal';
 import ReAssignTask from '../Dialogs/ReAssignTask';
 import Pagination from '../Pagination';
+import SearchBox from '../SearchBox/SearchBox';
 
 interface Address {
   location: string;
@@ -62,6 +63,7 @@ const CompletedInstallation: React.FC = () => {
   const [modalImages, setModalImages] = useState<Photo[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasAssignAccess, setHasAssignAccess] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const itemsPerPage = 10;
 
     //checktoken
@@ -135,27 +137,60 @@ const CompletedInstallation: React.FC = () => {
   };
   const indexOfLastOrder = currentPage * itemsPerPage;
   const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
-  const currentOrders = backendData.slice(indexOfFirstOrder, indexOfLastOrder);
+  const filteredOrders = backendData.filter((order) =>
+    order.contactPerson?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  let currentOrders = filteredOrders.slice(
+    indexOfFirstOrder,
+    indexOfLastOrder
+  );
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
-  console.log(backendData);
-  console.log(modalImages);
+   useEffect(() => {
+      setCurrentPage(1);
+    }, [searchQuery]);
   return (
     <div>
+    <SearchBox 
+      placeholder="Search by customer name"
+      value={searchQuery}
+      onChange={setSearchQuery}
+    />
     <table className="w-full text-left table-auto min-w-max">
       <thead>
         <tr className="bg-gray-50">
-          <th className="p-4 border-b border-blue-gray-50 min-w-[120px]">Task ID</th>
-          <th className="p-4 border-b border-blue-gray-50 min-w-[90px] whitespace-normal w-25">Before & After Images</th>
-          <th className="p-4 border-b border-blue-gray-50 min-w-[150px]">Technician Names</th>
-          {/* <th className="p-4 border-b border-blue-gray-50 min-w-[150px]">Issue Reported</th> */}
-          <th className="p-4 border-b border-blue-gray-50 min-w-[180px]">Material Used</th>
-          <th className="p-4 border-b border-blue-gray-50  whitespace-normal w-25">Assigned Date & Time</th>
-          <th className="p-4 border-b border-blue-gray-50 min-w-[120px] whitespace-normal w-25">Closure Date & Time</th>
-          <th className="p-4 border-b border-blue-gray-50 min-w-[120px] whitespace-normal w-25">TAT1</th>
-          <th className="p-4 border-b border-blue-gray-50 min-w-[150px]">TAT2</th>
+          <th className="p-2 border-b border-blue-gray-50 min-w-[120px]">
+            <div className="font-semibold text-sm">Task ID</div>
+          </th>
+          <th className="p-1 border-b border-blue-gray-50 min-w-[90px] whitespace-normal w-25">
+            <div className="font-semibold text-sm">Before & After Images</div>
+          </th>
+          <th className="p-1 border-b border-blue-gray-50 min-w-[150px]">
+            <div className="font-semibold text-sm">Technician Names</div>
+          </th>
+          <th className="p-1 border-b border-blue-gray-50 min-w-[150px]">
+            <div className="font-semibold text-sm">Customer Details</div>
+          </th>
+          <th className="p-1 border-b border-blue-gray-50 min-w-[180px]">
+            <div className="font-semibold text-sm">Material Used</div>
+          </th>
+          <th className="p-1 border-b border-blue-gray-50  whitespace-normal">
+            <div className="font-semibold text-sm">Assigned Date & Time</div>
+          </th>
+          <th className="p-1 border-b border-blue-gray-50 min-w-[90px] whitespace-normal w-20">
+            <div className="font-semibold text-sm">Closure Date & Time</div>
+          </th>
+          <th className="p-1 border-b border-blue-gray-50 min-w-[120px] whitespace-normal w-25">
+            <div className="font-semibold text-sm">TAT1</div>
+          </th>
+          <th className="p-1 border-b border-blue-gray-50 min-w-[150px]">
+            <div className="font-semibold text-sm">TAT2</div>
+          </th>
           {hasAssignAccess && (
-            <th className="p-4 border-b border-blue-gray-50 min-w-[150px]">Action</th>
+            <th className="p-1 border-b border-blue-gray-50 min-w-[150px]">
+                <div className="font-semibold text-sm">Action</div>
+            </th>
           )}
         </tr>
       </thead>
@@ -167,8 +202,8 @@ const CompletedInstallation: React.FC = () => {
         ) : (
           currentOrders.map((order) => (
             <tr key={order._id} className="hover:bg-gray-50">
-              <td className="p-4 border-b border-blue-gray-50">{order.task_id || "N/A"}</td>
-              <td className="p-4 border-b border-blue-gray-50">
+              <td className="p-2 border-b border-blue-gray-50 text-sm">{order.task_id || "N/A"}</td>
+              <td className="p-2 border-b border-blue-gray-50 text-sm">
                   {order.photos?.length > 0 ? (
                     <button
                       className="underline text-blue-600"
@@ -180,7 +215,7 @@ const CompletedInstallation: React.FC = () => {
                     "No Images"
                   )}
                 </td>
-                <td className="p-4 border-b border-blue-gray-50">
+                <td className="p-2 border-b border-blue-gray-50 text-sm">
                 {order.assignedTechnicians?.length > 0 ? (
                   <ul className="list-none">
                     {order.assignedTechnicians.map((technician) => (
@@ -192,6 +227,11 @@ const CompletedInstallation: React.FC = () => {
                 ) : (
                   "No technicians assigned"
                 )}
+              </td>
+              <td className="p-2 border-b border-blue-gray-50 text-sm">
+                {order.contactPerson}
+                <br />
+                {order.customerDetails}
               </td>
               {/* <td className="p-4 border-b border-blue-gray-50">{order.issueReported || "N/A"}</td> */}
               <td className="p-2 border-b border-blue-gray-50 text-sm">
@@ -209,11 +249,11 @@ const CompletedInstallation: React.FC = () => {
                   "No Materials Used"
                 )}
               </td>
-              <td className="p-4 border-b border-blue-gray-50">{order.date || "N/A"}</td>
-              <td className="p-4 border-b border-blue-gray-50">{order.closureDate || "N/A"}</td>
-              <td className="p-4 border-b border-blue-gray-50">{order.TAT1 ? order.TAT1 : "0"}</td>
-              <td className="p-4 border-b border-blue-gray-50">{order.TAT2 ? order.TAT2 : "0"}</td>
-              <td className="p-4 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs z-99999">
+              <td className="p-2 border-b border-blue-gray-50 text-sm">{order.date || "N/A"}</td>
+              <td className="p-2 border-b border-blue-gray-50 text-sm">{order.closureDate || "N/A"}</td>
+              <td className="p-2 border-b border-blue-gray-50 text-sm">{order.TAT1 ? order.TAT1 : "0"}</td>
+              <td className="p-2 border-b border-blue-gray-50 text-sm">{order.TAT2 ? order.TAT2 : "0"}</td>
+              <td className="p-2 border-b border-blue-gray-50 text-sm whitespace-normal break-words max-w-xs z-99999">
                 {/* <RoutineApproveTask orderId={order._id} /> */}
                 {hasAssignAccess && (
                   <ReAssignTask orderId={order._id}/>

@@ -10,7 +10,7 @@ const page = () => {
 
   return (
     <DefaultLayout>
-      <div className="relative flex flex-col w-full h-full text-gray-700 bg-white shadow-md rounded-xl bg-clip-border">
+      <div className="relative flex flex-col w-full h-full text-gray-700 bg-white rounded-xl bg-clip-border">
       <div class="relative mx-4 mt-4 overflow-hidden text-gray-700 bg-white rounded-none bg-clip-border">
         <div class="flex flex-col justify-between gap-8 mb-4 md:flex-row md:items-center">
           <div>

@@ -4,6 +4,7 @@ import Modal from '../Modal/Modal';
 import CompletedApproveTask from '../Dialogs/ApproveTask';
 import { formatDate } from '../utils/dateUtils';
 import Pagination from '../Pagination';
+import SearchBox from '../SearchBox/SearchBox';
 
 interface Address {
   location: string;
@@ -64,6 +65,7 @@ const CompletedBreakdown: React.FC = () => {
   const [selectedTask, setSelectedTask] = useState<Order | null>(null);
   const [hasAssignAccess, setHasAssignAccess] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
   const itemsPerPage = 10; // Number of items per page
     //checktoken
     useEffect(() => {
@@ -149,10 +151,25 @@ const CompletedBreakdown: React.FC = () => {
 
   const indexOfLastOrder = currentPage * itemsPerPage;
   const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
-  const currentOrders = backendData.slice(indexOfFirstOrder, indexOfLastOrder);
+  const filteredOrders = backendData.filter((order) =>
+    order.contactPerson.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  let currentOrders = filteredOrders.slice(
+    indexOfFirstOrder,
+    indexOfLastOrder
+  );
+
+    useEffect(() => {
+      setCurrentPage(1);
+    }, [searchQuery]);
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
   return (
     <div>
+    <SearchBox 
+      placeholder="Search by customer name"
+      value={searchQuery}
+      onChange={setSearchQuery}
+    />
     <table className="w-full text-left table-auto min-w-max">
       <thead>
         <tr className="bg-gray-50">

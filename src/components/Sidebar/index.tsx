@@ -8,6 +8,8 @@ import SidebarItem from "@/components/Sidebar/SidebarItem";
 import ClickOutside from "@/components/ClickOutside";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { useRouter } from "next/router";
+import { User2 } from "lucide-react"
+import { useEffect, useState } from "react";
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -362,18 +364,62 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const pathname = usePathname();
 
   const [pageName, setPageName] = useLocalStorage("selectedMenu", "dashboard");
+  const [userName, setUserName] = useState("Guest");
+  const [userRole, setUserRole] = useState("User ");
+
+  useEffect(() => {
+    const checkUserAccess = () => {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        try {
+          const base64Url = token.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          }).join(''));
+          
+          const decodedToken = JSON.parse(jsonPayload);
+          
+          setUserName(decodedToken.name || "Guest");
+          setUserRole(decodedToken.role || "User ");
+        } catch (err) {
+          console.error("Error decoding token:", err);
+          setUserName("Guest");
+          setUserRole("User ");
+        }
+      }
+    };
+
+    checkUserAccess();
+  }, []);
+
+  const ProfileSection = () => {
+    return (
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center space-x-3">
+          <div className="flex-shrink-0">
+            <User2 className="h-7 w-7 text-black rounded-xl bg-gray-100 shadow-gray-700 shadow-md" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{userName}</p>
+            <p className="text-sm text-gray-400 dark:text-gray-400 truncate">{userRole === "viewAccess" ? "View Access" : userRole}</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <ClickOutside onClick={() => setSidebarOpen(false)}>
       <aside
-        className={`absolute left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden border-r border-stroke bg-white dark:border-stroke-dark dark:bg-gray-dark lg:static lg:translate-x-0 ${
+        className={`absolute left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-hidden border-r border-stroke bg-white dark:border-stroke-dark dark:bg-gray-dark lg:static lg:translate-x-0 ${
           sidebarOpen
             ? "translate-x-0 duration-300 ease-linear"
             : "-translate-x-full"
         }`}
       >
         {/* <!-- SIDEBAR HEADER --> */}
-        <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5 xl:py-10">
+        <div className="flex-shrink-0 flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5 xl:py-10">
           <Link href="/">
             <Image
               width={260}
@@ -381,7 +427,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               src={"/images/logo/airexpert_logo.svg"}
               alt="Logo"
               priority
-              className="dark:hidden "
+              className="dark:hidden"
             />
             <Image
               width={156}
@@ -413,10 +459,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             </svg>
           </button>
         </div>
-        {/* <!-- SIDEBAR HEADER --> */}
-        <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
+
+        {/* <!-- SIDEBAR CONTENT --> */}
+        <div className="flex flex-col flex-grow overflow-y-auto">
           {/* <!-- Sidebar Menu --> */}
-          <nav className="mt-1 px-4 lg:px-6">
+          <nav className="flex-grow mt-1 px-4 lg:px-6">
             {menuGroups.map((group, groupIndex) => (
               <div key={groupIndex}>
                 <h3 className="mb-5 text-sm font-medium text-dark-4 dark:text-dark-6">
@@ -436,8 +483,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               </div>
             ))}
           </nav>
-          {/* <!-- Sidebar Menu --> */}
         </div>
+
+        {/* <!-- Profile Section --> */}
+        <ProfileSection />
       </aside>
     </ClickOutside>
   );

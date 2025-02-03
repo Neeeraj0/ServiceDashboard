@@ -5,6 +5,7 @@ import { formatDate } from '../utils/dateUtils';
 import './module.style.css';
 import PipingModal from '../Modal/PipingModal';
 import Pagination from '../Pagination';
+import SearchBox from '../SearchBox/SearchBox';
 
 interface Photo {
   url: string;
@@ -79,6 +80,7 @@ const ApprovalPending = () => {
   const itemsPerPage = 10;
   const [selectedTask, setSelectedTask] = useState<PipingResponse | null>(null);
   const [hasAssignAccess, setHasAssignAccess] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   //checktoken
     useEffect(() => {
@@ -159,15 +161,30 @@ const ApprovalPending = () => {
 
   const indexOfLastOrder = currentPage * itemsPerPage;
   const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
-  const currentOrders = pipingData.slice(indexOfFirstOrder, indexOfLastOrder);
+  const filteredOrders = pipingData.filter((order) =>
+    order.client_name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
+  let currentOrders = filteredOrders.slice(
+    indexOfFirstOrder,
+    indexOfLastOrder
+  );
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error fetching data: {error}</div>;
 
   return (
     <div>
+      <SearchBox 
+        placeholder="Search by customer name"
+        value={searchQuery}
+        onChange={setSearchQuery}
+      />
       <table className="w-full text-left table-auto min-w-max">
         <thead>
           <tr>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import ReAssignTask from '../Dialogs/ReAssignTask';
 import Pagination from '../Pagination';
+import SearchBox from '../SearchBox/SearchBox';
 
 interface Address {
   location: string;
@@ -33,6 +34,7 @@ interface Order {
 const AssignedBreakdown: React.FC = () => {
   let [backendData, setBackendData] = useState<Order[]>([]);
   const [hasAssignAccess, setHasAssignAccess] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // Number of items per page
   //checktoken
@@ -89,14 +91,30 @@ const AssignedBreakdown: React.FC = () => {
 
   const indexOfLastOrder = currentPage * itemsPerPage;
   const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
-  const currentOrders = backendData.slice(indexOfFirstOrder, indexOfLastOrder);
+  const filteredOrders = backendData.filter((order) =>
+    order.contactPerson.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  let currentOrders = filteredOrders.slice(
+    indexOfFirstOrder,
+    indexOfLastOrder
+  );
+
+    useEffect(() => {
+      setCurrentPage(1);
+    }, [searchQuery]);
+
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   return (
     <div>
+    <SearchBox 
+      placeholder="Search by customer name"
+      value={searchQuery}
+      onChange={setSearchQuery}
+    />
     <table className="w-full text-left table-auto min-w-max">
   <thead>
-    <tr className="bg-gray-50">
+    <tr className="">
       <th className="p-2 border-b border-blue-gray-50 min-w-[120px]">
         <div className="font-semibold text-sm">Task ID</div>
       </th>
