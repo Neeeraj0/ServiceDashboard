@@ -8,7 +8,6 @@ import AssignTask from "../Dialogs/AssignTask";
 import "./module.style.css";
 import Papa from "papaparse";
 import SearchBox from "../SearchBox/SearchBox";
-
 const OpenBreakdown = () => {
   let [backendData, setBackendData] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -199,7 +198,7 @@ const OpenBreakdown = () => {
   useEffect(() => {
     // Update current page when filteredData changes (e.g., after deleting a task)
     setCurrentPage(1);
-  }, [currentOrders]);
+  }, [searchQuery]);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
@@ -208,6 +207,13 @@ const OpenBreakdown = () => {
 
   return (
     <div className="overflow-x-auto">
+      {/* <div style={{ marginTop: '4rem' }}>
+          <DecryptedText
+            text="This text animates when in view"
+            animateOn="view"
+            revealDirection="center"
+          />
+        </div> */}
       <SearchBox 
       placeholder="Search by customer name"
       value={searchQuery}

@@ -17,10 +17,9 @@ export default function Home() {
   return (
     <>
     <UserProvider>
-        <DefaultLayout>
-          {/* <OpenBreakdown /> */}
-          <OpenBreakdown /> 
-        </DefaultLayout>
+          <DefaultLayout>
+            <OpenBreakdown /> 
+          </DefaultLayout>
     </UserProvider>
     </>
   );

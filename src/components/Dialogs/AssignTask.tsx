@@ -5,6 +5,7 @@ import { ACUnit } from "@/types/breakdown/Order";
 import toast from "react-hot-toast";
 import React from "react";
 import '../BreakdownCalls/module.style.css';
+import { useAuth } from "@/app/context/AuthContext";
 
 interface Technician {
   name: string;
@@ -45,6 +46,7 @@ export default React.memo(function AssignTask({
   const [filteredTechnicians, setFilteredTechnicians] = useState<Technician[]>([]);
   const [selectedTechnicians, setSelectedTechnicians] = useState<Technician[]>([]);
   const [isButtonClicked, setIsButtonClicked] = useState(false);
+  const {userName} = useAuth();
 
   useEffect(() => {
     const fetchTechnicians = async () => {
@@ -247,6 +249,7 @@ export default React.memo(function AssignTask({
       taskType: "breakdown",
       complaintRaised,
       assignedTechnicians: selectedTechnicians.map((tech) => tech.name),
+      assignedBy: userName ? [userName] : [], 
     };
 
     try {

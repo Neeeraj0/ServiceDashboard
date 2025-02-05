@@ -4,6 +4,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import TimePicker from "../TimePicker/TimePicker";
 import '../BreakdownCalls/module.style.css';
+import { useAuth } from "@/app/context/AuthContext";
 
 interface ACUnit {
   type: string;
@@ -47,7 +48,7 @@ export default function AssignInstallation({
   const [filteredTechnicians, setFilteredTechnicians] = useState<Technician[]>([]);
   const [selectedTechnicians, setSelectedTechnicians] = useState<Technician[]>([]); // Track selected technicians
   const [isAnimating, setIsAnimating] = useState(false);
-  const [isButtonDisabled, setIsButtonDisabled] = useState(false);  
+  const { userName, loading } = useAuth();
   console.log(ac_units);
   useEffect(() => {
     const fetchTechnicians = async () => {
@@ -226,9 +227,8 @@ export default function AssignInstallation({
         };
       });
     });
+    console.log('username', userName);
     
-    console.log('ac display', transformedACUnits);
-
     const taskDataCreation = {
       title: "Installation",
       // customerComplaint: customerComplaint,
@@ -247,7 +247,8 @@ export default function AssignInstallation({
       contactPerson: {
         name: contactName,
         phone_number: contactNumber
-      }
+      },
+      assignedBy: userName ? [userName] : [], // Add assignedBy with user's name
     };
 
     try {

@@ -4,6 +4,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import TimePicker from "../TimePicker/TimePicker";
 import '../BreakdownCalls/module.style.css';
+import { useAuth } from "@/app/context/AuthContext";
 
 interface ACUnit {
   type: string;
@@ -55,7 +56,7 @@ export default function AssignSetup({
   const [filteredTechnicians, setFilteredTechnicians] = useState<Technician[]>([]);
   const [selectedTechnicians, setSelectedTechnicians] = useState<Technician[]>([]); // Track selected technicians
   const [isAnimating, setIsAnimating] = useState(false);
-
+  const {userName} = useAuth();
   const isFormValid = servicingDate && servicingTime && selectedTechnicians.length > 0;
 
   console.log(ac_units);
@@ -180,39 +181,6 @@ export default function AssignSetup({
     const orderResponse = await axios.get(`${process.env.NEXT_PUBLIC_SALES_BACKEND_API}/api/preOrder/orders/detail/${preOrderId}`);
     const orders = orderResponse.data;
 
-    // const orderMap: { [key: string]: string[] } = {}; // key: model, value: array of order IDs
-    // const usedOrderIds = new Set();
-
-    // orders.forEach((order: any) => {
-    //     const model = order.model; 
-    //     if (!orderMap[model]) {
-    //         orderMap[model] = [];
-    //     }
-    //     orderMap[model].push(order._id);
-    // });
-
-    // const transformedAC = ac_units.flatMap((unit) => {
-    //     const modelCapacity = unit.capacity === "10" ? "1 Ton" : unit.capacity === "15" ? "1.5 Ton" : unit.capacity === "20" ? "2 Ton" : unit.capacity;
-    //     const orderIds = orderMap[unit.capacity] || []; 
-        
-    //     return Array.from({ length: unit.quantity }, (_, i) => {
-    //         console.log(unit.type);
-    //         const deviceName = unit.type === "Split AC" 
-    //             ? `S${unit.capacity}-${i + 1}` 
-    //             : unit.type === "Cassette AC" 
-    //             ? `C${unit.capacity}-${i + 1}` 
-    //             : `${unit.capacity}-${i + 1}`; // Default case if the type is neither Split nor Cassette
-    
-    //         return {
-    //             type: unit.type + " AC",
-    //             capacity: modelCapacity,
-    //             quantity: 1,
-    //             deviceName: deviceName,  // Correct dynamic device name
-    //             orderId: orderIds[i] || null
-    //         };
-    //     });
-    // });
-
     const orderMap: { [key: string]: string[] } = {}; // key: model, value: array of order IDs
     const usedOrderIds = new Set<string>(); // Track used order IDs
     
@@ -284,7 +252,9 @@ export default function AssignSetup({
       contactPerson: {
         name: contactName,
         phone_number: contactNumber
-      }
+      },
+      assignedBy: userName ? [userName] : [], // Add assignedBy with user's name
+
     };
 
     console.log(taskDataCreation);

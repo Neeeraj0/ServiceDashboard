@@ -10,6 +10,7 @@ import { UserProvider } from "./context/UserContext";
 import jwt from "jsonwebtoken";
 import { ReactQueryProvider } from "@/providers/ReactQueryProvider";
 import "./module.style.css";
+import { AuthProvider } from "./context/AuthContext";
 
 export default function RootLayout({
   children,
@@ -73,11 +74,13 @@ export default function RootLayout({
         <div id="app-root">
           <ReactQueryProvider>
             <UserProvider>
-              {loading ? (
-                <Loader />
-              ) : isPublicRoute || isAuthenticated ? (
-                children
-              ) : null}
+              <AuthProvider>
+                {loading ? (
+                  <Loader />
+                ) : isPublicRoute || isAuthenticated ? (
+                  children
+                ) : null}
+              </AuthProvider>
             </UserProvider>
           </ReactQueryProvider>
           <Toaster position="top-center" />
