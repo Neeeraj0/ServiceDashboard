@@ -6,6 +6,7 @@ import './module.style.css';
 import PipingModal from '../Modal/PipingModal';
 import Pagination from '../Pagination';
 import SearchBox from '../SearchBox/SearchBox';
+import DatePicker2 from '../DateFilter/DatePicker2';
 
 interface Photo {
   url: string;
@@ -74,14 +75,17 @@ const ApprovalPending = () => {
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalImages, setModalImages] = useState<Photo[]>([]);
-  // Track approved tasks to prevent them from reappearing
   const [approvedTasks] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [selectedTask, setSelectedTask] = useState<PipingResponse | null>(null);
   const [hasAssignAccess, setHasAssignAccess] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-
+  const [isOpen, setIsOpen] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [originalData, setOriginalData] = useState<PipingResponse[]>([]);
+  const [selectedStartDate, setSelectedStartDate] = useState<string | null>(null);
+  const [selectedEndDate, setSelectedEndDate] = useState<string | null>(null);
   //checktoken
     useEffect(() => {
       const checkUserAccess = () => {
@@ -110,13 +114,13 @@ const ApprovalPending = () => {
     try {
       const res = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/installation/getApprovalPending`);
       // const res = await axios.get('http://localhost:8000/api/installation/getApprovalPending');
-      // Filter out any previously approved tasks
       const filteredData = res.data.filter((task: PipingResponse) => !approvedTasks.has(task.task_id));
       setPipingData(filteredData);
+      setOriginalData(filteredData);
     } catch (err: any) {
       if (err.response && err.response.status === 404) {
-        setPipingData([]); // Set empty array for no tasks
-        setError(null); // Clear any existing errors
+        setPipingData([]); 
+        setError(null); 
       } else {
         console.error("Error fetching piping data:", err);
         setError(err.message);
@@ -126,21 +130,17 @@ const ApprovalPending = () => {
     }
   };
 
-  // Initial data fetch
   useEffect(() => {
     fetchPipingData();
     
-    // Set up periodic refresh every 30 seconds
     const intervalId = setInterval(fetchPipingData, 30000);
     
-    // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
   }, []);
 
   const handleTaskApproval = (taskId: string) => {
     setRemovingIds(prev => new Set(prev).add(taskId));
     
-    // Add to approved tasks set to prevent reappearing
     approvedTasks.add(taskId);
     
     setTimeout(() => {
@@ -175,16 +175,135 @@ const ApprovalPending = () => {
     setCurrentPage(1);
   }, [searchQuery]);
 
+      useEffect(() => {
+        if (selectedStartDate || selectedEndDate) {
+          const filteredData = originalData.filter((order) => {
+            const orderDate = new Date(order.assignedDate);
+            const orderLocalDate = new Date(
+              orderDate.getFullYear(),
+              orderDate.getMonth(),
+              orderDate.getDate(),
+              orderDate.getHours(), 
+              orderDate.getMinutes() 
+            ).toISOString().split('T')[0];
+    
+            console.log('orderLocalDate', orderLocalDate);
+            console.log('selectedStartDate', selectedStartDate);
+            console.log('selectedEndDate', selectedEndDate);
+    
+            if (selectedStartDate && selectedEndDate) {
+              return orderLocalDate >= selectedStartDate && orderLocalDate <= selectedEndDate;
+            } else if (selectedStartDate) {
+              return orderLocalDate === selectedStartDate;
+            }
+            return true;
+          });
+          setPipingData(filteredData);
+        } else {
+          setPipingData(originalData);
+        }
+      }, [selectedStartDate, selectedEndDate, originalData]);  
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error fetching data: {error}</div>;
 
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+  };
+
+  
+  const openDatePicker = () => {
+    setShowDatePicker(true);
+  };
+
+  const closeDatePicker = () => {
+    setShowDatePicker(false);
+  };
+
+  const resetDatePicker = () => {
+    setSelectedStartDate(null);
+    setSelectedEndDate(null);
+    setPipingData(originalData);
+  };
+
   return (
     <div>
-      <SearchBox 
-        placeholder="Search by customer name"
-        value={searchQuery}
-        onChange={setSearchQuery}
-      />
+      <div className="flex items-center justify-between mb-4">    
+          <SearchBox 
+            placeholder="Search by customer name"
+            value={searchQuery}
+            onChange={setSearchQuery}
+          />
+          <button
+                    type="button"
+                    className="inline-flex w-[fit-content] justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50"
+                    onClick={toggleDropdown}
+                  >
+                    Filters 🌪️
+                    <svg
+                    className="-mr-1 size-5 text-gray-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+          
+                  {isOpen && (
+                  <div className="absolute right-0 z-10 mt-10 w-56 origin-top-right rounded-md bg-white ring-1 shadow-lg ring-black/5 focus:outline-hidden">
+                    <div className="py-1">
+                      <div
+                        className="flex justify-between items-center px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        Filters <span className="text-red-500 font-bold cursor-pointer">❌</span>
+                      </div>
+                      <div
+                        className="block px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
+                        onClick={openDatePicker}
+                      >
+                        Date
+                      </div>
+                    </div>
+                  </div>
+                )}
+          
+                    {showDatePicker && (
+                        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 mt-[-60vh]">
+                          <div className="bg-white rounded-lg shadow-lg p-6 relative w-96">
+                            <button className="absolute top-2 right-2 text-gray-600 hover:text-red-500 text-lg" onClick={closeDatePicker}>
+                              ❌
+                            </button>
+                            <h2 className="text-lg font-semibold mb-4 text-center">Select Date Range</h2>
+                            <DatePicker2
+                              selectedStartDate={selectedStartDate}
+                              selectedEndDate={selectedEndDate}
+                              setSelectedStartDate={setSelectedStartDate}
+                              setSelectedEndDate={setSelectedEndDate}
+                            />
+                            <div className="flex justify-center mt-4 space-x-4">
+                              <button
+                                className="px-4 py-2 bg-white text-gray-700 font-semibold rounded"
+                                onClick={resetDatePicker}
+                              >
+                                Clear Date
+                              </button>
+                              <button
+                                className="px-4 py-2 bg-blue-500 text-white font-semibold rounded hover:bg-blue-600"
+                                onClick={closeDatePicker}
+                              >
+                                Apply
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+      </div>
       <table className="w-full text-left table-auto min-w-max">
         <thead>
           <tr>

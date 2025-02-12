@@ -1,7 +1,6 @@
 'use client'
 
 import AssignedBreakdown from '@/components/BreakdownCalls/AssignedBreakdown'
-import OpenBreakdown from '@/components/BreakdownCalls/OpenBreakdown'
 import DefaultLayout from '@/components/Layouts/DefaultLaout'
 import Sidebar from '@/components/Sidebar'
 import React from 'react'

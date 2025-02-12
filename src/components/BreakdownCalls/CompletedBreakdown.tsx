@@ -5,6 +5,7 @@ import CompletedApproveTask from '../Dialogs/ApproveTask';
 import { formatDate } from '../utils/dateUtils';
 import Pagination from '../Pagination';
 import SearchBox from '../SearchBox/SearchBox';
+import DatePicker2 from '../DateFilter/DatePicker2';
 
 interface Address {
   location: string;
@@ -67,7 +68,12 @@ const CompletedBreakdown: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const itemsPerPage = 10; // Number of items per page
-    //checktoken
+  const [isOpen, setIsOpen] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedStartDate, setSelectedStartDate] = useState<string | null>(null);
+  const [selectedEndDate, setSelectedEndDate] = useState<string | null>(null);
+  const [originalData, setOriginalData] = useState<Order[]>([]);
+  //checktoken
     useEffect(() => {
         const checkUserAccess = () => {
           const token = localStorage.getItem('authToken');
@@ -91,6 +97,35 @@ const CompletedBreakdown: React.FC = () => {
     
         checkUserAccess();
     }, []);
+
+   useEffect(() => {
+      if (selectedStartDate || selectedEndDate) {
+        const filteredData = originalData.filter((order) => {
+          const orderDate = new Date(order.assignedDate);
+          const orderLocalDate = new Date(
+            orderDate.getFullYear(),
+            orderDate.getMonth(),
+            orderDate.getDate(),
+            orderDate.getHours() + 5, 
+            orderDate.getMinutes() + 30 
+          ).toISOString().split('T')[0];
+  
+          console.log('orderLocalDate', orderLocalDate);
+          console.log('selectedStartDate', selectedStartDate);
+          console.log('selectedEndDate', selectedEndDate);
+  
+          if (selectedStartDate && selectedEndDate) {
+            return orderLocalDate >= selectedStartDate && orderLocalDate <= selectedEndDate;
+          } else if (selectedStartDate) {
+            return orderLocalDate === selectedStartDate;
+          }
+          return true;
+        });
+        setBackendData(filteredData);
+      } else {
+        setBackendData(originalData);
+      }
+    }, [selectedStartDate, selectedEndDate, originalData]); 
 
   useEffect(() => {
     const fetchCompletedOrders = async () => {
@@ -128,6 +163,7 @@ const CompletedBreakdown: React.FC = () => {
         const filteredOrders = orders.filter((order: any) => !completedQueryIds.includes(order._id));
         console.log('Filtered Orders:', filteredOrders);
         setBackendData(filteredOrders);
+        setOriginalData(filteredOrders);
       } catch (error) {
         console.error(error);
       }
@@ -163,13 +199,103 @@ const CompletedBreakdown: React.FC = () => {
       setCurrentPage(1);
     }, [searchQuery]);
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const openDatePicker = () => {
+    setShowDatePicker(true);
+  };
+
+  const closeDatePicker = () => {
+    setShowDatePicker(false);
+  };
+
+  const resetDatePicker = () => {
+    setSelectedStartDate(null);
+    setSelectedEndDate(null);
+    setBackendData(originalData);
+  };
   return (
     <div>
+        <div className="flex items-center justify-between mb-4">    
+
     <SearchBox 
       placeholder="Search by customer name"
       value={searchQuery}
       onChange={setSearchQuery}
     />
+    <button
+              type="button"
+              className="inline-flex w-[fit-content] justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50"
+              onClick={toggleDropdown}
+            >
+              Filters 🌪️
+              <svg
+              className="-mr-1 size-5 text-gray-400"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+    
+            {isOpen && (
+            <div className="absolute right-0 z-10 mt-10 w-56 origin-top-right rounded-md bg-white ring-1 shadow-lg ring-black/5 focus:outline-hidden">
+              <div className="py-1">
+                <div
+                  className="flex justify-between items-center px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Filters <span className="text-red-500 font-bold cursor-pointer">❌</span>
+                </div>
+                <div
+                  className="block px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
+                  onClick={openDatePicker}
+                >
+                  Date
+                </div>
+              </div>
+            </div>
+          )}
+    
+              {showDatePicker && (
+                  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 mt-[-60vh]">
+                    <div className="bg-white rounded-lg shadow-lg p-6 relative w-96">
+                      <button className="absolute top-2 right-2 text-gray-600 hover:text-red-500 text-lg" onClick={closeDatePicker}>
+                        ❌
+                      </button>
+                      <h2 className="text-lg font-semibold mb-4 text-center">Select Date Range</h2>
+                      <DatePicker2
+                        selectedStartDate={selectedStartDate}
+                        selectedEndDate={selectedEndDate}
+                        setSelectedStartDate={setSelectedStartDate}
+                        setSelectedEndDate={setSelectedEndDate}
+                      />
+                       <div className="flex justify-center mt-4 space-x-4">
+                        <button
+                          className="px-4 py-2 bg-white text-gray-700 font-semibold rounded"
+                          onClick={resetDatePicker}
+                        >
+                          Clear Date
+                        </button>
+                        <button
+                          className="px-4 py-2 bg-blue-500 text-white font-semibold rounded hover:bg-blue-600"
+                          onClick={closeDatePicker}
+                        >
+                          Apply
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+    </div>
     <table className="w-full text-left table-auto min-w-max">
       <thead>
         <tr className="bg-gray-50">
@@ -225,7 +351,7 @@ const CompletedBreakdown: React.FC = () => {
                   "No technicians assigned"
                 )}
               </td>
-              <td className="p-2 border-b border-blue-gray-50 text-sm">
+              <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
                 {order.contactPerson || "N/A"}
                 <br />
                 {order.customerDetails || "N/A"}
@@ -262,10 +388,10 @@ const CompletedBreakdown: React.FC = () => {
                 (order.isPeriodicService ? "Yes" : "No") : "N/A"}
               </td>
               <td className="p-4 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs">
-                {order.TAT1 || "N/A"}
+                {order.TAT1 }
               </td>
               <td className="p-4 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs">
-                {order.TAT2 || "N/A"}
+                {order.TAT2 }
               </td>
               <td className="p-2 border-b border-blue-gray-50">
                 {/* <button className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:underline">

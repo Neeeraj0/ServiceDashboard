@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { ACUnit, Order } from "@/types/breakdown/Order";
 import { ShippingAddress } from "@/types/breakdown/ShippingAddress";
@@ -8,8 +8,12 @@ import AssignTask from "../Dialogs/AssignTask";
 import "./module.style.css";
 import Papa from "papaparse";
 import SearchBox from "../SearchBox/SearchBox";
+import issuesList from '../utils/IssuesList';
+import DatePicker2 from "../DateFilter/DatePicker2";
+import locationPinCodes, { LocationKey } from "@/types/filters/LocationKeys";
 const OpenBreakdown = () => {
   let [backendData, setBackendData] = useState<Order[]>([]);
+  const [originalData, setOriginalData] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [shippingAddresses, setShippingAddresses] = useState<ShippingAddress[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -19,6 +23,16 @@ const OpenBreakdown = () => {
   const [showAnimation, setShowAnimation] = useState(false);
   const [hasAssignAccess, setHasAssignAccess] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+  const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+  const [selectedStartDate, setSelectedStartDate] = useState<string | null>(null);
+  const [selectedEndDate, setSelectedEndDate] = useState<string | null>(null);
+  const filterDropdownRef = useRef<HTMLDivElement>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showIssueFilter, setShowIssueFilter] = useState(false);
+  const [showLocationFilter, setShowLocationFilter] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   //check token
   useEffect(() => {
@@ -46,6 +60,47 @@ const OpenBreakdown = () => {
   }, []);
 
   useEffect(() => {
+    let filteredData = originalData;
+    if (selectedStartDate || selectedEndDate) {
+      const filteredData = originalData.filter((order) => {
+        const orderDate = new Date(order.TimeStamp);
+        const orderDateString = orderDate.toISOString().split("T")[0]; // Convert to "YYYY-MM-DD"
+  
+        if (selectedStartDate && selectedEndDate) {
+          return orderDateString >= selectedStartDate && orderDateString <= selectedEndDate;
+        } else if (selectedStartDate) {
+          return orderDateString === selectedStartDate;
+        }
+        return true;
+      });
+  
+      setBackendData(filteredData);
+    }
+
+    if (selectedIssues.length > 0) {
+      filteredData = filteredData.filter((order) => 
+        selectedIssues.includes(order.subject) 
+      );
+      setBackendData(filteredData);
+    }
+
+    if (selectedLocations.length > 0) {
+      filteredData = filteredData.filter((order) => {
+        const shippingAddress = getShippingAddress(order._id);
+        console.log(shippingAddress);
+        if (shippingAddress) {
+          const pinCode = shippingAddress.pincode; 
+          return selectedLocations.some(location => 
+            locationPinCodes[location as LocationKey]?.includes(pinCode) 
+          );
+        }
+        return false;
+      });
+      setBackendData(filteredData);
+    }
+  }, [selectedStartDate, selectedEndDate, selectedIssues, originalData, selectedLocations]);  
+
+  useEffect(() => {
     const fetchTasks = async () => {
       try {
         const res = await axios.get("https://production.circolife.vip/api/query/queries/all", {
@@ -54,16 +109,18 @@ const OpenBreakdown = () => {
           },
         });
 
-        setBackendData(
-          res.data.data.map((order: any) => ({
-            ...order,
-            contactperson: order.contactperson || "N/A",
-            contactnumber: order.contactnumber || "N/A",
-            subject: order.subject || "N/A",
-            deviceid: order.deviceid || "N/A",
-            orderModels: order.orderModels || [],
-          }))
-        );
+        const fetchedData = res.data.data.map((order: any) => ({
+          ...order,
+          contactperson: order.contactperson || "N/A",
+          contactnumber: order.contactnumber || "N/A",
+          subject: order.subject || "N/A",
+          deviceid: order.deviceid || "N/A",
+          orderModels: order.orderModels || [],
+        }));
+
+        setBackendData(fetchedData);
+        setOriginalData(fetchedData);
+        
       } catch (err: any) {
         console.error("Error fetching data: ", err);
         setError(err.message);
@@ -75,7 +132,6 @@ const OpenBreakdown = () => {
     fetchTasks();
   }, []);
 
-  // Transform orderModels to ACUnit array
   const transformOrderModels = (orderModels: (string | number | null)[]): ACUnit[] => {
     const acUnits: ACUnit[] = [];
     for (let i = 0; i < orderModels.length; i += 2) {
@@ -196,9 +252,77 @@ const OpenBreakdown = () => {
   };
 
   useEffect(() => {
-    // Update current page when filteredData changes (e.g., after deleting a task)
     setCurrentPage(1);
   }, [searchQuery]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target as Node)) {
+        setSelectedFilter(null);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, []);
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const openDatePicker = () => {
+    setShowDatePicker(true);
+  };
+
+  const closeDatePicker = () => {
+    setShowDatePicker(false);
+  };
+
+  const openFilterByIssue = () => {
+    setShowIssueFilter(true);
+  };
+  const closeFilterByIssue = () => {
+    setShowIssueFilter(false);
+    setIsOpen(false);
+  }
+
+  const resetDatePicker = () => {
+    setSelectedStartDate(null);
+    setSelectedEndDate(null);
+    setBackendData(originalData);
+  };
+
+  const handleIssueSelection = (issue: string) => {
+    setSelectedIssues((prevIssues) => {
+      if (prevIssues.includes(issue)) {
+        return prevIssues.filter((i) => i !== issue);
+      } else {
+        return [...prevIssues, issue];
+      }
+    });
+  };
+  
+  const openFilterByLocation = () => {
+    setShowLocationFilter(true);
+  };
+  
+  const closeFilterByLocation = () => {
+    setShowLocationFilter(false);
+    setIsOpen(false);
+    setBackendData(originalData);
+  };
+
+  const handleLocationSelection = (location: LocationKey) => {
+    setSelectedLocations((prevLocations) => {
+      if (prevLocations.includes(location)) {
+        return prevLocations.filter((loc) => loc !== location);
+      } else {
+        return [...prevLocations, location];
+      }
+    });
+  };
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
@@ -207,30 +331,180 @@ const OpenBreakdown = () => {
 
   return (
     <div className="overflow-x-auto">
-      {/* <div style={{ marginTop: '4rem' }}>
-          <DecryptedText
-            text="This text animates when in view"
-            animateOn="view"
-            revealDirection="center"
+      <div className="flex items-center justify-between mb-4">
+        <SearchBox 
+        placeholder="Search by customer name"
+        value={searchQuery}
+        onChange={setSearchQuery} />
+
+      <button
+        type="button"
+        className="inline-flex w-[fit-content] justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50"
+        onClick={toggleDropdown}
+      >
+        Filters 🌪️
+        <svg
+          className="-mr-1 size-5 text-gray-400"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            fillRule="evenodd"
+            d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+            clipRule="evenodd"
           />
-        </div> */}
-      <SearchBox 
-      placeholder="Search by customer name"
-      value={searchQuery}
-      onChange={setSearchQuery} />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 z-10 mt-10 w-56 origin-top-right rounded-md bg-white ring-1 shadow-lg ring-black/5 focus:outline-hidden">
+          <div className="py-1">
+            <div
+              className="flex justify-between items-center px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
+              onClick={() => setIsOpen(false)}
+            >
+              Filters <span className="text-red-500 font-bold cursor-pointer">❌</span>
+            </div>
+            <div
+              className="block px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
+              onClick={openDatePicker}
+            >
+              Date
+            </div>
+            <div
+              className="block px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
+              onClick={openFilterByIssue}
+            >
+              Issue
+            </div>
+            <div
+              className="block px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
+              onClick={openFilterByLocation}
+            >
+              Location
+            </div>
+            <button
+              onClick={downloadCSV}
+              className="px-4 py-2 bg-green-500 text-white font-bold shadow-xl rounded hover:bg-green-600"
+            >
+              Download to Excel 📊
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showDatePicker && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 mt-[-60vh]">
+          <div className="bg-white rounded-lg shadow-lg p-6 relative w-96">
+            <button className="absolute top-2 right-2 text-gray-600 hover:text-red-500 text-lg" onClick={closeDatePicker}>
+              ❌
+            </button>
+            <h2 className="text-lg font-semibold mb-4 text-center">Select Date Range</h2>
+            <DatePicker2
+              selectedStartDate={selectedStartDate}
+              selectedEndDate={selectedEndDate}
+              setSelectedStartDate={setSelectedStartDate}
+              setSelectedEndDate={setSelectedEndDate}
+            />
+             <div className="flex justify-center mt-4 space-x-4">
+              <button
+                className="px-4 py-2 bg-white text-gray-700 font-semibold rounded"
+                onClick={resetDatePicker}
+              >
+                Clear Date
+              </button>
+              <button
+                className="px-4 py-2 bg-blue-500 text-white font-semibold rounded hover:bg-blue-600"
+                onClick={closeDatePicker}
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+        {showIssueFilter && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 mt-[-30vh]">
+            <div className="bg-white rounded-lg shadow-lg p-6 relative w-96">
+             <button className="absolute top-2 right-2 text-gray-600 hover:text-red-500 text-lg" onClick={closeFilterByIssue}>
+              ❌
+            </button>
+              <ul className="space-y-2">
+                  {issuesList.map((issue, index) => (
+                    <li key={index} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={issue}
+                        checked={selectedIssues.includes(issue)}
+                        onChange={() => handleIssueSelection(issue)}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <label htmlFor={issue} className="ml-2 text-sm text-gray-700">
+                        {issue}
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex justify-end mt-3 space-x-2">
+                  <button
+                    onClick={() => setSelectedIssues([])}
+                    className="px-3 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300"
+                  >
+                    Reset
+                  </button>
+                  <button
+                    onClick={() => setShowIssueFilter(false)}
+                    className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+          </div>
+      )}
+
+        {showLocationFilter && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 mt-[-30vh]">
+            <div className="bg-white rounded-lg shadow-lg p-6 relative w-96">
+              <button className="absolute top-2 right-2 text-gray-600 hover:text-red-500 text-lg" onClick={closeFilterByLocation}>
+                ❌
+              </button>
+              <h2 className="text-lg font-semibold mb-4 text-center">Select Locations</h2>
+              <ul className="space-y-2">
+              {Object.keys(locationPinCodes).map((location) => (
+                <li key={location} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id={location}
+                    checked={selectedLocations.includes(location)}
+                    onChange={() => handleLocationSelection(location as LocationKey)}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <label htmlFor={location} className="ml-2 text-sm text-gray-700">
+                    {location}
+                  </label>
+                </li>
+              ))}
+              </ul>
+              <div className="flex justify-end mt-3 space-x-2">
+                <button
+                  onClick={closeFilterByLocation}
+                  className="px-3 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
       {showAnimation && (
         <div className="animation-overlay">
           <img src={'/images/illustration/Animation - 1734419092020.gif'} alt="Loading..." className="animation-gif" />
         </div>
       )}
-      <div className="flex absolute justify-end w-full mt-[-2vh] lg:mt-[-5vh] ml-[-5vw]">
-        <button
-          onClick={downloadCSV}
-          className="px-4 py-2 bg-green-500 text-white font-bold shadow-xl rounded hover:bg-green-600"
-        >
-          Download to Excel 📊
-        </button>
-      </div>
 
       <table className="w-full text-left table-auto min-w-max mt-10">
         <thead>

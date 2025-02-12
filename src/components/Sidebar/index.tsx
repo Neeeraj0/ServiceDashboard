@@ -7,8 +7,7 @@ import Image from "next/image";
 import SidebarItem from "@/components/Sidebar/SidebarItem";
 import ClickOutside from "@/components/ClickOutside";
 import useLocalStorage from "@/hooks/useLocalStorage";
-import { useRouter } from "next/router";
-import { User2 } from "lucide-react"
+import { LogOutIcon, User2 } from "lucide-react"
 import { useEffect, useState } from "react";
 
 interface SidebarProps {

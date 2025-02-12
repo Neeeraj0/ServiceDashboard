@@ -4,6 +4,7 @@ import Modal from '../Modal/Modal';
 import CompletedApproveTask from '../Dialogs/ApproveTask';
 import RoutineAssignTask from '../Dialogs/RoutineAssignTask';
 import RoutineApproveTask from '../Dialogs/RoutineApprove';
+import './module.style.css';
 import PipingModal from '../Modal/PipingModal';
 import ReAssignTask from '../Dialogs/ReAssignTask';
 import Pagination from '../Pagination';
@@ -150,6 +151,8 @@ const CompletedInstallation: React.FC = () => {
    useEffect(() => {
       setCurrentPage(1);
     }, [searchQuery]);
+
+  
   return (
     <div>
     <SearchBox 
