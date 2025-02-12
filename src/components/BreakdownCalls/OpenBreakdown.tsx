@@ -84,6 +84,10 @@ const OpenBreakdown = () => {
       setBackendData(filteredData);
     }
 
+    if(selectedIssues.length === 0 && selectedStartDate === null && selectedEndDate === null) {
+      setBackendData(originalData);
+    }
+
     if (selectedLocations.length > 0) {
       filteredData = filteredData.filter((order) => {
         const shippingAddress = getShippingAddress(order._id);
@@ -314,6 +318,14 @@ const OpenBreakdown = () => {
     setBackendData(originalData);
   };
 
+  const resetFilterByIssue = () => {
+    setSelectedIssues([]);
+    setShowIssueFilter(false);
+    setIsOpen(false);
+    setBackendData(originalData);
+  };
+
+
   const handleLocationSelection = (location: LocationKey) => {
     setSelectedLocations((prevLocations) => {
       if (prevLocations.includes(location)) {
@@ -449,7 +461,7 @@ const OpenBreakdown = () => {
                 </ul>
                 <div className="flex justify-end mt-3 space-x-2">
                   <button
-                    onClick={() => setSelectedIssues([])}
+                    onClick={resetFilterByIssue}
                     className="px-3 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300"
                   >
                     Reset
