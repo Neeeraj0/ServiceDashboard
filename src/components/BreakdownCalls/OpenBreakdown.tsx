@@ -18,10 +18,9 @@ import toast from "react-hot-toast";
 import ClickOutside from "../ClickOutside";
 import Loader from "../common/Loader";
 import { Loader2 } from "lucide-react";
-import onLoadingCompleteProp from "@/types/Loader/Loading";
 
 interface OpenBreakdownProps {
-  onLoadingComplete: onLoadingCompleteProp;
+  onLoadingComplete?: () => void;
 }
 
 const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
@@ -133,7 +132,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
         setError(err.message);
       } finally {
         setLoading(false);
-        onLoadingComplete();
+        onLoadingComplete?.();
       }
     };
 

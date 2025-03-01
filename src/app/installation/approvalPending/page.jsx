@@ -6,7 +6,7 @@ import ApprovalPending from '@/components/Installation/ApprovalPending'
 import React, { useEffect, useState } from 'react'
 import Loader from '@/components/common/Loader'
 
-const page = () => {
+const Page = () => {
       const [isLoading, setIsLoading] = useState(true)
     
       const handleLoadingComplete = () => {
@@ -49,4 +49,4 @@ const page = () => {
   )
 }
 
-export default page
+export default Page

@@ -7,7 +7,7 @@ import DatePicker2 from '../DateFilter/DatePicker2';
 import { useRefresh } from '@/app/context/RefreshContext';
 import toast from 'react-hot-toast';
 import ClickOutside from '../ClickOutside';
-import onLoadingCompleteProp from '@/types/Loader/Loading';
+import {onLoadingCompleteProp} from '@/types/Loader/Loading';
 
 interface Address {
   location: string;
@@ -36,7 +36,7 @@ interface Order {
   assignedTechnicians: Technician[];
 }
 interface AssignedBreakdownProps {
-  onLoadingComplete: onLoadingCompleteProp;
+  onLoadingComplete: () => void;
 }
 
 const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete }) => {

@@ -7,7 +7,7 @@ import DefaultLayout from '@/components/Layouts/DefaultLaout'
 import Sidebar from '@/components/Sidebar'
 import React, { useEffect, useState } from 'react'
 
-const page = () => {
+const Page = () => {
     const [isLoading, setIsLoading] = useState(true)
   
     const handleLoadingComplete = () => {
@@ -50,4 +50,4 @@ const page = () => {
   )
 }
 
-export default page
+export default Page

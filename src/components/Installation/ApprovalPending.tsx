@@ -9,7 +9,6 @@ import SearchBox from '../SearchBox/SearchBox';
 import DatePicker2 from '../DateFilter/DatePicker2';
 import { useRefresh } from '@/app/context/RefreshContext';
 import ClickOutside from '../ClickOutside';
-import onLoadingCompleteProp from '@/types/Loader/Loading';
 
 interface Photo {
   url: string;
@@ -72,7 +71,7 @@ interface PipingResponse {
 }
 
 interface ApprovalPendingInstallationProps {
-  onLoadingComplete: onLoadingCompleteProp;
+  onLoadingComplete: () => void;
 }
 
 const ApprovalPending: React.FC<ApprovalPendingInstallationProps> = ({onLoadingComplete}) => {

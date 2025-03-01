@@ -9,7 +9,6 @@ import DatePicker2 from '../DateFilter/DatePicker2';
 import { useRefresh } from '@/app/context/RefreshContext';
 import toast from 'react-hot-toast';
 import ClickOutside from '../ClickOutside';
-import onLoadingCompleteProp from '@/types/Loader/Loading';
 
 interface Address {
   location: string;
@@ -65,7 +64,7 @@ interface Order {
 }
 
 interface CompletedBreakdownProps {
-  onLoadingComplete: onLoadingCompleteProp;
+  onLoadingComplete: () => void;
 }
 
 const CompletedBreakdown: React.FC<CompletedBreakdownProps> = ({onLoadingComplete}) => {

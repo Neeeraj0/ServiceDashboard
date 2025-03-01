@@ -77,7 +77,7 @@ export default function TechnicianProfile() {
                 <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
                   <div>
                     <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                      Technician's Name
+                      Technician&apos;s Name
                     </label>
                     <input
                       type="text"
@@ -92,7 +92,7 @@ export default function TechnicianProfile() {
                   </div>
                   <div>
                     <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                      Technician's Email
+                      Technician&apos;s Email
                     </label>
                     <input
                       type="email"
@@ -107,7 +107,7 @@ export default function TechnicianProfile() {
                   </div>
                   <div>
                     <label htmlFor="phone" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                      Technician's Phone Number
+                      Technician&apos;s Phone Number
                     </label>
                     <input
                       type="text"

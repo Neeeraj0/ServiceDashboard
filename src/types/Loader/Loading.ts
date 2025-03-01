@@ -1,5 +1,1 @@
-interface onLoadingCompleteProp {
-    onLoadingComplete: () => void;
-}
-
-export default onLoadingCompleteProp;
+export type onLoadingCompleteProp = () => void; // ✅ Correct way
