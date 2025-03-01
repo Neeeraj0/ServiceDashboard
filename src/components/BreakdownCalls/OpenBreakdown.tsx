@@ -11,7 +11,20 @@ import SearchBox from "../SearchBox/SearchBox";
 import issuesList from '../utils/IssuesList';
 import DatePicker2 from "../DateFilter/DatePicker2";
 import locationPinCodes, { LocationKey } from "@/types/filters/LocationKeys";
-const OpenBreakdown = () => {
+import Pagination from "../Pagination";
+import DropdownDefaultTwo from "../Dropdowns/DropdownDefaultTwo";
+import { useRefresh } from "@/app/context/RefreshContext";
+import toast from "react-hot-toast";
+import ClickOutside from "../ClickOutside";
+import Loader from "../common/Loader";
+import { Loader2 } from "lucide-react";
+import onLoadingCompleteProp from "@/types/Loader/Loading";
+
+interface OpenBreakdownProps {
+  onLoadingComplete: onLoadingCompleteProp;
+}
+
+const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
   let [backendData, setBackendData] = useState<Order[]>([]);
   const [originalData, setOriginalData] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +46,7 @@ const OpenBreakdown = () => {
   const [showIssueFilter, setShowIssueFilter] = useState(false);
   const [showLocationFilter, setShowLocationFilter] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const { triggerRefresh, refreshKey } = useRefresh();
 
   //check token
   useEffect(() => {
@@ -61,48 +75,36 @@ const OpenBreakdown = () => {
 
   useEffect(() => {
     let filteredData = originalData;
+
     if (selectedStartDate || selectedEndDate) {
-      const filteredData = originalData.filter((order) => {
-        const orderDate = new Date(order.TimeStamp);
-        const orderDateString = orderDate.toISOString().split("T")[0]; // Convert to "YYYY-MM-DD"
-  
-        if (selectedStartDate && selectedEndDate) {
-          return orderDateString >= selectedStartDate && orderDateString <= selectedEndDate;
-        } else if (selectedStartDate) {
-          return orderDateString === selectedStartDate;
-        }
-        return true;
-      });
-  
-      setBackendData(filteredData);
+        filteredData = originalData.filter((order) => {
+            const orderDate = new Date(order.TimeStamp).toISOString().split("T")[0]; // Convert to YYYY-MM-DD
+            
+            if (selectedStartDate && selectedEndDate) {
+                return orderDate >= selectedStartDate && orderDate <= selectedEndDate;
+            } else if (selectedStartDate) {
+                return orderDate === selectedStartDate;
+            }
+            return true;
+        });
     }
 
     if (selectedIssues.length > 0) {
-      filteredData = filteredData.filter((order) => 
-        selectedIssues.includes(order.subject) 
-      );
-      setBackendData(filteredData);
-    }
-
-    if(selectedIssues.length === 0 && selectedStartDate === null && selectedEndDate === null) {
-      setBackendData(originalData);
+        filteredData = filteredData.filter((order) => selectedIssues.includes(order.subject));
     }
 
     if (selectedLocations.length > 0) {
-      filteredData = filteredData.filter((order) => {
-        const shippingAddress = getShippingAddress(order._id);
-        console.log(shippingAddress);
-        if (shippingAddress) {
-          const pinCode = shippingAddress.pincode; 
-          return selectedLocations.some(location => 
-            locationPinCodes[location as LocationKey]?.includes(pinCode) 
-          );
-        }
-        return false;
-      });
-      setBackendData(filteredData);
+        filteredData = filteredData.filter((order) => {
+            const shippingAddress = getShippingAddress(order._id);
+            return shippingAddress
+                ? selectedLocations.some((location) => locationPinCodes[location as LocationKey]?.includes(shippingAddress.pincode))
+                : false;
+        });
     }
-  }, [selectedStartDate, selectedEndDate, selectedIssues, originalData, selectedLocations]);  
+
+    setBackendData(filteredData);
+}, [selectedStartDate, selectedEndDate, selectedIssues, selectedLocations, originalData]);
+ 
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -118,6 +120,7 @@ const OpenBreakdown = () => {
           contactperson: order.contactperson || "N/A",
           contactnumber: order.contactnumber || "N/A",
           subject: order.subject || "N/A",
+          summary: order.summery || "N/A",
           deviceid: order.deviceid || "N/A",
           orderModels: order.orderModels || [],
         }));
@@ -130,11 +133,12 @@ const OpenBreakdown = () => {
         setError(err.message);
       } finally {
         setLoading(false);
+        onLoadingComplete();
       }
     };
 
     fetchTasks();
-  }, []);
+  }, [refreshKey, onLoadingComplete]);
 
   const transformOrderModels = (orderModels: (string | number | null)[]): ACUnit[] => {
     const acUnits: ACUnit[] = [];
@@ -187,8 +191,6 @@ const OpenBreakdown = () => {
     const address = shippingAddresses.find((address) => address._id === orderId);
     return address?.customerData?.shipping_address[0] || null;
   };
-
-  console.log("shipping address", shippingAddresses);
 
   const formatDate = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -255,6 +257,22 @@ const OpenBreakdown = () => {
     }, 500); // Match animation duration
   };
 
+  const handleMarkAsResolved = (id: string) => {
+    setRemovingId(id); 
+
+    console.log("Marking as resolved...", id);
+  
+    setTimeout(() => {
+      setBackendData((prevData) =>
+        prevData.map((task) =>
+          task._id === id ? { ...task, status: false } : task
+        ).filter((task) => task.status !== false) 
+      );
+      setRemovingId(null); 
+    }, 500); 
+  };
+
+
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
@@ -313,6 +331,7 @@ const OpenBreakdown = () => {
   };
   
   const closeFilterByLocation = () => {
+    setSelectedLocations([]);
     setShowLocationFilter(false);
     setIsOpen(false);
     setBackendData(originalData);
@@ -336,74 +355,98 @@ const OpenBreakdown = () => {
     });
   };
 
+  const handleRefresh = () => {
+    toast.success('data refreshing...');
+    triggerRefresh();
+  }
+
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return (
+    <Loader />
+  );
   if (error) return <div>Error fetching data: {error}</div>;
 
   return (
     <div className="overflow-x-auto">
       <div className="flex items-center justify-between mb-4">
-        <SearchBox 
-        placeholder="Search by customer name"
-        value={searchQuery}
-        onChange={setSearchQuery} />
+        <div className="flex-grow">
+          <SearchBox 
+          placeholder="Search by customer name"
+          value={searchQuery}
+          onChange={setSearchQuery} />
+        </div>
 
-      <button
-        type="button"
-        className="inline-flex w-[fit-content] justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50"
-        onClick={toggleDropdown}
-      >
-        Filters 🌪️
-        <svg
-          className="-mr-1 size-5 text-gray-400"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            fillRule="evenodd"
-            d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
-            clipRule="evenodd"
-          />
-        </svg>
-      </button>
+        <div className="flex gap-2 ml-auto">
+          <button 
+            onClick={handleRefresh}
+            className="p-2 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200"
+            title="Refresh data"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M23 4v6h-6"/>
+              <path d="M1 20v-6h6"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+          </button>
+          <button
+            type="button"
+            className="inline-flex w-[fit-content] justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50"
+            onClick={toggleDropdown}
+          >
+            Filters 🌪️
+            <svg
+              className="-mr-1 size-5 text-gray-400"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                fillRule="evenodd"
+                d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </button>
+        </div>
 
       {isOpen && (
-        <div className="absolute right-0 z-10 mt-10 w-56 origin-top-right rounded-md bg-white ring-1 shadow-lg ring-black/5 focus:outline-hidden">
-          <div className="py-1">
-            <div
-              className="flex justify-between items-center px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
-              onClick={() => setIsOpen(false)}
-            >
-              Filters <span className="text-red-500 font-bold cursor-pointer">❌</span>
+        <ClickOutside onClick={() => setIsOpen(false)}>
+          <div className="absolute right-0 z-10 mt-10 w-56 origin-top-right rounded-md bg-white ring-1 shadow-lg ring-black/5 focus:outline-hidden">
+            <div className="py-1">
+              <div
+                className="flex justify-between items-center px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
+                onClick={() => setIsOpen(false)}
+              >
+                Filters <span className="text-red-500 font-bold cursor-pointer">❌</span>
+              </div>
+              <div
+                className="block px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
+                onClick={openDatePicker}
+              >
+                Date
+              </div>
+              <div
+                className="block px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
+                onClick={openFilterByIssue}
+              >
+                Issue
+              </div>
+              <div
+                className="block px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
+                onClick={openFilterByLocation}
+              >
+                Location
+              </div>
+              <button
+                onClick={downloadCSV}
+                className="px-4 py-2 bg-green-500 text-white font-bold shadow-xl rounded hover:bg-green-600"
+              >
+                Download to Excel 📊
+              </button>
             </div>
-            <div
-              className="block px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
-              onClick={openDatePicker}
-            >
-              Date
-            </div>
-            <div
-              className="block px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
-              onClick={openFilterByIssue}
-            >
-              Issue
-            </div>
-            <div
-              className="block px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
-              onClick={openFilterByLocation}
-            >
-              Location
-            </div>
-            <button
-              onClick={downloadCSV}
-              className="px-4 py-2 bg-green-500 text-white font-bold shadow-xl rounded hover:bg-green-600"
-            >
-              Download to Excel 📊
-            </button>
           </div>
-        </div>
+        </ClickOutside>
       )}
 
       {showDatePicker && (
@@ -507,6 +550,12 @@ const OpenBreakdown = () => {
                 >
                   Reset
                 </button>
+                <button
+                  onClick={() => setShowLocationFilter(false)} 
+                  className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Apply
+                </button>
               </div>
             </div>
           </div>
@@ -541,7 +590,6 @@ const OpenBreakdown = () => {
           ) : (
             currentOrders.map((order, index) => {
               const shippingAddress = getShippingAddress(order._id);
-              console.log("shipping address", shippingAddress);
               const addressDisplay = shippingAddress
                 ? `${shippingAddress.line1}, ${shippingAddress.line2 || ""}, ${shippingAddress.city}, ${shippingAddress.state}, ${shippingAddress.pincode}`
                 : "N/A";
@@ -555,7 +603,9 @@ const OpenBreakdown = () => {
                   <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
                     {order.contactperson} <br /> {order.contactnumber}
                   </td>
-                  <td className="p-2 border-b border-blue-gray-50 text-sm">{order.subject}</td>
+                  <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
+                       {order.subject === "Others" ? `${order.subject} - ${order.summary}` : order.subject}
+                  </td>
                   <td className="p-2 border-b border-blue-gray-50 text-wrap max-w-50">{addressDisplay}</td>
                   <td className="p-2 border-b border-blue-gray-50 text-wrap text-sm flex-wrap">
                     {formatDate(order.TimeStamp)}
@@ -565,7 +615,7 @@ const OpenBreakdown = () => {
                   </td>
                   {hasAssignAccess && (
                   <td className="p-2 border-b border-blue-gray-50 mt-[5vh] text-sm">
-                    <AssignTask
+                    {/* <AssignTask
                       orderId={order._id}
                       clientName={order.contactperson}
                       clientNumber={order.contactnumber}
@@ -579,6 +629,14 @@ const OpenBreakdown = () => {
                           : (order.orderModels as ACUnit[])
                       }
                       onTaskAssigned={handleTaskAssigned} 
+                    /> */}
+                    <DropdownDefaultTwo 
+                       orderId={order._id} 
+                       order={order}
+                       getShippingAddress={getShippingAddress} 
+                       transformOrderModels={transformOrderModels} 
+                       onTaskAssigned={handleTaskAssigned} 
+                       onResolved={handleMarkAsResolved}
                     />
                   </td>
                   )}
@@ -589,78 +647,12 @@ const OpenBreakdown = () => {
         </tbody>
       </table>
 
-      {/* Pagination Controls */}
       <Pagination
-        totalPages={Math.ceil(backendData.length / itemsPerPage)}
-        currentPage={currentPage}
-        paginate={paginate}
-      />
-    </div>
-  );
-};
-
-const Pagination = ({
-  totalPages,
-  currentPage,
-  paginate,
-}: {
-  totalPages: number;
-  currentPage: number;
-  paginate: (page: number) => void;
-}) => {
-  const visiblePages = 5; // Number of pages to display
-  const pages = [];
-
-  const startPage = Math.max(currentPage - Math.floor(visiblePages / 2), 1);
-  const endPage = Math.min(startPage + visiblePages - 1, totalPages);
-
-  const adjustedStart = Math.max(endPage - visiblePages + 1, 1);
-
-  for (let i = adjustedStart; i <= endPage; i++) {
-    pages.push(
-      <button
-        key={i}
-        onClick={() => paginate(i)}
-        className={`pagination-button ${currentPage === i ? "active" : ""}`}
-      >
-        {i}
-      </button>
-    );
-  }
-
-  return (
-    <div className="pagination">
-      <button
-        className="pagination-button"
-        onClick={() => paginate(1)}
-        disabled={currentPage === 1}
-      >
-        First
-      </button>
-      <button
-        className="pagination-button"
-        onClick={() => paginate(currentPage - 1)}
-        disabled={currentPage === 1}
-      >
-        Previous
-      </button>
-
-      {pages}
-
-      <button
-        className="pagination-button"
-        onClick={() => paginate(currentPage + 1)}
-        disabled={currentPage === totalPages}
-      >
-        Next
-      </button>
-      <button
-        className="pagination-button"
-        onClick={() => paginate(totalPages)}
-        disabled={currentPage === totalPages}
-      >
-        Last
-      </button>
+          currentPage={currentPage}
+          totalItems={backendData.length}
+          itemsPerPage={itemsPerPage}
+          paginate={paginate}
+        />
     </div>
   );
 };

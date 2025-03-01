@@ -50,15 +50,12 @@ export default React.memo(function AssignTask({
 
   useEffect(() => {
     const fetchTechnicians = async () => {
-      // Check if technicians exist in localStorage
       const cachedTechnicians = JSON.parse(localStorage.getItem("technicians") || "[]");
   
-      // If we find cached data, set it immediately
       if (cachedTechnicians.length > 0) {
         setTechnicians(cachedTechnicians);
       }
   
-      // If cached technicians is empty or not available, fetch from API
       if (cachedTechnicians.length === 0) {
         try {
           const response = await axios.get('https://servicebackend.circolife.vip/api/technicians/getTechnicians');
@@ -153,7 +150,7 @@ export default React.memo(function AssignTask({
     if (period === "PM" && hours !== 12) hours += 12; // Convert PM to 24-hour format
     if (period === "AM" && hours === 12) hours = 0; // Handle midnight (12:00 AM)
   
-    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+    return `${hours?.toString().padStart(2, "0")}:${minutes?.toString().padStart(2, "0")}`;
   }
 
   const transformedACUnit =
@@ -162,7 +159,6 @@ export default React.memo(function AssignTask({
         let type, capacity;
         console.log("units", unit);
 
-        // If model is a standard ton size, set type to Split AC
         if (
           unit?.model === "1 Ton" ||
           unit?.model === "1.5 Ton" ||
@@ -181,7 +177,6 @@ export default React.memo(function AssignTask({
               ? "S30"
               : unit.model;
         } 
-        // Handle existing S or C prefixed models
         else if (unit?.model.startsWith("S")) {
           type = "Split AC";
           capacity =
@@ -207,7 +202,6 @@ export default React.memo(function AssignTask({
               : unit.model;
         } 
         else {
-          // Fallback for any other model
           type = "Split AC";
           capacity = unit?.model;
         }
@@ -256,6 +250,9 @@ export default React.memo(function AssignTask({
       await axios.post(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/tasks`, taskDataCreation, {
         headers: { "Content-Type": "application/json" },
       });
+      // await axios.post(`http://35.154.208.29:8080/api/tasks`, taskDataCreation, {
+      //   headers: { "Content-Type": "application/json" },
+      // });
 
       // Update query status
       await axios.put(
@@ -305,12 +302,26 @@ export default React.memo(function AssignTask({
     <div className="flex w-full font-sans">
       <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
         <Dialog.Trigger asChild>
-          <button
-            onClick={() => setIsOpen(true)}
-            className="px-4 py-2 text-sm font-medium text-white bg-[#A14996] rounded hover:bg-[#A14996]"
+        <button
+          onClick={() => setIsOpen(true)}
+          className="px-4 py-2 flex items-center gap-2 text-sm font-medium text-black bg-white rounded text-center mx-auto"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            shapeRendering="geometricPrecision"
+            width="15"
+            height="15"
+            textRendering="geometricPrecision"
+            imageRendering="optimizeQuality"
+            fillRule="evenodd"
+            clipRule="evenodd"
+            viewBox="0 0 419 511.67"
+            className="shrink-0"
           >
-            Assign Task
-          </button>
+            <path d="M314.98 303.62c57.47 0 104.02 46.59 104.02 104.03 0 57.47-46.58 104.02-104.02 104.02-57.47 0-104.02-46.58-104.02-104.02 0-57.47 46.58-104.03 104.02-104.03zM41.73 59.27h23.93v24.38H41.73c-4.54 0-8.7 1.76-11.8 4.61l-.45.49c-3.14 3.13-5.1 7.48-5.1 12.24v315.53c0 4.75 1.96 9.1 5.1 12.24 3.13 3.15 7.48 5.11 12.25 5.11h142.62c1.68 8.44 4.17 16.6 7.36 24.38H41.73c-11.41 0-21.86-4.71-29.42-12.26C4.72 438.44 0 427.99 0 416.52V100.99c0-11.48 4.7-21.92 12.25-29.47l.79-.72c7.5-7.13 17.62-11.53 28.69-11.53zm297.55 217.37V100.99c0-4.74-1.96-9.09-5.12-12.24-3.11-3.15-7.47-5.1-12.24-5.1h-23.91V59.27h23.91c11.45 0 21.86 4.72 29.42 12.26 7.61 7.56 12.32 18.02 12.32 29.46V283.6c-7.79-3.06-15.95-5.41-24.38-6.96zm-206.75-8.07c-7.13 0-12.92-5.79-12.92-12.92s5.79-12.93 12.92-12.93h142.83c7.13 0 12.92 5.8 12.92 12.93s-5.79 12.92-12.92 12.92H132.53zM89.5 241.22c7.98 0 14.44 6.46 14.44 14.44 0 7.97-6.46 14.43-14.44 14.43-7.97 0-14.44-6.46-14.44-14.43 0-7.98 6.47-14.44 14.44-14.44zm0 78.62c7.98 0 14.44 6.46 14.44 14.44 0 7.97-6.46 14.43-14.44 14.43-7.97 0-14.44-6.46-14.44-14.43 0-7.98 6.47-14.44 14.44-14.44zm43.04 27.35c-7.13 0-12.93-5.79-12.93-12.92s5.8-12.93 12.93-12.93h80.96a133.608 133.608 0 0 0-17.26 25.85h-63.7zM89.5 162.6c7.98 0 14.44 6.46 14.44 14.44 0 7.98-6.46 14.44-14.44 14.44-7.97 0-14.44-6.46-14.44-14.44 0-7.98 6.47-14.44 14.44-14.44zm43.03 27.37c-7.13 0-12.92-5.8-12.92-12.93s5.79-12.92 12.92-12.92h142.83c7.13 0 12.92 5.79 12.92 12.92s-5.79 12.93-12.92 12.93H132.53zM93 39.4h46.13C141.84 17.18 159.77 0 181.52 0c21.62 0 39.45 16.95 42.34 38.94l46.76.46c2.61 0 4.7 2.09 4.7 4.71v51.84c0 2.6-2.09 4.7-4.7 4.7H93.05c-2.56 0-4.71-2.1-4.71-4.7V44.11A4.638 4.638 0 0 1 93 39.4zm88.03-19.25c12.3 0 22.26 9.98 22.26 22.27 0 12.3-9.96 22.26-22.26 22.26-12.29 0-22.26-9.96-22.26-22.26 0-12.29 9.97-22.27 22.26-22.27zm118.39 346.9c-.04-4.59-.46-7.86 5.23-7.79l18.45.23c5.95-.04 7.53 1.86 7.46 7.43v25.16h25.02c4.59-.03 7.86-.46 7.78 5.24l-.22 18.44c.03 5.96-1.86 7.54-7.43 7.48h-25.15v25.14c.07 5.57-1.51 7.46-7.46 7.43l-18.45.22c-5.69.09-5.27-3.2-5.23-7.79v-25h-25.16c-5.59.06-7.47-1.52-7.44-7.48l-.22-18.44c-.09-5.7 3.2-5.27 7.79-5.24h25.03v-25.03z"/>
+          </svg>
+          Assign Task
+        </button>
         </Dialog.Trigger>
 
         <Dialog.Portal>
@@ -348,20 +359,20 @@ export default React.memo(function AssignTask({
 
                   {filteredTechnicians.length > 0 && (
                     <ul className="absolute w-full border border-gray-300 mt-1 max-h-48 overflow-y-auto bg-white rounded-md shadow-lg z-10">
-                      {filteredTechnicians.map((tech) => (
-                        <li
-                          key={tech.technician_id}
-                          className="p-2 cursor-pointer hover:bg-gray-100"
-                          onClick={() => handleSelectTechnician(tech)}
-                        >
-                          {tech.name}
-                        </li>
-                      ))}
-                    </ul>
+                    {filteredTechnicians.map((tech) => (
+                      <li
+                        key={tech.technician_id}
+                        className="p-2 cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSelectTechnician(tech)}
+                      >
+                        {tech.name}
+                      </li>
+                    ))}
+                  </ul>
                   )}
                 </div>
 
-                <div className="mb-4">
+                <div className="mb-4 max-h-[90px] overflow-y-scroll border rounded-md p-2 flex flex-wrap gap-2">
                   {selectedTechnicians.map((tech) => (
                     <div key={tech.technician_id} className="bg-blue-100 text-blue-800 px-3 py-2 rounded-md flex items-center justify-between mb-2">
                       {tech.name}
@@ -408,9 +419,9 @@ export default React.memo(function AssignTask({
                   </select>
                 </div>
 
-                <button onClick={refreshTechnicians} className="text-blue-500 hover:underline w-fit">
+                {/* <button onClick={refreshTechnicians} className="text-blue-500 hover:underline w-fit">
                   Refresh Technicians
-                </button>
+                </button> */}
 
                 <div className="flex justify-center mt-8">
                   <button

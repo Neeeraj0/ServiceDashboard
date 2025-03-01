@@ -85,6 +85,8 @@ export default function DatePicker2({
             setSelectedEndDate(formattedDate);
         }
     }
+
+    setIsOpen(false);
 };
 
   const updateInput = (): string => {

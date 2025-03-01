@@ -4,6 +4,10 @@ import ReAssignTask from '../Dialogs/ReAssignTask';
 import Pagination from '../Pagination';
 import SearchBox from '../SearchBox/SearchBox';
 import DatePicker2 from '../DateFilter/DatePicker2';
+import { useRefresh } from '@/app/context/RefreshContext';
+import toast from 'react-hot-toast';
+import ClickOutside from '../ClickOutside';
+import onLoadingCompleteProp from '@/types/Loader/Loading';
 
 interface Address {
   location: string;
@@ -31,8 +35,11 @@ interface Order {
   deviceId: string;
   assignedTechnicians: Technician[];
 }
+interface AssignedBreakdownProps {
+  onLoadingComplete: onLoadingCompleteProp;
+}
 
-const AssignedBreakdown: React.FC = () => {
+const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete }) => {
   let [backendData, setBackendData] = useState<Order[]>([]);
   const [hasAssignAccess, setHasAssignAccess] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -43,6 +50,7 @@ const AssignedBreakdown: React.FC = () => {
   const [selectedStartDate, setSelectedStartDate] = useState<string | null>(null);
   const [selectedEndDate, setSelectedEndDate] = useState<string | null>(null);
   const [originalData, setOriginalData] = useState<Order[]>([]);
+  const { triggerRefresh, refreshKey } = useRefresh();
 
   //checktoken
     useEffect(() => {
@@ -69,8 +77,6 @@ const AssignedBreakdown: React.FC = () => {
       checkUserAccess();
     }, []);
 
-    
-
   useEffect(() => {
     const fetchAssignedOrders = async () => {
       try {
@@ -91,11 +97,13 @@ const AssignedBreakdown: React.FC = () => {
         setOriginalData(orders);
       } catch (error) {
         console.error(error);
+      } finally{
+        onLoadingComplete();
       }
     };
 
     fetchAssignedOrders();
-  }, []);
+  }, [refreshKey, onLoadingComplete]);
 
   useEffect(() => {
     if (selectedStartDate || selectedEndDate) {
@@ -160,51 +168,73 @@ const AssignedBreakdown: React.FC = () => {
     setSelectedEndDate(null);
     setBackendData(originalData);
   };
+
+  const handleRefresh = () => {
+    toast.success('data refreshing...');
+    triggerRefresh();
+  }
   return (
     <div>
        <div className="flex items-center justify-between mb-4">    
-          <SearchBox 
-            placeholder="Search by customer name"
-            value={searchQuery}
-            onChange={setSearchQuery}
-          />
-          <button
-          type="button"
-          className="inline-flex w-[fit-content] justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50"
-          onClick={toggleDropdown}
-        >
-          Filters 🌪️
-          <svg
-          className="-mr-1 size-5 text-gray-400"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          aria-hidden="true"
-          >
-            <path
-              fillRule="evenodd"
-              d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
-              clipRule="evenodd"
+          <div className='flex-grow'>
+            <SearchBox 
+              placeholder="Search by customer name"
+              value={searchQuery}
+              onChange={setSearchQuery}
             />
-          </svg>
-        </button>
+          </div>
+          <div className='flex gap-2 ml-auto'>
+            <button 
+              onClick={handleRefresh}
+              className="p-2 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200"
+              title="Refresh data"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 4v6h-6"/>
+                <path d="M1 20v-6h6"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
+            </button>
+            <button
+            type="button"
+            className="inline-flex w-[fit-content] justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50"
+            onClick={toggleDropdown}
+          >
+            Filters 🌪️
+            <svg
+            className="-mr-1 size-5 text-gray-400"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+            >
+              <path
+                fillRule="evenodd"
+                d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                clipRule="evenodd"
+              />
+            </svg>
+            </button>
+          </div>
 
         {isOpen && (
-        <div className="absolute right-0 z-10 mt-10 w-56 origin-top-right rounded-md bg-white ring-1 shadow-lg ring-black/5 focus:outline-hidden">
-          <div className="py-1">
-            <div
-              className="flex justify-between items-center px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
-              onClick={() => setIsOpen(false)}
-            >
-              Filters <span className="text-red-500 font-bold cursor-pointer">❌</span>
+          <ClickOutside onClick={() => setIsOpen(false)}>
+            <div className="absolute right-0 z-10 mt-10 w-56 origin-top-right rounded-md bg-white ring-1 shadow-lg ring-black/5 focus:outline-hidden">
+              <div className="py-1">
+                <div
+                  className="flex justify-between items-center px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Filters <span className="text-red-500 font-bold cursor-pointer">❌</span>
+                </div>
+                <div
+                  className="block px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
+                  onClick={openDatePicker}
+                >
+                  Date
+                </div>
+              </div>
             </div>
-            <div
-              className="block px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
-              onClick={openDatePicker}
-            >
-              Date
-            </div>
-          </div>
-        </div>
+          </ClickOutside>
       )}
 
           {showDatePicker && (

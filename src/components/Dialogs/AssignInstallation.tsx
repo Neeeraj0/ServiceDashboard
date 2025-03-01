@@ -20,6 +20,7 @@ interface Technician {
 
 interface AssignTaskProps {
   preOrderId: string;
+  parentPreOrderId: string;
   clientName: string;
   clientNumber: string;
   description: string;
@@ -32,6 +33,7 @@ interface AssignTaskProps {
 
 export default function AssignInstallation({
   preOrderId,
+  parentPreOrderId,
   clientName,
   clientNumber,
   addressDisplay,
@@ -174,7 +176,8 @@ export default function AssignInstallation({
       return;
     }
 
-    const orderResponse = await axios.get(`https://salestrackbackend.circolife.vip/api/preOrder/orders/detail/${preOrderId}`);
+    // const orderResponse = await axios.get(`https://salestrackbackend.circolife.vip/api/preOrder/orders/detail/${preOrderId}`);
+    const orderResponse = await axios.get(`http://65.1.92.30:8080/api/preOrder/orders/detail/${preOrderId}`);
     const orders = orderResponse.data;
 
     const orderMap: { [key: string]: string[] } = {}; // key: model, value: array of order IDs
@@ -242,6 +245,7 @@ export default function AssignInstallation({
       quantity: totalQuantity,
       taskType: "installation",
       approvalPending: false,
+      parentPreorder: parentPreOrderId,
       preOrderId: preOrderId,
       assignedTechnicians: selectedTechnicians.map((tech) => tech.name), // Send selected technician names
       contactPerson: {
@@ -285,7 +289,7 @@ export default function AssignInstallation({
         <Dialog.Trigger asChild>
           <button
             onClick={() => setIsOpen(true)}
-            className="px-4 py-2 text-sm font-medium text-white hover:bg-blue-800  w-full border border-1 bg-blue-600 rounded-lg border-gray-200 text-center"
+            className="px-4 py-2 text-sm font-medium text-white hover:bg-[#A14996]  w-full border border-1 bg-[#A14996] rounded-lg border-gray-200 text-center"
           >
             Assign Task
           </button>

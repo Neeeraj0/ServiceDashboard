@@ -30,6 +30,7 @@ export default function Login() {
   const [otp, setOtp] = useState('');
   const [showOtp, setShowOtp] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // New loading state
+  const [isVerifying, setIsVerifying] = useState(false); // Added verifying state
   const router = useRouter();
   const { setUserData } = useUser();
 
@@ -73,13 +74,12 @@ export default function Login() {
       setShowOtp(true);
       setUserData({ 
         phone: phoneNumber, 
-        role: formData.role // Now this is type-safe
+        role: formData.role 
       });
       toast.success('OTP sent successfully!');
       setIsLoading(false);
     } catch (error) {
       console.error('Error sending OTP:', error);
-      toast.error('Failed to send OTP. Please try again.');
     }
   };
 
@@ -89,17 +89,18 @@ export default function Login() {
       return;
     }
 
+    setIsVerifying(true);
     try {
       const result = await window.confirmationResult.confirm(otp);
       const user = result.user;
       
       let endpoint;
       if (formData.role === 'servicehead') {
-          endpoint = 'https://servicebackend.circolife.vip/api/users/checkUser';
+          endpoint = `${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/users/checkUser`;
       } else if (formData.role === 'viewAccess') {
-          endpoint = 'https://servicebackend.circolife.vip/api/users/checkUser';
+          endpoint = `${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/users/checkUser`;
       } else {
-          endpoint = 'https://servicebackend.circolife.vip/api/technicians/checkTechnician';
+          endpoint = `${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/technicians/checkTechnician`;
       }
 
       const response = await fetch(endpoint, {
@@ -124,6 +125,8 @@ export default function Login() {
     } catch (error) {
       console.error('Error verifying OTP:', error);
       toast.error('Invalid OTP. Please try again.');
+    } finally{
+      setIsVerifying(false);
     }
   };
 
@@ -198,7 +201,7 @@ export default function Login() {
                 onClick={showOtp ? verifyOtp : sendOtp}
                 disabled={!isFormValid || (showOtp && !otp)}
               >
-                {isLoading ? 'Sending...' : (showOtp ? 'Verify OTP' : 'Send OTP')}
+                  {isVerifying ? 'Verifying...' : isLoading ? 'Sending...' : (showOtp ? 'Verify OTP' : 'Send OTP')}
                 </button>
             </form>
           </div>

@@ -2,19 +2,26 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-// Define the shape of the context
 interface AuthContextType {
   userName: string | null;
-  loading: boolean; // To indicate loading state
+  userEmail: string | null;
+  userRole: string | null;
+  userPhone: string | null;
+  userId: string | null;
+  loading: boolean; 
   loadUserFromToken: () => void;
+  logout: () => void;
 }
 
-// Create the context with a default value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // AuthProvider component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [userName, setUserName] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [userPhone, setUserPhone] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true); // Initialize loading state
 
   const loadUserFromToken = () => {
@@ -29,29 +36,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         const decodedToken = JSON.parse(jsonPayload);
         setUserName(decodedToken.name);
+        setUserEmail(decodedToken.email);
+        setUserRole(decodedToken.role);
+        setUserPhone(decodedToken.phone);
+        setUserId(decodedToken.admin_id);
       } catch (error) {
         console.error('Error decoding token:', error);
         setUserName(null);
+        setUserEmail(null);
+        setUserRole(null);
+        setUserPhone(null);
+        setUserId(null);
       }
     } else {
       console.log('No token found');
       setUserName(null);
     }
-    setLoading(false); // Set loading to false after attempting to load user
+    setLoading(false); 
   };
 
   useEffect(() => {
     loadUserFromToken();
   }, []);
 
+  const logout = () => {
+    localStorage.removeItem('authToken');
+    setUserName(null);
+    setUserEmail(null);
+    setUserRole(null);
+    setUserPhone(null);
+    setUserId(null);
+    loadUserFromToken();
+    window.location.reload(); 
+  };
+
+
   return (
-    <AuthContext.Provider value={{ userName, loading, loadUserFromToken }}>
+    <AuthContext.Provider value={{ userName, userEmail, userRole, userPhone, userId, loading, logout, loadUserFromToken }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Custom hook to use the AuthContext
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

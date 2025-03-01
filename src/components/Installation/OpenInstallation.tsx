@@ -3,6 +3,9 @@ import axios from 'axios';
 import './module.style.css'
 import AssignInstallation from '../Dialogs/AssignInstallation';
 import SearchBox from '../SearchBox/SearchBox';
+import { useRefresh } from '@/app/context/RefreshContext';
+import toast from 'react-hot-toast';
+import { formatDate } from '../utils/dateUtils';
 
 interface PreorderResponse {
   _id: string;
@@ -56,6 +59,7 @@ interface PreorderResponse {
     country: string;
     state: string;
   };
+  parentPreorder: string;
   orderingStatus: boolean;
   preOrdertimestamp: string;
   paidamount: number;
@@ -80,13 +84,18 @@ const OpenInstallation = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [hasAssignAccess, setHasAssignAccess] = useState(true);
+  const { triggerRefresh, refreshKey } = useRefresh();
   const itemsPerPage = 10;
 
   const modelToTonnage: { [key: string]: string } = {
-    "S10": "1T",
-    "S15": "1.5T",
-    "S20": "2T",
-    "S30": "3T",
+    "S10": "Split 1T",
+    "S15": "Split 1.5T",
+    "S20": "Split 2T",
+    "S30": "Split 3T",
+    "C10": "Cassette 1T",
+    "C15": "Cassette 1.5T",
+    "C20": "Cassette 2T",
+    "C30": "Cassette 3T",
   };
 
   //checktoken
@@ -115,49 +124,50 @@ const OpenInstallation = () => {
       checkUserAccess();
     }, []);
 
-  const fetchData = async () => {
-    try {
-      const [preordersRes, assignedTasksRes] = await Promise.all([
-        axios.get('https://salestrackbackend.circolife.vip/api/preOrder/getall/preorders', {
-          headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_SALES_BACKEND_TOKEN}`,
-          },
-        }),
-        axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/installation/getAssigned`),
-      ]);
-  
-      // Filter orders where orderingStatus is true
-      const ordersWithOrderingStatus = preordersRes.data.filter(
-        (order: PreorderResponse) => order.orderingStatus === true
-      );
-  
-      // Extract assigned task `preOrderId` for filtering
-      const assignedPreorderIds = new Set(
-        assignedTasksRes.data.map((task: { preOrderId: string }) => task.preOrderId)
-      );
-  
-      // Filter orders that are not assigned
-      const unassignedOrders = ordersWithOrderingStatus.filter(
-        (order: PreorderResponse) => !assignedPreorderIds.has(order._id)
-      );
-
-      console.log('unassignedOrders:', unassignedOrders);
-      console.log('assignedTasks:', assignedTasksRes.data);
-  
-      setAllPreorderData(ordersWithOrderingStatus);
-      setAssignedTasks(assignedTasksRes.data);
-      setFilteredPreorders(unassignedOrders);
-    } catch (err: any) {
-      console.error('Error fetching data:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };  
-
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [preordersRes, assignedTasksRes] = await Promise.all([
+          // axios.get('http://65.1.92.30:8080/api/preOrder/getall/preorders', {
+            axios.get('https://salestrackbackend.circolife.vip/api/preOrder/getall/preorders', {
+            headers: {
+              Authorization: `Bearer ${process.env.NEXT_PUBLIC_SALES_BACKEND_TOKEN}`,
+            },
+          }),
+          axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/installation/getAssigned`),
+        ]);
+    
+        // Filter orders where orderingStatus is true
+        const ordersWithOrderingStatus = preordersRes.data.filter(
+          (order: PreorderResponse) => order.orderingStatus === true &&
+          order.AcDetails.length > 0 
+        );
+        // Extract assigned task `preOrderId` for filtering
+        const assignedPreorderIds = new Set(
+          assignedTasksRes.data.map((task: { preOrderId: string }) => task.preOrderId)
+        );
+    
+        // Filter orders that are not assigned
+        const unassignedOrders = ordersWithOrderingStatus.filter(
+          (order: PreorderResponse) => !assignedPreorderIds.has(order._id)
+        );
+  
+        console.log('unassignedOrders:', unassignedOrders);
+        console.log('assignedTasks:', assignedTasksRes.data);
+    
+        setAllPreorderData(ordersWithOrderingStatus);
+        setAssignedTasks(assignedTasksRes.data);
+        setFilteredPreorders(unassignedOrders);
+      } catch (err: any) {
+        console.error('Error fetching data:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };  
+
     fetchData();
-  }, []);
+  }, [refreshKey]);
 
   useEffect(() => {
     const assignedPreorderIds = new Set(
@@ -174,26 +184,29 @@ const OpenInstallation = () => {
     );
   
     setFilteredPreorders(searchFiltered);
-    setCurrentPage(1); // Reset to first page when search changes
+    if (searchQuery) {
+      setCurrentPage(1);
+    }
   }, [allPreorderData, assignedTasks, searchQuery]);
 
   const formatACDetails = (acDetails: PreorderResponse['AcDetails']) => {
-    const groupedDetails: Record<string, string[]> = {};
+    const groupedDetails: Record<string, { quantity: number, tonnage: string }> = {};
   
     acDetails.forEach((ac) => {
-      const tonnage = modelToTonnage[ac.model] || ac.model;
+      const tonnage = modelToTonnage[ac.model] || ac.model; //  modelToTonnage 
       const formattedAC = `${tonnage} (${ac.quantity})`;
   
-      if (!groupedDetails[ac.ac_type]) {
-        groupedDetails[ac.ac_type] = [];
+      if (!groupedDetails[ac.model]) {
+        groupedDetails[ac.model] = { quantity: 0, tonnage }; 
       }
-      groupedDetails[ac.ac_type].push(formattedAC);
+      groupedDetails[ac.model].quantity += ac.quantity; // quantity summation
     });
   
-    return Object.entries(groupedDetails)
-      .map(([type, details]) => `${type}: ${details.join(', ')}`)
-      .join('\n');
+    return Object.values(groupedDetails)
+      .map(({ tonnage, quantity }) => `${tonnage} (${quantity})`)
+      .join(', ');
   };
+  
 
   const handleTaskAssigned = useCallback((id: string) => {
     setRemovingId(id);
@@ -215,13 +228,36 @@ const OpenInstallation = () => {
     setCurrentPage(pageNumber);
   };
 
+  const handleRefresh = () => {
+    toast.success('Data Refreshed Successfully');
+    triggerRefresh();
+  };
+
   return (
     <div>
-      <SearchBox 
-        placeholder="Search by customer name"
-        value={searchQuery}
-        onChange={setSearchQuery}
-      />
+        <div className="flex items-center justify-between mb-4">
+          <div className='flex-grow'>
+            <SearchBox 
+              placeholder="Search by customer name"
+              value={searchQuery}
+              onChange={setSearchQuery}
+            />
+          </div>
+          <div className='flex gap-2 ml-[auto] '>
+              <button 
+                  onClick={handleRefresh}
+                  className="p-2 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200"
+                  title="Refresh data"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M23 4v6h-6"/>
+                    <path d="M1 20v-6h6"/>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                  </svg>
+                </button>
+                <span></span>
+          </div>
+      </div>
       <table className="w-full text-left table-auto min-w-max">
         <thead>
           <tr>
@@ -250,6 +286,8 @@ const OpenInstallation = () => {
                 quantity: ac.quantity
               }));
 
+              const formattedDateTime = formatDate(order.DateofInstallation);
+              
               const address = `${order.customer_shipping_address.address_line1}, ${order.customer_shipping_address.address_line2 || ''}, ${order.customer_shipping_address.city}, ${order.customer_shipping_address.state}, ${order.customer_shipping_address.pincode}`;
 
               return (
@@ -273,17 +311,15 @@ const OpenInstallation = () => {
                     {address}
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm">
-                    {order.DateofInstallation ? new Date(order.DateofInstallation).toLocaleDateString('en-IN', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                    }) : "Not Provided"}
-                    {order.TimeofInstallation}
+                    {formattedDateTime.date} 
+                    {" "}
+                    {order.TimeofInstallation || "N/A"}
                   </td>
                   {hasAssignAccess && (
                     <td className="p-2 border-b border-blue-gray-50 text-sm relative dropdown-container">
                       <AssignInstallation 
                         preOrderId={order._id}
+                        parentPreOrderId={order.parentPreorder}
                         clientName={order.customer.name}
                         clientNumber={order.customer.mobile}
                         description=""

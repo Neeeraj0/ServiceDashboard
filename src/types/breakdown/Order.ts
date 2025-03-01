@@ -7,10 +7,10 @@ export type Order = {
     _id: string;
     contactperson: string;
     contactnumber: string;
-    summery: string;
+    summary: string;
     subject: string;
     status: boolean,
-    customerComplaint: string,
+    customerComplaint: string;
     TimeStamp: string;
     queryStatus: string;
     deviceid: string;

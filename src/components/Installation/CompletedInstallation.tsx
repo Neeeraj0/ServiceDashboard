@@ -9,6 +9,7 @@ import PipingModal from '../Modal/PipingModal';
 import ReAssignTask from '../Dialogs/ReAssignTask';
 import Pagination from '../Pagination';
 import SearchBox from '../SearchBox/SearchBox';
+import { useRefresh } from '@/app/context/RefreshContext';
 
 interface Address {
   location: string;
@@ -65,6 +66,7 @@ const CompletedInstallation: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasAssignAccess, setHasAssignAccess] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const { triggerRefresh, refreshKey } = useRefresh();
   const itemsPerPage = 10;
 
     //checktoken
@@ -130,7 +132,7 @@ const CompletedInstallation: React.FC = () => {
     };
 
     fetchCompletedOrders();
-  }, []);
+  }, [refreshKey]);
 
   const handleViewImages = (photos: Photo[]) => {
     setModalImages(photos);
@@ -155,11 +157,16 @@ const CompletedInstallation: React.FC = () => {
   
   return (
     <div>
-    <SearchBox 
-      placeholder="Search by customer name"
-      value={searchQuery}
-      onChange={setSearchQuery}
-    />
+      <div className="flex items-center justify-between mb-4">  
+        <div className='flex-grow'>
+          <SearchBox 
+            placeholder="Search by customer name"
+            value={searchQuery}
+            onChange={setSearchQuery}
+          />
+        </div>
+        
+      </div>
     <table className="w-full text-left table-auto min-w-max">
       <thead>
         <tr className="bg-gray-50">
