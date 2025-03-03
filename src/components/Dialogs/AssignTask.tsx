@@ -47,7 +47,6 @@ export default React.memo(function AssignTask({
   const [selectedTechnicians, setSelectedTechnicians] = useState<Technician[]>([]);
   const [isButtonClicked, setIsButtonClicked] = useState(false);
   const {userName} = useAuth();
-
   useEffect(() => {
     const fetchTechnicians = async () => {
       const cachedTechnicians = JSON.parse(localStorage.getItem("technicians") || "[]");

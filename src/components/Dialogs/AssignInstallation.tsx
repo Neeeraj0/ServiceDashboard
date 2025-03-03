@@ -176,8 +176,8 @@ export default function AssignInstallation({
       return;
     }
 
-    // const orderResponse = await axios.get(`https://salestrackbackend.circolife.vip/api/preOrder/orders/detail/${preOrderId}`);
-    const orderResponse = await axios.get(`http://65.1.92.30:8080/api/preOrder/orders/detail/${preOrderId}`);
+    const orderResponse = await axios.get(`https://salestrackbackend.circolife.vip/api/preOrder/orders/detail/${preOrderId}`);
+    // const orderResponse = await axios.get(`http://65.1.92.30:8080/api/preOrder/orders/detail/${preOrderId}`);
     const orders = orderResponse.data;
 
     const orderMap: { [key: string]: string[] } = {}; // key: model, value: array of order IDs

@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 interface AuthContextType {
   userName: string | null;
@@ -8,7 +8,7 @@ interface AuthContextType {
   userRole: string | null;
   userPhone: string | null;
   userId: string | null;
-  loading: boolean; 
+  loading: boolean;
   loadUserFromToken: () => void;
   logout: () => void;
 }
@@ -22,37 +22,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userPhone, setUserPhone] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true); // Initialize loading state
+  const [loading, setLoading] = useState<boolean>(true);
+
+  const decodeToken = (token: string) => {
+    try {
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = atob(base64);
+
+      console.log("Decoded JWT Payload:", jsonPayload);
+
+      return JSON.parse(jsonPayload);
+    } catch (error) {
+      console.error("Error decoding token:", error);
+      return null;
+    }
+  };
 
   const loadUserFromToken = () => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-        
-        const decodedToken = JSON.parse(jsonPayload);
-        setUserName(decodedToken.name);
-        setUserEmail(decodedToken.email);
-        setUserRole(decodedToken.role);
-        setUserPhone(decodedToken.phone);
-        setUserId(decodedToken.admin_id);
-      } catch (error) {
-        console.error('Error decoding token:', error);
-        setUserName(null);
-        setUserEmail(null);
-        setUserRole(null);
-        setUserPhone(null);
-        setUserId(null);
-      }
-    } else {
-      console.log('No token found');
+    setLoading(true);
+    const token = localStorage.getItem("authToken");
+
+    if (!token) {
+      console.log("No token found in localStorage");
       setUserName(null);
+      setUserEmail(null);
+      setUserRole(null);
+      setUserPhone(null);
+      setUserId(null);
+      setLoading(false);
+      return;
     }
-    setLoading(false); 
+
+    const decodedToken = decodeToken(token);
+    console.log(decodedToken.admin_id);
+    console.log(decodedToken.name);
+    if (decodedToken) {
+      setUserName(decodedToken.name || null);
+      setUserEmail(decodedToken.email || null);
+      setUserRole(decodedToken.role || null);
+      setUserPhone(decodedToken.phone || null);
+      setUserId(decodedToken.admin_id || null);
+    } else {
+      console.warn("Invalid token or decoding failed");
+      setUserName(null);
+      setUserEmail(null);
+      setUserRole(null);
+      setUserPhone(null);
+      setUserId(null);
+    }
+
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -60,20 +80,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const logout = () => {
-    localStorage.removeItem('authToken');
+    localStorage.removeItem("authToken");
     setUserName(null);
     setUserEmail(null);
     setUserRole(null);
     setUserPhone(null);
     setUserId(null);
-    loadUserFromToken();
-    window.location.reload(); 
+    window.location.reload();
   };
-
 
   return (
     <AuthContext.Provider value={{ userName, userEmail, userRole, userPhone, userId, loading, logout, loadUserFromToken }}>
-      {children}
+      {!loading && children} {/* Prevents rendering until auth is loaded */}
     </AuthContext.Provider>
   );
 };
@@ -81,7 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

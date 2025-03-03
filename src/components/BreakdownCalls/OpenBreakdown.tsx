@@ -168,7 +168,6 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
         );
 
         const token = loginResponse.data.token;
-        console.log("token", token);
 
         const res = await axios.get("https://testing.backend.summary.circolife.vip/api/summary/address", {
           headers: {
