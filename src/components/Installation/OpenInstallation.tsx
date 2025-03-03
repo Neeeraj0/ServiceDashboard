@@ -196,6 +196,7 @@ const OpenInstallation = () => {
       const tonnage = modelToTonnage[ac.model] || ac.model; //  modelToTonnage 
       const formattedAC = `${tonnage} (${ac.quantity})`;
   
+      
       if (!groupedDetails[ac.model]) {
         groupedDetails[ac.model] = { quantity: 0, tonnage }; 
       }

@@ -215,6 +215,7 @@ const OpenInstallation = () => {
   }, []);
 
   if (loading) return <div>Loading...</div>;
+  
 
   const indexOfLastOrder = currentPage * itemsPerPage;
   const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
