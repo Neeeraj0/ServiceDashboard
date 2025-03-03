@@ -167,7 +167,7 @@ const OpenInstallation = () => {
     };  
 
     fetchData();
-  }, [refreshKey]);
+  }, []);
 
   useEffect(() => {
     const assignedPreorderIds = new Set(

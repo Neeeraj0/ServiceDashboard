@@ -6,6 +6,7 @@ import SearchBox from '../SearchBox/SearchBox';
 import DatePicker2 from '../DateFilter/DatePicker2';
 import { useRefresh } from '@/app/context/RefreshContext';
 import ClickOutside from '../ClickOutside';
+import { formatDate } from '../utils/dateUtils';
 
 interface Address {
   location: string;
@@ -86,7 +87,7 @@ const AssignedInstallation: React.FC = () => {
           issueReported: order.description,
           status: order.status,
           address: order.address.map((addr: Address) => addr.location).join(", ") || "N/A",
-          date: new Date(order.servicingDate).toLocaleDateString(),
+          date: order.servicingDate,
           deviceId: order.ac_units?.map((unit: any) => `${unit.type} (${unit.capacity})`).join(", ") || "N/A",
           assignedTechnicians: order.assignedTechnicians || []
         }));
@@ -273,7 +274,7 @@ const AssignedInstallation: React.FC = () => {
             <div className="font-semibold text-sm">Customer Address</div>
           </th> */}
           <th className="p-2 border-b border-blue-gray-50 min-w-[120px]">
-            <div className="font-semibold text-sm">Date</div>
+            <div className="font-semibold text-sm">Date & Time</div>
           </th>
           {/* <th className="p-2 border-b border-blue-gray-50 min-w-[150px]">
             <div className="font-semibold text-sm">Device ID</div>
@@ -323,7 +324,9 @@ const AssignedInstallation: React.FC = () => {
               {/* <td className="p-2 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs">
                 {order.address || "N/A"}
               </td> */}
-              <td className="p-2 border-b border-blue-gray-50 text-sm">{order.date || "N/A"}</td>
+              <td className="p-2 border-b border-blue-gray-50 text-sm">
+                {order.date ? `${formatDate(order.date).date} ${formatDate(order.date).time}` : "N/A"}
+              </td>
               {/* <td className="p-2 border-b border-blue-gray-50 text-sm">{order.deviceId || "N/A"}</td> */}
               <td className="p-2 border-b border-blue-gray-50">
                 {/* <button className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:underline">

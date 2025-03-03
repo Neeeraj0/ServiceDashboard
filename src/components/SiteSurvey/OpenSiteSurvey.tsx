@@ -1,18 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
-import PipingAssignTask from '../Dialogs/PipingAssignTask';
-import MoveToInstallation from '../Dialogs/MoveToInstallation';
 import './module.style.css'
-import SiteSurveyForm from './SiteSurveyForm/SiteSurveyForm';
+import AssignInstallation from '../Dialogs/AssignInstallation';
+import SearchBox from '../SearchBox/SearchBox';
+import { useRefresh } from '@/app/context/RefreshContext';
+import toast from 'react-hot-toast';
+import { formatDate } from '../utils/dateUtils';
 
 interface PreorderResponse {
+  _id: string;
   customer: {
     customer_id: string;
     name: string;
     email: string;
     mobile: string;
   };
-  _id: string;
+  superAdmin: string;
+  brandName: string;
   AcDetails: {
     ac_type: string;
     subscription_price: number;
@@ -22,7 +26,6 @@ interface PreorderResponse {
     plan_year: string;
     deposit: number;
     quantity: number;
-    contactPerson: string;
     _id: string;
   }[];
   Ac_totalAmount: number;
@@ -44,17 +47,25 @@ interface PreorderResponse {
     city: string;
     country: string;
     state: string;
-    addressId: string;
     contactPerson: string;
     contactNumber: string;
   };
-  paidamount: number;
+  customer_billing_address: {
+    gst_number: string;
+    address_line1: string;
+    address_line2: string;
+    pincode: string;
+    city: string;
+    country: string;
+    state: string;
+  };
+  parentPreorder: string;
   orderingStatus: boolean;
-  paymentStatusFullPayment: string;
-  paymentStatusToken: string;
   preOrdertimestamp: string;
-  DateofSiteSurvey: string;
-  DateofInstallation: string;
+  paidamount: number;
+  DateofSiteSurvey?: string;
+  DateofInstallation?: string;
+  TimeofInstallation?: string;
 }
 
 interface SiteSurveyDetail {
@@ -62,98 +73,188 @@ interface SiteSurveyDetail {
   PreOrderId: string;
 }
 
-const OpenSiteSurvey = () => {
-  let [preorderData, setPreorderData] = useState<PreorderResponse[]>([]);
+const OpenInstallation = () => {
+  const [allPreorderData, setAllPreorderData] = useState<PreorderResponse[]>([]);
+  const [filteredPreorders, setFilteredPreorders] = useState<PreorderResponse[]>([]);
   const [siteSurveyDetails, setSiteSurveyDetails] = useState<SiteSurveyDetail[]>([]);
+  const [assignedTasks, setAssignedTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<PreorderResponse | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [hasAssignAccess, setHasAssignAccess] = useState(true);
+  const { triggerRefresh, refreshKey } = useRefresh();
+  const itemsPerPage = 10;
+
+  const modelToTonnage: { [key: string]: string } = {
+    "S10": "Split 1T",
+    "S15": "Split 1.5T",
+    "S20": "Split 2T",
+    "S30": "Split 3T",
+    "C10": "Cassette 1T",
+    "C15": "Cassette 1.5T",
+    "C20": "Cassette 2T",
+    "C30": "Cassette 3T",
+  };
+
+  //checktoken
+    //checktoken
+    useEffect(() => {
+      const checkUserAccess = () => {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+          try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            
+            const decodedToken = JSON.parse(jsonPayload);
+            
+            setHasAssignAccess(decodedToken.role !== "viewAccess");
+          } catch (err) {
+            console.error("Error decoding token:", err);
+            setHasAssignAccess(false); // Default to no access if token is invalid
+          }
+        }
+      };
+  
+      checkUserAccess();
+    }, []);
+
+    useEffect(() => {
+      const fetchData = async () => {
+        try {
+          const [preordersRes, assignedTasksRes] = await Promise.all([
+            axios.get('https://salestrackbackend.circolife.vip/api/preOrder/getall/preorders', {
+              headers: {
+                Authorization: `Bearer ${process.env.NEXT_PUBLIC_SALES_BACKEND_TOKEN}`,
+              },
+            }),
+            axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/installation/getAssigned`),
+          ]);
+      
+          const ordersWithOrderingStatus = preordersRes.data.filter(
+            (order: PreorderResponse) => 
+              order.AcDetails.length > 0 &&
+              order.DateofSiteSurvey // Add this condition to check if DateofSiteSurvey exists
+          );
+          
+          const assignedPreorderIds = new Set(
+            assignedTasksRes.data.map((task: { preOrderId: string }) => task.preOrderId)
+          );
+      
+          const unassignedOrders = ordersWithOrderingStatus.filter(
+            (order: PreorderResponse) => !assignedPreorderIds.has(order._id)
+          );
+    
+          console.log('unassignedOrders:', unassignedOrders);
+          console.log('assignedTasks:', assignedTasksRes.data);
+      
+          setAllPreorderData(ordersWithOrderingStatus);
+          setAssignedTasks(assignedTasksRes.data);
+          setFilteredPreorders(unassignedOrders);
+        } catch (err: any) {
+          console.error('Error fetching data:', err);
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };  
+    
+      fetchData();
+    }, [refreshKey]);
 
   useEffect(() => {
-    const fetchPreorderData = async () => {
-      try {
-        const res = await axios.get('http://13.203.74.27:5000/api/preOrder/getall/preorders');
-        // const res = await axios.get('http://13.201.4.68:8080/api/preOrder/getall/preorders');
-        // const res = await axios.get('https://salestrackbackend.circolife.vip/api/preOrder/getall/preorders');
-        setPreorderData(res.data);
-      } catch (err: any) {
-        console.error("Error fetching preorder data:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const assignedPreorderIds = new Set(
+      assignedTasks.map((task: { preOrderId: string }) => task.preOrderId)
+    );
+  
+    const unassignedOrders = allPreorderData.filter(
+      (order: PreorderResponse) => !assignedPreorderIds.has(order._id)
+    );
+    
+    // Apply search filter
+    const searchFiltered = unassignedOrders.filter(order => 
+      order.customer.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  
+    setFilteredPreorders(searchFiltered);
+    if (searchQuery) {
+      setCurrentPage(1);
+    }
+  }, [allPreorderData, assignedTasks, searchQuery]);
 
-    const fetchSiteSurveyDetails = async () => {
-      try {
-        const res = await axios.get('http://35.154.208.29:8080/api/SiteSurveyDetails/preOrders/piping');
-        setSiteSurveyDetails(res.data);
-      } catch (err: any) {
-        console.error("Error fetching site survey details:", err);
-        setError(err.message);
+  const formatACDetails = (acDetails: PreorderResponse['AcDetails']) => {
+    const groupedDetails: Record<string, { quantity: number, tonnage: string }> = {};
+  
+    acDetails.forEach((ac) => {
+      const tonnage = modelToTonnage[ac.model] || ac.model; //  modelToTonnage 
+      const formattedAC = `${tonnage} (${ac.quantity})`;
+  
+      if (!groupedDetails[ac.model]) {
+        groupedDetails[ac.model] = { quantity: 0, tonnage }; 
       }
-    };
+      groupedDetails[ac.model].quantity += ac.quantity; // quantity summation
+    });
+  
+    return Object.values(groupedDetails)
+      .map(({ tonnage, quantity }) => `${tonnage} (${quantity})`)
+      .join(', ');
+  };
+  
 
-    fetchPreorderData();
-    fetchSiteSurveyDetails();
+  const handleTaskAssigned = useCallback((id: string) => {
+    setRemovingId(id);
+    setTimeout(() => {
+      setFilteredPreorders(prev => prev.filter(task => task._id !== id));
+      setRemovingId(null);
+    }, 300);
   }, []);
 
   if (loading) return <div>Loading...</div>;
-  if (error) return <div>No Records found: {error}</div>;
 
-   preorderData = preorderData.filter(order => 
-    !siteSurveyDetails.some(detail => detail.PreOrderId === order._id)
-  );
-
-
-  const modelToTonnage = {
-    "10": "1T",
-    "15": "1.5T",
-    "20": "2T",
-    "30": "3T",
-  };
-
-  const formatACDetails = (acDetails: PreorderResponse['AcDetails']) => {
-    const groupedDetails: Record<string, string[]> = {};
-  
-    acDetails.forEach((ac) => {
-      const tonnage = modelToTonnage[ac.model as keyof typeof modelToTonnage] || ac.model;
-      const formattedAC = `${tonnage} (${ac.quantity})`;
-  
-      if (!groupedDetails[ac.ac_type]) {
-        groupedDetails[ac.ac_type] = [];
-      }
-      groupedDetails[ac.ac_type].push(formattedAC);
-    });
-  
-    return Object.entries(groupedDetails)
-      .map(([type, details]) => `${type}: ${details.join(', ')}`)
-      .join('\n');
-  };
-
-  const openModal = (order: PreorderResponse) => {
-    setSelectedOrder(order);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    console.log('function called');
-    setIsModalOpen(false);
-    setSelectedOrder(null);
-  };
-
-  // Calculate the current orders to display
   const indexOfLastOrder = currentPage * itemsPerPage;
   const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
-  const currentOrders = preorderData.slice(indexOfFirstOrder, indexOfLastOrder);
+  const currentOrders = filteredPreorders.slice(indexOfFirstOrder, indexOfLastOrder);
+  const totalPages = Math.ceil(filteredPreorders.length / itemsPerPage);
 
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  const paginate = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const handleRefresh = () => {
+    toast.success('Data Refreshed Successfully');
+    triggerRefresh();
+  };
 
   return (
     <div>
+        <div className="flex items-center justify-between mb-4">
+          <div className='flex-grow'>
+            <SearchBox 
+              placeholder="Search by customer name"
+              value={searchQuery}
+              onChange={setSearchQuery}
+            />
+          </div>
+          <div className='flex gap-2 ml-[auto] '>
+              <button 
+                  onClick={handleRefresh}
+                  className="p-2 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200"
+                  title="Refresh data"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M23 4v6h-6"/>
+                    <path d="M1 20v-6h6"/>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                  </svg>
+                </button>
+                <span></span>
+          </div>
+      </div>
       <table className="w-full text-left table-auto min-w-max">
         <thead>
           <tr>
@@ -162,30 +263,32 @@ const OpenSiteSurvey = () => {
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer Details</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">AC Details</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer Address</th>
-            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm max-w-40">Date of Site Survey</th>
-            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Action</th>
+            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm max-w-40">Site Survey Date & Time</th>
+            {hasAssignAccess && (
+              <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Action</th>
+            )}
           </tr>
         </thead>
         <tbody>
-          {preorderData.length === 0 ? (
+          {currentOrders.length === 0 ? (
             <tr>
               <td colSpan={9} className="text-center">No preorders available</td>
             </tr>
           ) : (
             currentOrders.map((order, index) => {
-              const serialNumber =  indexOfFirstOrder + index + 1; // Calculate serial number
+              const serialNumber = indexOfFirstOrder + index + 1;
               const acUnits = order.AcDetails.map(ac => ({
-                type: ac.ac_type,
-                model: ac.model,
+                type: ac.ac_type + " AC",
+                capacity: ac.model,
                 quantity: ac.quantity
               }));
 
+              const formattedDateTime = formatDate(order.DateofInstallation);
+              
               const address = `${order.customer_shipping_address.address_line1}, ${order.customer_shipping_address.address_line2 || ''}, ${order.customer_shipping_address.city}, ${order.customer_shipping_address.state}, ${order.customer_shipping_address.pincode}`;
 
               return (
-                <tr key={order._id}>
-                  {/* <td className="p-2 border-b border-blue-gray-50 text-sm">{order.customer.customer_id}</td>
-                   */}
+                <tr key={order._id} className={removingId === order._id ? 'fade-out' : ''}>
                   <td className="p-2 border-b border-blue-gray-50 text-sm">{serialNumber}</td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm">
                     {order.customer_shipping_address.contactPerson && order.customer_shipping_address.contactNumber
@@ -199,28 +302,32 @@ const OpenSiteSurvey = () => {
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm whitespace-normal w-50">{order.customer.name}</td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm whitespace-pre-line w-40">
-                      {formatACDetails(order.AcDetails)}
+                    {formatACDetails(order.AcDetails)}
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm whitespace-normal w-40">
-                    {`${address}`}
+                    {address}
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm">
-                    { order.DateofSiteSurvey ? new Date(order.DateofSiteSurvey).toLocaleDateString('en-IN', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                    }) : (
-                      "Not Provided"
-                    )}
+                    {formattedDateTime.date} 
+                    {" "}
+                    {order.TimeofInstallation || "N/A"}
                   </td>
-                  <td className="p-2 border-b border-blue-gray-50 text-sm relative dropdown-container">
-                    <button 
-                      onClick={() => openModal(order)}
-                      className="text-red-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-                    >
-                      Mark as Completed
-                    </button>
-                  </td>
+                  {hasAssignAccess && (
+                    <td className="p-2 border-b border-blue-gray-50 text-sm relative dropdown-container">
+                      <AssignInstallation 
+                        preOrderId={order._id}
+                        parentPreOrderId={order.parentPreorder}
+                        clientName={order.customer.name}
+                        clientNumber={order.customer.mobile}
+                        description=""
+                        onTaskAssigned={handleTaskAssigned}
+                        ac_units={acUnits}
+                        addressDisplay={address}
+                        contactName={order.customer_shipping_address.contactPerson}
+                        contactNumber={order.customer_shipping_address.contactNumber}
+                      />
+                    </td>
+                  )}
                 </tr>
               );
             })
@@ -228,7 +335,7 @@ const OpenSiteSurvey = () => {
         </tbody>
       </table>
 
-      <div className="pagination">
+      <div className="pagination flex flex-wrap justigy-center gap-2">
         <button
           className={`pagination-button ${currentPage === 1 ? 'disabled' : ''}`}
           onClick={() => paginate(currentPage - 1)}
@@ -236,7 +343,7 @@ const OpenSiteSurvey = () => {
         >
           Previous
         </button>
-        {Array.from({ length: Math.ceil(preorderData.length / itemsPerPage) }, (_, index) => (
+        {Array.from({ length: totalPages }, (_, index) => (
           <button
             key={index + 1}
             onClick={() => paginate(index + 1)}
@@ -246,19 +353,15 @@ const OpenSiteSurvey = () => {
           </button>
         ))}
         <button
-          className={`pagination-button ${currentPage === Math.ceil(preorderData.length / itemsPerPage) ? 'disabled' : ''}`}
+          className={`pagination-button ${currentPage === totalPages ? 'disabled' : ''}`}
           onClick={() => paginate(currentPage + 1)}
-          disabled={currentPage === Math.ceil(preorderData.length / itemsPerPage)}
+          disabled={currentPage === totalPages}
         >
           Next
         </button>
       </div>
-
-      {isModalOpen && (
-        <SiteSurveyForm closeModal={closeModal} orderData={selectedOrder} />
-      )}
     </div>
   );
 };
 
-export default OpenSiteSurvey;
+export default OpenInstallation;

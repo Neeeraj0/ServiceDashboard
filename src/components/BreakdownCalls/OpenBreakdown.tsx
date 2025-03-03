@@ -137,7 +137,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
     };
 
     fetchTasks();
-  }, [refreshKey, onLoadingComplete]);
+  }, [onLoadingComplete]);
 
   const transformOrderModels = (orderModels: (string | number | null)[]): ACUnit[] => {
     const acUnits: ACUnit[] = [];
