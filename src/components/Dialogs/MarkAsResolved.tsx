@@ -23,39 +23,45 @@ export default function MarkAsResolved({ orderId, onResolved }: MarkAsResolvedPr
   const [clientName, setClientName] = useState<string | null>(null);
   const [clientNumber, setClientNumber] = useState<string | null>(null);
   const [customerComplaint, setCustomerComplaint] = useState<string | null>(null);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
   const { userName } = useAuth();
+
+  // State for storing the token
+  const [token, setToken] = useState<string | null>(null);
 
   // Fetch authentication token
   const getToken = async (): Promise<string | null> => {
-    let token = localStorage.getItem("token");
-
-    if (!token) {
-      try {
-        const loginResponse = await fetch("https://testing.backend.summary.circolife.vip/api/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: "admin@circolife.com",
-            password: "admin@123",
-          }),
-        });
-
-        if (!loginResponse.ok) {
-          throw new Error("Login failed");
-        }
-
-        const data = await loginResponse.json();
-        token = data.token;
-        localStorage.setItem("token", token || "");
-        localStorage.setItem("isAuthenticated", "true");
-      } catch (error) {
-        console.error("Login error:", error);
-        toast.error("Authentication failed");
-        return null;
-      }
+    if (token) {
+      return token;  // If token is already in state, return it
     }
 
-    return token;
+    try {
+      const loginResponse = await axios.post("https://testing.backend.summary.circolife.vip/api/login", 
+        {
+          email: "admin@circolife.com",
+          password: "admin@123",
+        }, 
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (loginResponse.status !== 200) {
+        throw new Error("Login failed");
+      }
+
+      const data = loginResponse.data;
+      const newToken = data.token;
+      setToken(newToken);  // Save token in state
+      localStorage.setItem("token", newToken);  // Optional: still store token in localStorage for future sessions
+      localStorage.setItem("isAuthenticated", "true");
+
+      return newToken;
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("Authentication failed");
+      return null;
+    }
   };
 
   // Fetch shipping address and customer details
@@ -63,23 +69,19 @@ export default function MarkAsResolved({ orderId, onResolved }: MarkAsResolvedPr
     const fetchShippingAddress = async () => {
       const token = await getToken();
       if (!token) return;
-
       try {
-        const response = await fetch("https://testing.backend.summary.circolife.vip/api/summary/address", {
-          method: "GET",
+        setIsDataLoaded(false); // Reset data loaded state when fetching starts
+        
+        const response = await axios.get("https://testing.backend.summary.circolife.vip/api/summary/address", {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         });
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch address. Status: ${response.status}`);
-        }
-
-        const data = await response.json();
+        
+        const data = response.data;
         const matchedOrder = data.find((item: any) => item._id === orderId);
-
+        
         if (matchedOrder) {
           const address = matchedOrder.customerData?.shipping_address[0] || null;
           setShippingAddress(address ? `${address.line1}, ${address.line2}, ${address.city}, ${address.state} - ${address.pincode}` : null);
@@ -90,12 +92,16 @@ export default function MarkAsResolved({ orderId, onResolved }: MarkAsResolvedPr
         } else {
           toast.error("Order ID not found in address data.");
         }
+        
+        // Set data loaded to true only after all data is set
+        setIsDataLoaded(true);
       } catch (error) {
         console.error("Error fetching shipping address:", error);
-        toast.error("Failed to fetch shipping address.");
+        toast.error("Error loading data. Please try again.");
+        setIsDataLoaded(true); // Still set to true so user can retry
       }
     };
-
+    
     if (isOpen) {
       fetchShippingAddress();
     }
@@ -121,17 +127,17 @@ export default function MarkAsResolved({ orderId, onResolved }: MarkAsResolvedPr
 
       const payload = {
         _id: orderId,
-        address: shippingAddress || "N/A",
+        address: shippingAddress,
         title: "Breakdown",
-        customerComplaint: customerComplaint || "N/A",
+        customerComplaint: customerComplaint,
         ac_units: [],
         servicingDate: new Date().toISOString(),
         assignedTechnicians: [""], 
-        deviceId: deviceId || "Unknown",
+        deviceId: deviceId,
         quantity: 1,
         taskType: "breakdown",
-        client_number: clientNumber || "N/A",
-        client_name: clientName || "N/A",
+        client_number: clientNumber,
+        client_name: clientName,
         assignedBy: userName ? [userName] : [],
         status: "Completed",
         note: resolveNote, // Resolution note
@@ -167,7 +173,6 @@ export default function MarkAsResolved({ orderId, onResolved }: MarkAsResolvedPr
       );
 
       if (summaryResponse.status === 403) {
-        toast.error("Session expired. Please log in again.");
         localStorage.removeItem("token");
         localStorage.setItem("isAuthenticated", "false");
         return;
@@ -207,6 +212,13 @@ export default function MarkAsResolved({ orderId, onResolved }: MarkAsResolvedPr
           <Dialog.Overlay className="fixed inset-0 bg-black/40" />
           <Dialog.Content className="flex items-center justify-center fixed inset-0 w-full h-full bg-transparent">
             <div className="w-[35%] h-auto bg-white rounded-lg p-8 shadow-lg relative">
+              <button 
+                className="absolute top-2 right-2 text-gray-600 hover:text-red-500"
+                onClick={() => setIsOpen(false)}
+                aria-label="Close"
+              >
+                &times; {/* You can also use an SVG icon here */}
+              </button>
               <Dialog.Title className="text-center font-sans text-lg font-medium">Mark Query as Resolved</Dialog.Title>
               <Dialog.Description className="text-center text-sm text-gray-600 mt-2">Provide details about the resolution</Dialog.Description>
 
@@ -226,7 +238,13 @@ export default function MarkAsResolved({ orderId, onResolved }: MarkAsResolvedPr
                   <textarea className="form-control w-full p-2 border rounded" rows={4} value={resolveNote} onChange={(e) => setResolveNote(e.target.value)} required />
                 </div>
 
-                <button type="submit" disabled={isLoading} className="bg-purple-600 text-white py-2 px-8 rounded text-sm hover:bg-purple-700">{isLoading ? "Processing..." : "Submit"}</button>
+                <button 
+                  type="submit" 
+                  disabled={isLoading || !isDataLoaded} 
+                  className={`btn ${(isLoading || !isDataLoaded) ? 'btn-disabled' : 'btn-primary bg-[#A14996] text-white p-2 rounded-lg'}`}
+                >
+                  {isLoading ? 'Processing...' : !isDataLoaded ? 'Loading data...' : 'Submit'}
+                </button>
               </form>
             </div>
           </Dialog.Content>

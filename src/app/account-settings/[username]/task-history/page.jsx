@@ -5,6 +5,7 @@ import { useAuth } from "@/app/context/AuthContext";
 import DefaultLayout from "@/components/Layouts/DefaultLaout";
 import { formatDate } from "@/components/utils/dateUtils";
 import Papa from "papaparse";
+import './module.style.css';
 
 const TaskHistoryPage = () => {
   const { userName, userId} = useAuth();
@@ -130,10 +131,10 @@ const TaskHistoryPage = () => {
                             return `${formattedDate.date} ${formattedDate.time}`;
                         })()}
                         </td>
-                        <td className="px-4 py-2 capitalize font-extrabold">
-                            {task.status === "open" && "🔴 OPEN"}
-                            {task.status === "pending" && "🟡 PENDING"}
-                            {task.status === "Completed" && "🟢 COMPLETED"}
+                        <td className="px-4 py-2 capitalize font-extrabold status-cell">
+                          {task.status === "open" && <span className="status-dot open"> OPEN</span>}
+                          {task.status === "pending" && <span className="status-dot pending"> PENDING</span>}
+                          {task.status === "Completed" && <span className="status-dot completed"> COMPLETED</span>}
                         </td>
                       </tr>
                     ))}

@@ -52,7 +52,7 @@ export default function TechnicianProfile() {
           if (response.status === 201) {
             toast.success("Technician registered successfully!");
             refreshTechnicians();
-            setFormData({ name: "", email: "", phoneNumber: "", role: "Technician" }); // Reset form
+            setFormData({ name: "", email: "", phoneNumber: "", role: "serviceengineer" }); // Reset form
           } else {
             toast.error(result.message || "Error registering technician.");
           }

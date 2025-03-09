@@ -6,6 +6,8 @@ import SearchBox from '../SearchBox/SearchBox';
 import { useRefresh } from '@/app/context/RefreshContext';
 import toast from 'react-hot-toast';
 import { formatDate } from '../utils/dateUtils';
+import FilterDrawer from '../Filters/Filters';
+import InstallationFilterDrawer from '../Filters/OpenInstallationFilters';
 
 interface PreorderResponse {
   _id: string;
@@ -139,8 +141,8 @@ const OpenInstallation = () => {
     
         // Filter orders where orderingStatus is true
         const ordersWithOrderingStatus = preordersRes.data.filter(
-          (order: PreorderResponse) => order.orderingStatus === true &&
-          order.AcDetails.length > 0 
+          (order: PreorderResponse) =>
+          order.AcDetails.length > 0 && order.DateofInstallation
         );
         // Extract assigned task `preOrderId` for filtering
         const assignedPreorderIds = new Set(
@@ -167,7 +169,7 @@ const OpenInstallation = () => {
     };  
 
     fetchData();
-  }, []);
+  }, [refreshKey]);
 
   useEffect(() => {
     const assignedPreorderIds = new Set(
@@ -196,7 +198,7 @@ const OpenInstallation = () => {
       const tonnage = modelToTonnage[ac.model] || ac.model; //  modelToTonnage 
       const formattedAC = `${tonnage} (${ac.quantity})`;
   
-      
+
       if (!groupedDetails[ac.model]) {
         groupedDetails[ac.model] = { quantity: 0, tonnage }; 
       }
@@ -256,7 +258,10 @@ const OpenInstallation = () => {
                     <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
                   </svg>
                 </button>
-                <span></span>
+                <InstallationFilterDrawer 
+                  originalData={allPreorderData} 
+                  setFilteredData={setFilteredPreorders} 
+                />
           </div>
       </div>
       <table className="w-full text-left table-auto min-w-max">
@@ -313,7 +318,7 @@ const OpenInstallation = () => {
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm">
                     {formattedDateTime.date} 
-                    {" "}
+                    <br />
                     {order.TimeofInstallation || "N/A"}
                   </td>
                   {hasAssignAccess && (

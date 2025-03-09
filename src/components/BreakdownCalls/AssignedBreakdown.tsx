@@ -8,6 +8,9 @@ import { useRefresh } from '@/app/context/RefreshContext';
 import toast from 'react-hot-toast';
 import ClickOutside from '../ClickOutside';
 import {onLoadingCompleteProp} from '@/types/Loader/Loading';
+import { formatDate } from '../utils/dateUtils';
+import FilterDrawer from '../Filters/Filters';
+import AssignedFilterDrawer from '../Filters/AssignedFilters';
 
 interface Address {
   location: string;
@@ -89,7 +92,7 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
           issueReported: order.description,
           status: order.status,
           address: order.address.map((addr: Address) => addr.location).join(", ") || "N/A",
-          date: new Date(order.assignedDate).toLocaleDateString(),
+          date: order.assignedDate,
           deviceId: order.ac_units?.map((unit: any) => `${unit.type} (${unit.capacity})`).join(", ") || "N/A",
           assignedTechnicians: order.assignedTechnicians || []
         }));
@@ -195,7 +198,7 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
                 <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
               </svg>
             </button>
-            <button
+            {/* <button
             type="button"
             className="inline-flex w-[fit-content] justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50"
             onClick={toggleDropdown}
@@ -213,7 +216,11 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
                 clipRule="evenodd"
               />
             </svg>
-            </button>
+            </button> */}
+            <AssignedFilterDrawer 
+              originalData={originalData} 
+              setFilteredData={setBackendData}
+            />
           </div>
 
         {isOpen && (
@@ -341,7 +348,9 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
           <td className="p-2 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs">
             {order.address != "N/A" ? order.address : "Non App User"}
           </td>
-          <td className="p-2 border-b border-blue-gray-50 text-sm">{order.date || "N/A"}</td>
+          <td className="p-2 border-b border-blue-gray-50 text-sm">
+              {order.date ? `${formatDate(order.date).date} ${formatDate(order.date).time}` : "N/A"}
+          </td>
           {/* <td className="p-2 border-b border-blue-gray-50 text-sm">{order.deviceId || "N/A"}</td> */}
           <td className="p-2 border-b border-blue-gray-50">
             {/* <button className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:underline">

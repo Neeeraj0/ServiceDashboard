@@ -7,6 +7,7 @@ import DatePicker2 from '../DateFilter/DatePicker2';
 import { useRefresh } from '@/app/context/RefreshContext';
 import ClickOutside from '../ClickOutside';
 import { formatDate } from '../utils/dateUtils';
+import AssignedFilterDrawer from '../Filters/AssignedFilters';
 
 interface Address {
   location: string;
@@ -99,7 +100,7 @@ const AssignedInstallation: React.FC = () => {
     };
 
     fetchAssignedOrders();
-  }, [refreshKey]);
+  }, []);
 
     useEffect(() => {
       if (selectedStartDate || selectedEndDate) {
@@ -128,7 +129,25 @@ const AssignedInstallation: React.FC = () => {
       } else {
         setBackendData(originalData);
       }
-    }, [selectedStartDate, selectedEndDate, originalData]);  
+    }, [selectedStartDate, selectedEndDate, originalData]); 
+    
+    useEffect(() => {
+      let filteredData = originalData;
+  
+      if (selectedStartDate || selectedEndDate) {
+          filteredData = originalData.filter((order) => {
+              const orderDate = new Date(order.date).toISOString().split("T")[0]; // Convert to YYYY-MM-DD
+              
+              if (selectedStartDate && selectedEndDate) {
+                  return orderDate >= selectedStartDate && orderDate <= selectedEndDate;
+              } else if (selectedStartDate) {
+                  return orderDate === selectedStartDate;
+              }
+              return true;
+          });
+      }
+      setBackendData(filteredData);
+  }, [selectedStartDate, selectedEndDate, originalData]);
   
   const indexOfLastOrder = currentPage * itemsPerPage;
   const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
@@ -177,79 +196,10 @@ const AssignedInstallation: React.FC = () => {
               onChange={setSearchQuery}
             />
           </div>  
-          <div className='flex gap-2 ml-auto'>
-                    <button
-                        type="button"
-                        className="inline-flex w-[fit-content] justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50"
-                        onClick={toggleDropdown}
-                      >
-                        Filters 🌪️
-                        <svg
-                        className="-mr-1 size-5 text-gray-400"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        aria-hidden="true"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </button>
-          </div>
-          
-                  {isOpen && (
-                    <ClickOutside onClick={() => setIsOpen(false)}>
-                      <div className="absolute right-0 z-10 mt-10 w-56 origin-top-right rounded-md bg-white ring-1 shadow-lg ring-black/5 focus:outline-hidden">
-                        <div className="py-1">
-                          <div
-                            className="flex justify-between items-center px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
-                            onClick={() => setIsOpen(false)}
-                          >
-                            Filters <span className="text-red-500 font-bold cursor-pointer">❌</span>
-                          </div>
-                          <div
-                            className="block px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
-                            onClick={openDatePicker}
-                          >
-                            Date
-                          </div>
-                        </div>
-                      </div>
-                    </ClickOutside>
-                )}
-          
-                    {showDatePicker && (
-                        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 mt-[-60vh]">
-                          <div className="bg-white rounded-lg shadow-lg p-6 relative w-96">
-                            <button className="absolute top-2 right-2 text-gray-600 hover:text-red-500 text-lg" onClick={closeDatePicker}>
-                              ❌
-                            </button>
-                            <h2 className="text-lg font-semibold mb-4 text-center">Select Date Range</h2>
-                            <DatePicker2
-                              selectedStartDate={selectedStartDate}
-                              selectedEndDate={selectedEndDate}
-                              setSelectedStartDate={setSelectedStartDate}
-                              setSelectedEndDate={setSelectedEndDate}
-                            />
-                            <div className="flex justify-center mt-4 space-x-4">
-                              <button
-                                className="px-4 py-2 bg-white text-gray-700 font-semibold rounded"
-                                onClick={resetDatePicker}
-                              >
-                                Clear Date
-                              </button>
-                              <button
-                                className="px-4 py-2 bg-blue-500 text-white font-semibold rounded hover:bg-blue-600"
-                                onClick={closeDatePicker}
-                              >
-                                Apply
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
+          <AssignedFilterDrawer 
+                        originalData={originalData} 
+                        setFilteredData={setBackendData}
+                      />
         </div>
     <table className="w-full text-left table-auto min-w-max">
       <thead>

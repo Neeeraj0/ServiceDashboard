@@ -18,7 +18,7 @@ export const RefreshProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     const interval = setInterval(() => {
       triggerRefresh();
-    }, 15000); // Auto-refresh every 30 seconds
+    }, 60000);
 
     return () => clearInterval(interval);
   }, []);

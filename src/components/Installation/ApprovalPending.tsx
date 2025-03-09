@@ -178,38 +178,38 @@ const ApprovalPending: React.FC<ApprovalPendingInstallationProps> = ({onLoadingC
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
-
-      useEffect(() => {
-        if (selectedStartDate || selectedEndDate) {
-          const filteredData = originalData.filter((order) => {
-            const orderDate = new Date(order.assignedDate);
-            const orderLocalDate = new Date(
-              orderDate.getFullYear(),
-              orderDate.getMonth(),
-              orderDate.getDate(),
-              orderDate.getHours(), 
-              orderDate.getMinutes() 
-            ).toISOString().split('T')[0];
-    
-            console.log('orderLocalDate', orderLocalDate);
-            console.log('selectedStartDate', selectedStartDate);
-            console.log('selectedEndDate', selectedEndDate);
-    
-            if (selectedStartDate && selectedEndDate) {
-              return orderLocalDate >= selectedStartDate && orderLocalDate <= selectedEndDate;
-            } else if (selectedStartDate) {
-              return orderLocalDate === selectedStartDate;
-            }
-            return true;
-          });
-          setPipingData(filteredData);
-        } else {
-          setPipingData(originalData);
+      
+  useEffect(() => {
+    let filteredData = originalData;
+  
+    if (selectedStartDate || selectedEndDate) {
+      filteredData = originalData.filter((order) => {
+        // Parse the date strings to Date objects for proper comparison
+        const orderDate = new Date(order.assignedDate);
+        orderDate.setHours(0, 0, 0, 0); // Set to beginning of the day
+        
+        let startDateObj = selectedStartDate ? new Date(selectedStartDate) : null;
+        let endDateObj = selectedEndDate ? new Date(selectedEndDate) : null;
+        
+        // Set to beginning and end of respective days
+        if (startDateObj) startDateObj.setHours(0, 0, 0, 0);
+        if (endDateObj) endDateObj.setHours(23, 59, 59, 999);
+        
+        if (startDateObj && endDateObj) {
+          return orderDate >= startDateObj && orderDate <= endDateObj;
+        } else if (startDateObj) {
+          return orderDate >= startDateObj;
+        } else if (endDateObj) {
+          return orderDate <= endDateObj;
         }
-      }, [selectedStartDate, selectedEndDate, originalData]);  
+        return true;
+      });
+    }
+  
+    setPipingData(filteredData);
+  }, [selectedStartDate, selectedEndDate, originalData]);
 
   if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error fetching data: {error}</div>;
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);

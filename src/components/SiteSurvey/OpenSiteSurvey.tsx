@@ -6,6 +6,7 @@ import SearchBox from '../SearchBox/SearchBox';
 import { useRefresh } from '@/app/context/RefreshContext';
 import toast from 'react-hot-toast';
 import { formatDate } from '../utils/dateUtils';
+import AssignSiteSurvey from '../Dialogs/AssignSiteSurvey';
 
 interface PreorderResponse {
   _id: string;
@@ -66,6 +67,9 @@ interface PreorderResponse {
   DateofSiteSurvey?: string;
   DateofInstallation?: string;
   TimeofInstallation?: string;
+  executiveDetails: {
+            Name: string,
+  }
 }
 
 interface SiteSurveyDetail {
@@ -133,7 +137,8 @@ const OpenInstallation = () => {
                 Authorization: `Bearer ${process.env.NEXT_PUBLIC_SALES_BACKEND_TOKEN}`,
               },
             }),
-            axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/installation/getAssigned`),
+            // axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/installation/getAssigned`),
+            axios.get(`http://localhost:8000/api/siteSurveyDetails/getAssigned`),
           ]);
       
           const ordersWithOrderingStatus = preordersRes.data.filter(
@@ -215,7 +220,7 @@ const OpenInstallation = () => {
   }, []);
 
   if (loading) return <div>Loading...</div>;
-  
+
 
   const indexOfLastOrder = currentPage * itemsPerPage;
   const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
@@ -230,7 +235,6 @@ const OpenInstallation = () => {
     toast.success('Data Refreshed Successfully');
     triggerRefresh();
   };
-
   return (
     <div>
         <div className="flex items-center justify-between mb-4">
@@ -315,8 +319,10 @@ const OpenInstallation = () => {
                   </td>
                   {hasAssignAccess && (
                     <td className="p-2 border-b border-blue-gray-50 text-sm relative dropdown-container">
-                      <AssignInstallation 
+                      <AssignSiteSurvey 
+                        executiveId={order.executiveDetails.Name}
                         preOrderId={order._id}
+                        materialsdetails={order.materialsdetails}
                         parentPreOrderId={order.parentPreorder}
                         clientName={order.customer.name}
                         clientNumber={order.customer.mobile}

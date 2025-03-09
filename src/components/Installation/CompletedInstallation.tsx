@@ -10,6 +10,7 @@ import ReAssignTask from '../Dialogs/ReAssignTask';
 import Pagination from '../Pagination';
 import SearchBox from '../SearchBox/SearchBox';
 import { useRefresh } from '@/app/context/RefreshContext';
+import CompletedFilterDrawer from '../Filters/CompletedFilters';
 
 interface Address {
   location: string;
@@ -46,15 +47,19 @@ interface Order {
   contactPerson: string;
   customerDetails: string;
   issueReported: string;
+  issueFound: string;
   status: string;
   address: string;
+  assignedDate: string;
+  endDate: string;
   date: string;
-  closureDate: string;
+  note: string;
   deviceId: string;
-  isPeriodicService: boolean;
   assignedTechnicians: Technician[];
-  photos: Photo[]; 
+  photos: Photo[];
   materialsUsed: MaterialUsed[];
+  issueObserved: string;
+  isPeriodicService: boolean;
   TAT1: string;
   TAT2: string;
 }
@@ -260,7 +265,7 @@ const CompletedInstallation: React.FC = () => {
                 )}
               </td>
               <td className="p-2 border-b border-blue-gray-50 text-sm">{order.date || "N/A"}</td>
-              <td className="p-2 border-b border-blue-gray-50 text-sm">{order.closureDate || "N/A"}</td>
+              <td className="p-2 border-b border-blue-gray-50 text-sm">{order.endDate || "N/A"}</td>
               <td className="p-2 border-b border-blue-gray-50 text-sm">{order.TAT1 ? order.TAT1 : "0"}</td>
               <td className="p-2 border-b border-blue-gray-50 text-sm">{order.TAT2 ? order.TAT2 : "0"}</td>
               <td className="p-2 border-b border-blue-gray-50 text-sm whitespace-normal break-words max-w-xs z-99999">
