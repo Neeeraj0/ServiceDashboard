@@ -35,6 +35,7 @@ interface Order {
   status: string;
   address: string;
   date: string;
+  scheduledDate: string;
   deviceId: string;
   assignedTechnicians: Technician[];
 }
@@ -93,6 +94,7 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
           status: order.status,
           address: order.address.map((addr: Address) => addr.location).join(", ") || "N/A",
           date: order.assignedDate,
+          scheduledDate: order.servicingDate,
           deviceId: order.ac_units?.map((unit: any) => `${unit.type} (${unit.capacity})`).join(", ") || "N/A",
           assignedTechnicians: order.assignedTechnicians || []
         }));
@@ -222,58 +224,6 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
               setFilteredData={setBackendData}
             />
           </div>
-
-        {isOpen && (
-          <ClickOutside onClick={() => setIsOpen(false)}>
-            <div className="absolute right-0 z-10 mt-10 w-56 origin-top-right rounded-md bg-white ring-1 shadow-lg ring-black/5 focus:outline-hidden">
-              <div className="py-1">
-                <div
-                  className="flex justify-between items-center px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Filters <span className="text-red-500 font-bold cursor-pointer">❌</span>
-                </div>
-                <div
-                  className="block px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-100"
-                  onClick={openDatePicker}
-                >
-                  Date
-                </div>
-              </div>
-            </div>
-          </ClickOutside>
-      )}
-
-          {showDatePicker && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 mt-[-60vh]">
-                <div className="bg-white rounded-lg shadow-lg p-6 relative w-96">
-                  <button className="absolute top-2 right-2 text-gray-600 hover:text-red-500 text-lg" onClick={closeDatePicker}>
-                    ❌
-                  </button>
-                  <h2 className="text-lg font-semibold mb-4 text-center">Select Date Range</h2>
-                  <DatePicker2
-                    selectedStartDate={selectedStartDate}
-                    selectedEndDate={selectedEndDate}
-                    setSelectedStartDate={setSelectedStartDate}
-                    setSelectedEndDate={setSelectedEndDate}
-                  />
-                   <div className="flex justify-center mt-4 space-x-4">
-                    <button
-                      className="px-4 py-2 bg-white text-gray-700 font-semibold rounded"
-                      onClick={resetDatePicker}
-                    >
-                      Clear Date
-                    </button>
-                    <button
-                      className="px-4 py-2 bg-blue-500 text-white font-semibold rounded hover:bg-blue-600"
-                      onClick={closeDatePicker}
-                    >
-                      Apply
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
        </div>
     <table className="w-full text-left table-auto min-w-max">
   <thead>
@@ -349,7 +299,10 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
             {order.address != "N/A" ? order.address : "Non App User"}
           </td>
           <td className="p-2 border-b border-blue-gray-50 text-sm">
-              {order.date ? `${formatDate(order.date).date} ${formatDate(order.date).time}` : "N/A"}
+              <span className='bg-red-100 text-red-900 p-1 rounded-md capitalize'>assigned date</span>: {order.date ? `${formatDate(order.date).date} ${formatDate(order.date).time}` : "N/A"}
+              <br />
+              <br />
+              <span className='bg-green-100 text-green-800 p-1 rounded-md capitalize'>scheduled date</span>: {order.scheduledDate ? `${formatDate(order.scheduledDate).date} ${formatDate(order.scheduledDate).time}` : "N/A"}
           </td>
           {/* <td className="p-2 border-b border-blue-gray-50 text-sm">{order.deviceId || "N/A"}</td> */}
           <td className="p-2 border-b border-blue-gray-50">

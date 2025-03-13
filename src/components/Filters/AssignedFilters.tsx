@@ -26,6 +26,7 @@ interface Order {
   status: string;
   address: string;
   date: string;
+  scheduledDate: string;
   deviceId: string;
   assignedTechnicians: Technician[];
 }
@@ -88,7 +89,7 @@ const AssignedFilterDrawer: React.FC<FilterDrawerProps> = ({ originalData, setFi
         "Status": order.status,
         "Customer Address": order.address,
         "Date": order.date ? `${formatDate(order.date).date} ${formatDate(order.date).time}` : "N/A",
-        "Device ID": order.deviceId,
+        "AC Details": order.deviceId,
       }));
 
       const ws = XLSX.utils.json_to_sheet(exportData);

@@ -15,7 +15,6 @@ interface FilterDrawerProps {
   originalData: Order[];
   setFilteredData: (data: Order[]) => void;
   shippingAddresses: ShippingAddress[];
-  dateField: string; // New prop for the date field
 }
 
 const FilterDrawer: React.FC<FilterDrawerProps> = ({ 

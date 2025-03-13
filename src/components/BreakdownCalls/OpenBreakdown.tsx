@@ -238,7 +238,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, filteredData]);
+  }, [searchQuery]);
 
   const handleRefresh = () => {
     toast.success('Data refreshing...');
@@ -295,6 +295,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Contact Person</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer Details</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Issue Reported</th>
+            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Issue Description</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer Address</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Date</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Device ID</th>
@@ -325,7 +326,10 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
                     {order.contactperson} <br /> {order.contactnumber}
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
-                       {order.subject === "Others" ? `${order.subject} - ${order.summary}` : order.subject}
+                    {order.subject}
+                  </td>
+                  <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
+                    {order.summary}
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-wrap max-w-50">{addressDisplay}</td>
                   <td className="p-2 border-b border-blue-gray-50 text-wrap text-sm flex-wrap">
