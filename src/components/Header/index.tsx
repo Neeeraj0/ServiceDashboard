@@ -6,7 +6,7 @@ const Header = (props: {
   setSidebarOpen: (arg0: boolean) => void;
 }) => {
   return (
-    <header className="sticky-header">
+    <header className="">
       <div className="flex flex-grow items-center justify-between px-4 py-5  md:px-5 2xl:px-10">
         <div className="flex items-center gap-2 sm:gap-4 lg:hidden">
           <button

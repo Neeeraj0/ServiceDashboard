@@ -8,8 +8,6 @@ import { useRefresh } from '@/app/context/RefreshContext';
 import ClickOutside from '../ClickOutside';
 import { formatDate } from '../utils/dateUtils';
 import AssignedFilterDrawer from '../Filters/AssignedFilters';
-import { ACUnit } from '@/types/breakdown/Order';
-import AcInstallationDetails from '../ToolTips/AcInstallationDetails';
 
 interface Address {
   location: string;
@@ -25,12 +23,6 @@ interface Technician {
     technician_id: string;
 }
 
-interface Device {
-  deviceName: string;
-  model: string;
-  status: string;
-}
-
 interface Order {
   _id: string;
   task_id: string;
@@ -42,11 +34,10 @@ interface Order {
   date: string;
   scheduledDate: string;
   deviceId: string;
-  devices?: Device[];
   assignedTechnicians: Technician[];
 }
 
-const AssignedInstallation: React.FC = () => {
+const AssignedSiteSurvey: React.FC = () => {
   const [backendData, setBackendData] = useState<Order[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasAssignAccess, setHasAssignAccess] = useState(true);
@@ -86,8 +77,8 @@ const AssignedInstallation: React.FC = () => {
   useEffect(() => {
     const fetchAssignedOrders = async () => {
       try {
-        // const res = await axios.get('http://localhost:8000/api/installation/getAssigned');
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/installation/getAssigned`);
+        const res = await axios.get('http://localhost:8000/api/siteSurveyDetails/getAssigned');
+        // const res = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/installation/getAssigned`);
         const orders = res.data
         .filter((order: any) => order.status === 'open' || order.status === 'pending') // Add this filter to only keep "open" or "pending" orders
         .map((order: any) => ({
@@ -97,7 +88,6 @@ const AssignedInstallation: React.FC = () => {
           customerDetails: order.client_number,
           issueReported: order.description,
           status: order.status,
-          devices: order.devices || [],
           address: order.address.map((addr: Address) => addr.location).join(", ") || "N/A",
           date: order.servicingDate,
           deviceId: order.ac_units?.map((unit: any) => `${unit.type} (${unit.capacity})`).join(", ") || "N/A",
@@ -218,7 +208,7 @@ const AssignedInstallation: React.FC = () => {
           <th className="p-2 border-b border-blue-gray-50 min-w-[120px]">
             <div className="font-semibold text-sm">Task ID</div>
           </th>
-          <th className="p-2 border-b border-blue-gray-50 min-w-[150px] w-40">
+          <th className="p-2 border-b border-blue-gray-50 min-w-[150px]">
             <div className="font-semibold text-sm">Contact Person</div>
           </th>
           <th className="p-2 border-b border-blue-gray-50 min-w-[150px]">
@@ -227,9 +217,7 @@ const AssignedInstallation: React.FC = () => {
           <th className="p-2 border-b border-blue-gray-50 min-w-[180px]">
             <div className="font-semibold text-sm">Assigned Technicians</div>
           </th>
-          <th className="p-2 border-b border-blue-gray-50 min-w-[180px]">
-            <div className="font-semibold text-sm">Installation Details</div>
-          </th>
+          
           <th className="p-2 border-b border-blue-gray-50 min-w-[120px]">
             <div className="font-semibold text-sm">Status</div>
           </th>
@@ -273,8 +261,7 @@ const AssignedInstallation: React.FC = () => {
                   "No technicians assigned"
                 )}
               </td>
-              {/* <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">{order}</td> */}
-              <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50"><AcInstallationDetails devices={order.devices || []} /></td>
+              {/* <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">{order.issueReported || "N/A"}</td> */}
               <td className="p-2 border-b border-blue-gray-50 text-sm">
                 <span className={`px-5 py-2 rounded-full text-xs uppercase ${
                   order.status === 'open' ? 'bg-red-100 text-red-800':
@@ -315,4 +302,4 @@ const AssignedInstallation: React.FC = () => {
   );
 };
 
-export default AssignedInstallation;
+export default AssignedSiteSurvey;

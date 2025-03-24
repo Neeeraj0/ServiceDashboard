@@ -79,6 +79,9 @@ const menuGroups = [
       //   route: "#",
       //   children: [
       //     { label: "Open", route: "/site-survey/open"},
+      //     { label: "Assigned", route: "/site-survey/assigned"},
+      //     { label: "Approval Pending", route: "/site-survey/approvalPending"},
+      //     { label: "Completed", route: "/site-survey/completed"}
       //   ],
       // },
       {

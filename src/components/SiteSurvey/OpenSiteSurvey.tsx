@@ -77,7 +77,7 @@ interface SiteSurveyDetail {
   PreOrderId: string;
 }
 
-const OpenInstallation = () => {
+const OpenSiteSurvey = () => {
   const [allPreorderData, setAllPreorderData] = useState<PreorderResponse[]>([]);
   const [filteredPreorders, setFilteredPreorders] = useState<PreorderResponse[]>([]);
   const [siteSurveyDetails, setSiteSurveyDetails] = useState<SiteSurveyDetail[]>([]);
@@ -371,4 +371,4 @@ const OpenInstallation = () => {
   );
 };
 
-export default OpenInstallation;
+export default OpenSiteSurvey;

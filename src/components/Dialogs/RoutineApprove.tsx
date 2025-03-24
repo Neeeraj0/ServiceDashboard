@@ -1,6 +1,7 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { useState, useRef } from "react";
 import axios from "axios";
+import { useAuth } from "@/app/context/AuthContext";
 
 interface CompletedApproveTaskProps {
   orderId: string;
@@ -11,6 +12,7 @@ export default function RoutineApproveTask({
 }: CompletedApproveTaskProps) {
   const [isOpen, setIsOpen] = useState(false);
   const modalRef = useRef(null);
+  const {userId} = useAuth();
   const queryData = {
     queryStatus: "open",
   };
@@ -19,7 +21,11 @@ export default function RoutineApproveTask({
     e.preventDefault();
     if (orderId) {
       try {
-        await axios.put(`http://localhost:8000/api/routine/approveTask/${orderId}`, {
+        await axios.put(`http://localhost:8000/api/routine/approveTask/${orderId}`,
+          {
+            adminId: userId, 
+          }, 
+          {
           headers: {
             "Content-Type": "application/json",
           },

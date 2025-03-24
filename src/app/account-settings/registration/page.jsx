@@ -42,7 +42,8 @@ export default function TechnicianProfile() {
         e.preventDefault();
         try {
             const response = await axios.post(
-                `${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/technicians/register`,
+                // `${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/technicians/register`,
+                `http://localhost:8000/api/technicians/register`,
                 formData, 
                 {
                   headers: { "Content-Type": "application/json" }
