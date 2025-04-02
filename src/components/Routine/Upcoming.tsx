@@ -2,23 +2,21 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import CalendarBox from '../CalenderBox';
 import RoutineAssignTask from '../Dialogs/RoutineAssignTask';
+import Calendar from '../CalenderBox';
 
 const Upcoming = () => {
-  const [filter, setFilter] = useState("7-days"); // State for the filter
-  const [data, setData] = useState([]); // State for fetched data
+  const [filter, setFilter] = useState("7-days"); 
+  const [data, setData] = useState([]); 
   const [loading, setLoading] = useState(false);
 
   // Fetch data based on selected filter
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const url = filter === "7-days" 
-        ? "http://35.154.208.29:8080/api/routine/orders/service-due/7-days" 
-        : "http://35.154.208.29:8080/api/routine/orders/service-due/next-month";
-
+      const url = "http://localhost:8000/api/routine/orders/service-due/7-days" 
       try {
         const response = await axios.get(url);
-        setData(response.data); // Assuming the API response is structured as an array
+        setData(response.data); 
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -27,7 +25,7 @@ const Upcoming = () => {
     };
 
     fetchData();
-  }, [filter]); 
+  }, []); 
 
   // Function to group data by nextServiceDate
   const groupDataByDate = () => {
@@ -45,7 +43,7 @@ const Upcoming = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold">Upcoming Routine Service</h2>
+        <h2 className="text-lg font-semibold"></h2>
         <select 
           value={filter} 
           onChange={(e) => setFilter(e.target.value)} 
@@ -93,7 +91,7 @@ const Upcoming = () => {
         </div>
       ) : (
         <div className="w-full max-w-full rounded-[10px] bg-white shadow-1 dark:bg-gray-dark dark:shadow-card">
-          <CalendarBox data={data}/>
+          <Calendar data={data}/>
         </div>
       )}
     </div>

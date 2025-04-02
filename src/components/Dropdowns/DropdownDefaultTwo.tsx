@@ -59,11 +59,12 @@ const DropdownDefaultTwo = ({
                 description={order.summary}
                 complaintRaised={order.TimeStamp}
                 customerComplaint={order.subject}
-                addressDisplay={
-                  shippingAddrDetail
-                    ? `${shippingAddrDetail.line1}, ${shippingAddrDetail.city}`
-                    : "N/A"
-                }
+                // addressDisplay={
+                //   shippingAddrDetail
+                //     ? `${shippingAddrDetail.line1}, ${shippingAddrDetail.city}`
+                //     : "N/A"
+                // }
+                addressDisplay={order.address}
                 ac_units={
                   Array.isArray(order.orderModels) && typeof order.orderModels[0] === "string"
                     ? transformOrderModels(order.orderModels as (string | number | null)[])

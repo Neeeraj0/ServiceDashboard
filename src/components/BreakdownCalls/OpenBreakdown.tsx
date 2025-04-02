@@ -79,6 +79,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
           contactnumber: order.contactnumber || "N/A",
           subject: order.subject || "N/A",
           summary: order.summery || "N/A",
+          address: order?.address || "N/A",
           deviceid: order.deviceid || "N/A",
           orderModels: order.orderModels || [],
         }));
@@ -169,6 +170,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
         "Contact Person": order.contactperson,
         "Contact Number": order.contactnumber,
         "Issue Reported": order.subject,
+        "Actual Address": order?.address,
         "Customer Address": shippingAddresses.find((address) => address._id === order._id)
           ?.customerData?.shipping_address[0]?.line1 || "N/A",
         "Date": new Date(order.TimeStamp).toLocaleString(),
@@ -331,7 +333,9 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
                   <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
                     {order.summary}
                   </td>
-                  <td className="p-2 border-b border-blue-gray-50 text-wrap max-w-50">{addressDisplay}</td>
+                  <td className="p-2 border-b border-blue-gray-50 text-wrap max-w-50">
+                    {(order.address !== "N/A" && order.address !== "Not Available") ? order?.address : addressDisplay}
+                  </td>
                   <td className="p-2 border-b border-blue-gray-50 text-wrap text-sm flex-wrap">
                     {formatDate(order.TimeStamp)}
                   </td>

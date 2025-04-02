@@ -20,58 +20,57 @@ export default function SiteSurveyApprove({
   const [showAnimation, setShowAnimation] = useState(false);
   const [taskApproved, setTaskApproved] = useState(false);
   const [isApproving, setIsApproving] = useState(false); 
-  const {userId} = useAuth();
+  const {userId, userName} = useAuth();
+  console.log(userId, userName);
 
   const handleApproveTask = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsApproving(true);
     setShowAnimation(true); // Start showing animation
     setTaskApproved(false); // Reset task approval state
-
+  
     if (orderId) {
       try {
-        // Simulate a delay of 5 seconds
         await new Promise((resolve) => setTimeout(resolve, 5000));
-
-        // Approve the task after the delay
-        // await axios.put(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/routine/approveTask/${orderId}`, {
-          await axios.put(`http://localhost:8000/api/siteSurveyDetails/approveTask/${orderId}`,
+  
+        // Make the PUT request to the backend
+        await axios.put(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/siteSurveyDetails/approveTask/${orderId}`, 
           {
             adminId: userId, 
           },  
           {  
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        // You can add the code to create a new installation task here (commented-out in your code)
-        // const newTaskData = {
-        //   ...taskDetails, 
-        //   taskType: "installation",
-        // };
-
-        // await axios.post(`http://localhost:8000/api/installation/preInstallation`, newTaskData, {
-        //   headers: {
-        //     "Content-Type": "application/json",
-        //   },
-        // });
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+  
+        // If the request is successful, execute onApprove function
         onApprove(orderId);
-
+  
         setTaskApproved(true); // Mark task as approved
         toast.success("Task approved and installation task created successfully");
+  
       } catch (error) {
         console.error("Error approving task:", error);
-        toast.error("Failed to approve task");
+  
+        if (axios.isAxiosError(error) && error.response) {
+          const backendMessage = error.response.data ? error.response.data.error || error.response.data : "An error occurred while processing your request.";
+          const status = error.response.status || "Unknown";
+  
+          toast.error(`Error ${status}: ${backendMessage}`); // Display detailed error message
+        } else {
+          toast.error("Failed to approve task. Please try again.");
+        }
       } finally {
-        setShowAnimation(false); // Hide animation after the task is done
-        setIsOpen(false); // Close the modal
-        setIsApproving(false); // Reset the approval process state
+        setShowAnimation(false);
+        setIsOpen(false); 
+        setIsApproving(false); 
       }
     } else {
       alert("No corresponding task ID for selected task");
     }
   };
+  
 
   return (
     <div className="flex w-full font-sans">

@@ -263,8 +263,8 @@ export default function AssignSiteSurvey({
     };
 
     try {
-    //   await axios.post(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/tasks`, taskDataCreation, {
-       await axios.post(`http://localhost:8000/api/tasks`, taskDataCreation, {
+      await axios.post(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/tasks`, taskDataCreation, {
+      //  await axios.post(`http://35.154.208.29:8080/api/tasks`, taskDataCreation, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -277,7 +277,7 @@ export default function AssignSiteSurvey({
         timestamp: new Date()
       };
       console.log("Site Survey Data:", siteSurveyData);
-      await axios.post("http://localhost:8000/api/siteSurveyDetails/saveSiteSurveyDetails", siteSurveyData, {
+      await axios.post(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/siteSurveyDetails/saveSiteSurveyDetails`, siteSurveyData, {
         headers: { "Content-Type": "application/json" },
       })
         .then((res) => {
@@ -286,7 +286,7 @@ export default function AssignSiteSurvey({
             toast.success("Task assigned successfully");
             setIsOpen(false); 
             setIsAnimating(false)
-          }, 5000); 
+          }, 2000); 
         })
         .catch((err) => {
           console.log(err);

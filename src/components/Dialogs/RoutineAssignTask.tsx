@@ -95,18 +95,6 @@ export default function RoutineAssignTask({
           }
         );
         const token = loginResponse.data.token;
-
-        const addressResponse = await axios.get('http://35.154.208.29:5000/api/summary/address', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        const matchedAddress = addressResponse.data.find((address: any) => address._id === orderId);
-        if (matchedAddress) {
-          setAddress(matchedAddress.customerData.shipping_address[0] || "Address not available");
-        }
       } catch (error) {
         console.error("Error fetching address:", error);
       }

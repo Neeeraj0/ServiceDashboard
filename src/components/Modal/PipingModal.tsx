@@ -1,6 +1,7 @@
 import React, { ReactNode, useCallback, useState } from 'react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { default as NextImage } from 'next/image';
 
 interface Image {
   presignedUrl: string;
@@ -323,10 +324,19 @@ const PipingModal: React.FC<ModalProps> = ({ isOpen, onClose, images, taskName, 
                   <h4 className="text-lg font-semibold capitalize mb-2">
                     {image.type} - {image.servicePhase}
                   </h4>
-                  <img
+                  {/* <img
                     src={image.presignedUrl}
                     alt={image.type}
                     className="w-full h-auto rounded-md shadow-lg"
+                  /> */}
+                  <NextImage
+                    loader={() => image.presignedUrl}
+                    src={image.presignedUrl}
+                    alt={image.type}
+                    width={500}
+                    height={300}
+                    className="w-full h-auto rounded-md shadow-lg"
+                    priority={Number(image.orderId) < 8 ? true : false}
                   />
                 </div>
               ))}

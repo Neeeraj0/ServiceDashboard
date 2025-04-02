@@ -7,6 +7,7 @@ import { useRefresh } from '@/app/context/RefreshContext';
 import toast from 'react-hot-toast';
 import { formatDate } from '../utils/dateUtils';
 import AssignSiteSurvey from '../Dialogs/AssignSiteSurvey';
+import Pagination from '../Pagination';
 
 interface PreorderResponse {
   _id: string;
@@ -65,10 +66,11 @@ interface PreorderResponse {
   preOrdertimestamp: string;
   paidamount: number;
   DateofSiteSurvey?: string;
+  TimeofSiteSurvey?: string;
   DateofInstallation?: string;
   TimeofInstallation?: string;
   executiveDetails: {
-            Name: string,
+      Name: string,
   }
 }
 
@@ -137,15 +139,16 @@ const OpenSiteSurvey = () => {
                 Authorization: `Bearer ${process.env.NEXT_PUBLIC_SALES_BACKEND_TOKEN}`,
               },
             }),
-            // axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/installation/getAssigned`),
-            axios.get(`http://localhost:8000/api/siteSurveyDetails/getAssigned`),
+            axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/installation/getAssigned`),
           ]);
       
           const ordersWithOrderingStatus = preordersRes.data.filter(
             (order: PreorderResponse) => 
-              order.AcDetails.length > 0 &&
-              order.DateofSiteSurvey // Add this condition to check if DateofSiteSurvey exists
+              order.DateofSiteSurvey &&
+              order.TimeofSiteSurvey
           );
+
+          console.log('site survey orders',ordersWithOrderingStatus);
           
           const assignedPreorderIds = new Set(
             assignedTasksRes.data.map((task: { preOrderId: string }) => task.preOrderId)
@@ -288,7 +291,7 @@ const OpenSiteSurvey = () => {
                 quantity: ac.quantity
               }));
 
-              const formattedDateTime = formatDate(order.DateofInstallation);
+              const formattedDateTime = formatDate(order.DateofSiteSurvey);
               
               const address = `${order.customer_shipping_address.address_line1}, ${order.customer_shipping_address.address_line2 || ''}, ${order.customer_shipping_address.city}, ${order.customer_shipping_address.state}, ${order.customer_shipping_address.pincode}`;
 
@@ -315,7 +318,7 @@ const OpenSiteSurvey = () => {
                   <td className="p-2 border-b border-blue-gray-50 text-sm">
                     {formattedDateTime.date} 
                     {" "}
-                    {order.TimeofInstallation || "N/A"}
+                    {order.TimeofSiteSurvey || "N/A"}
                   </td>
                   {hasAssignAccess && (
                     <td className="p-2 border-b border-blue-gray-50 text-sm relative dropdown-container">
@@ -341,32 +344,13 @@ const OpenSiteSurvey = () => {
           )}
         </tbody>
       </table>
-
-      <div className="pagination flex flex-wrap justigy-center gap-2">
-        <button
-          className={`pagination-button ${currentPage === 1 ? 'disabled' : ''}`}
-          onClick={() => paginate(currentPage - 1)}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </button>
-        {Array.from({ length: totalPages }, (_, index) => (
-          <button
-            key={index + 1}
-            onClick={() => paginate(index + 1)}
-            className={`pagination-button ${currentPage === index + 1 ? 'active' : ''}`}
-          >
-            {index + 1}
-          </button>
-        ))}
-        <button
-          className={`pagination-button ${currentPage === totalPages ? 'disabled' : ''}`}
-          onClick={() => paginate(currentPage + 1)}
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </button>
-      </div>
+      
+      <Pagination
+          currentPage={currentPage}
+          totalItems={filteredPreorders.length}
+          itemsPerPage={itemsPerPage}
+          paginate={paginate}
+        />
     </div>
   );
 };

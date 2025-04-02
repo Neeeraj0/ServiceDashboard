@@ -77,8 +77,8 @@ const AssignedSiteSurvey: React.FC = () => {
   useEffect(() => {
     const fetchAssignedOrders = async () => {
       try {
-        const res = await axios.get('http://localhost:8000/api/siteSurveyDetails/getAssigned');
-        // const res = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/installation/getAssigned`);
+        // const res = await axios.get('http://35.154.208.29:8080/api/siteSurveyDetails/getAssigned');
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/siteSurveyDetails/getAssigned`);
         const orders = res.data
         .filter((order: any) => order.status === 'open' || order.status === 'pending') // Add this filter to only keep "open" or "pending" orders
         .map((order: any) => ({
@@ -89,7 +89,7 @@ const AssignedSiteSurvey: React.FC = () => {
           issueReported: order.description,
           status: order.status,
           address: order.address.map((addr: Address) => addr.location).join(", ") || "N/A",
-          date: order.servicingDate,
+          date: order.assignedDate,
           deviceId: order.ac_units?.map((unit: any) => `${unit.type} (${unit.capacity})`).join(", ") || "N/A",
           assignedTechnicians: order.assignedTechnicians || []
         }));
@@ -208,7 +208,7 @@ const AssignedSiteSurvey: React.FC = () => {
           <th className="p-2 border-b border-blue-gray-50 min-w-[120px]">
             <div className="font-semibold text-sm">Task ID</div>
           </th>
-          <th className="p-2 border-b border-blue-gray-50 min-w-[150px]">
+          <th className="p-2 border-b border-blue-gray-50 min-w-[150px] w-[50px]">
             <div className="font-semibold text-sm">Contact Person</div>
           </th>
           <th className="p-2 border-b border-blue-gray-50 min-w-[150px]">

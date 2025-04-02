@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import { formatDate } from '../utils/dateUtils';
 import FilterDrawer from '../Filters/Filters';
 import InstallationFilterDrawer from '../Filters/OpenInstallationFilters';
+import Pagination from '../Pagination';
 
 interface PreorderResponse {
   _id: string;
@@ -344,31 +345,12 @@ const OpenInstallation = () => {
         </tbody>
       </table>
 
-      <div className="pagination flex flex-wrap justigy-center gap-2">
-        <button
-          className={`pagination-button ${currentPage === 1 ? 'disabled' : ''}`}
-          onClick={() => paginate(currentPage - 1)}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </button>
-        {Array.from({ length: totalPages }, (_, index) => (
-          <button
-            key={index + 1}
-            onClick={() => paginate(index + 1)}
-            className={`pagination-button ${currentPage === index + 1 ? 'active' : ''}`}
-          >
-            {index + 1}
-          </button>
-        ))}
-        <button
-          className={`pagination-button ${currentPage === totalPages ? 'disabled' : ''}`}
-          onClick={() => paginate(currentPage + 1)}
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </button>
-      </div>
+      <Pagination
+        currentPage={currentPage}
+        totalItems={filteredPreorders.length}
+        itemsPerPage={itemsPerPage}
+        paginate={paginate}
+      />
     </div>
   );
 };
