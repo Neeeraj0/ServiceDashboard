@@ -7,32 +7,37 @@ import issuesList from "../utils/IssuesList";
 import { useAuth } from "@/app/context/AuthContext";
 import axios from "axios";
 import { formatDate } from "../utils/dateUtils";
+import { ACUnit, Order } from "@/types/breakdown/Order";
 
 interface MarkAsResolvedProps {
   orderId: string;
+  // clientName: string,
+  // clientNumber: string,
+  // description: string,
+  // complaintRaised: string,
+  // addressDisplay: string,
+  // customerComplaint: string ,
+  // ac_units: ACUnit[],
   onResolved: (id: string) => void;
+  order: Order
 }
 
-export default function MarkAsResolved({ orderId, onResolved }: MarkAsResolvedProps) {
+export default function MarkAsReolved({ orderId, onResolved, order}: MarkAsResolvedProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [resolveNote, setResolveNote] = useState("");
   const [issueIdentified, setIssueIdentified] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [shippingAddress, setShippingAddress] = useState<string | null>(null);
-  const [deviceId, setDeviceId] = useState<string | null>(null);
-  const [clientName, setClientName] = useState<string | null>(null);
-  const [clientNumber, setClientNumber] = useState<string | null>(null);
-  const [customerComplaint, setCustomerComplaint] = useState<string | null>(null);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const { userName } = useAuth();
 
-  // State for storing the token
+  console.log("MarkAsResolved Props: ", order);
+
   const [token, setToken] = useState<string | null>(null);
 
-  // Fetch authentication token
   const getToken = async (): Promise<string | null> => {
     if (token) {
-      return token;  // If token is already in state, return it
+      return token;  
     }
 
     try {
@@ -64,49 +69,6 @@ export default function MarkAsResolved({ orderId, onResolved }: MarkAsResolvedPr
     }
   };
 
-  // Fetch shipping address and customer details
-  useEffect(() => {
-    const fetchShippingAddress = async () => {
-      const token = await getToken();
-      if (!token) return;
-      try {
-        setIsDataLoaded(false); // Reset data loaded state when fetching starts
-        
-        const response = await axios.get("https://testing.backend.summary.circolife.vip/api/summary/address", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-        
-        const data = response.data;
-        const matchedOrder = data.find((item: any) => item._id === orderId);
-        
-        if (matchedOrder) {
-          const address = matchedOrder.customerData?.shipping_address[0] || null;
-          setShippingAddress(address ? `${address.line1}, ${address.line2}, ${address.city}, ${address.state} - ${address.pincode}` : null);
-          setDeviceId(matchedOrder.deviceid || null);
-          setCustomerComplaint(matchedOrder.subject || null);
-          setClientName(matchedOrder.contactperson || null);
-          setClientNumber(matchedOrder.contactnumber || null);
-        } else {
-          toast.error("Order ID not found in address data.");
-        }
-        
-        // Set data loaded to true only after all data is set
-        setIsDataLoaded(true);
-      } catch (error) {
-        console.error("Error fetching shipping address:", error);
-        toast.error("Error loading data. Please try again.");
-        setIsDataLoaded(true); // Still set to true so user can retry
-      }
-    };
-    
-    if (isOpen) {
-      fetchShippingAddress();
-    }
-  }, [isOpen, orderId]);
-
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,8 +78,6 @@ export default function MarkAsResolved({ orderId, onResolved }: MarkAsResolvedPr
       return;
     }
 
-    setIsLoading(true);
-
     try {
       const token = await getToken();
       if (!token) {
@@ -125,19 +85,21 @@ export default function MarkAsResolved({ orderId, onResolved }: MarkAsResolvedPr
         return;
       }
 
+      console.log('inside handle submit');
+      console.log(token);
       const payload = {
         _id: orderId,
-        address: shippingAddress,
+        address: order.address ,
         title: "Breakdown",
-        customerComplaint: customerComplaint,
+        customerComplaint: order.customerComplaint ,
         ac_units: [],
         servicingDate: new Date().toISOString(),
         assignedTechnicians: [""], 
-        deviceId: deviceId,
+        deviceId: order.deviceid,
         quantity: 1,
         taskType: "breakdown",
-        client_number: clientNumber,
-        client_name: clientName,
+        client_number: order.contactnumber,
+        client_name: order.contactperson ,
         assignedBy: userName ? [userName] : [],
         status: "Completed",
         note: resolveNote, // Resolution note
@@ -240,10 +202,9 @@ export default function MarkAsResolved({ orderId, onResolved }: MarkAsResolvedPr
 
                 <button 
                   type="submit" 
-                  disabled={isLoading || !isDataLoaded} 
-                  className={`btn ${(isLoading || !isDataLoaded) ? 'btn-disabled' : 'btn-primary bg-[#A14996] text-white p-2 rounded-lg'}`}
+                  className={`btn-primary bg-[#A14996] text-white p-2 rounded-lg`}
                 >
-                  {isLoading ? 'Processing...' : !isDataLoaded ? 'Loading data...' : 'Submit'}
+                  {'Submit'}
                 </button>
               </form>
             </div>

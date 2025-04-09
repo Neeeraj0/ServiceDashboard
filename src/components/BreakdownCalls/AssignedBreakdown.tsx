@@ -179,154 +179,154 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
     triggerRefresh();
   }
   return (
-    <div>
-       <div className="flex items-center justify-between mb-4">    
-          <div className='flex-grow'>
-            <SearchBox 
-              placeholder="Search by customer name"
-              value={searchQuery}
-              onChange={setSearchQuery}
-            />
-          </div>
-          <div className='flex gap-2 ml-auto'>
-            <button 
-              onClick={handleRefresh}
-              className="p-2 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200"
-              title="Refresh data"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M23 4v6h-6"/>
-                <path d="M1 20v-6h6"/>
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-              </svg>
-            </button>
-            {/* <button
-            type="button"
-            className="inline-flex w-[fit-content] justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50"
-            onClick={toggleDropdown}
-          >
-            Filters 🌪️
-            <svg
-            className="-mr-1 size-5 text-gray-400"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            aria-hidden="true"
-            >
-              <path
-                fillRule="evenodd"
-                d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
-                clipRule="evenodd"
+    <>
+      <div className="top-0 bg-white z-20 flex items-center justify-between mb-4">    
+            <div className='flex-grow'>
+              <SearchBox 
+                placeholder="Search by customer name"
+                value={searchQuery}
+                onChange={setSearchQuery}
               />
-            </svg>
-            </button> */}
-            <AssignedFilterDrawer 
-              originalData={originalData} 
-              setFilteredData={setBackendData}
-            />
-          </div>
-       </div>
-    <table className="w-full text-left table-auto min-w-max">
-  <thead>
-    <tr className="">
-      <th className="p-2 border-b border-blue-gray-50 min-w-[120px]">
-        <div className="font-semibold text-sm">Task ID</div>
-      </th>
-      <th className="p-2 border-b border-blue-gray-50 min-w-[150px]">
-        <div className="font-semibold text-sm">Contact Person</div>
-      </th>
-      <th className="p-2 border-b border-blue-gray-50 min-w-[150px]">
-        <div className="font-semibold text-sm">Customer Details</div>
-      </th>
-      <th className="p-2 border-b border-blue-gray-50 min-w-[180px]">
-        <div className="font-semibold text-sm">Assigned Technicians</div>
-      </th>
-      <th className="p-2 border-b border-blue-gray-50 min-w-[200px]">
-        <div className="font-semibold text-sm">Issue Reported</div>
-      </th>
-      <th className="p-2 border-b border-blue-gray-50 min-w-[120px]">
-        <div className="font-semibold text-sm">Status</div>
-      </th>
-      <th className="p-2 border-b border-blue-gray-50 min-w-[250px]">
-        <div className="font-semibold text-sm">Customer Address</div>
-      </th>
-      <th className="p-2 border-b border-blue-gray-50 min-w-[120px]">
-        <div className="font-semibold text-sm">Date</div>
-      </th>
-      {/* <th className="p-2 border-b border-blue-gray-50 min-w-[150px]">
-        <div className="font-semibold text-sm">Device ID</div>
-      </th> */}
-      {hasAssignAccess && ( <th className="p-2 border-b border-blue-gray-50 min-w-[100px]">
-        <div className="font-semibold text-sm">Action</div>
-      </th> )}
-    </tr>
-  </thead>
-  <tbody>
-    {backendData.length === 0 ? (
-      <tr>
-        <td colSpan={10} className="text-center p-4">No tasks available</td>
-      </tr>
-    ) : (
-      currentOrders.map((order) => (
-        <tr key={order._id} className="hover:bg-gray-50">
-          <td className="p-2 border-b border-blue-gray-50 text-sm">{order.task_id || "N/A"}</td>
-          <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">{order.contactPerson || "N/A"}</td>
-          <td className="p-2 border-b border-blue-gray-50 text-sm">{order.customerDetails || "N/A"}</td>
-          <td className="p-2 border-b border-blue-gray-50 text-sm">
-            {order.assignedTechnicians?.length > 0 ? (
-              <ul className="list-none">
-                {order.assignedTechnicians.map((technician) => (
-                  <li key={technician._id} className="mb-1">
-                    {technician.name}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              "No technicians assigned"
-            )}
-          </td>
-          <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">{order.issueReported || "N/A"}</td>
-          <td className="p-2 border-b border-blue-gray-50 text-sm">
-            <span className={`px-5 py-2 rounded-full text-xs uppercase ${
-              order.status === 'open' ? 'bg-red-100 text-red-800':
-              order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-              order.status === 'Completed' ? 'bg-green-100 text-green-800' : 
-              'bg-gray-100 text-gray-800'
-            }`}>
-              {order.status || "N/A"}
-            </span>
-          </td>
-          <td className="p-2 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs">
-            {order.address != "N/A" ? order.address : "Non App User"}
-          </td>
-          <td className="p-2 border-b border-blue-gray-50 text-sm">
-              <span className='bg-red-100 text-red-900 p-1 rounded-md capitalize'>assigned date</span>: {order.date ? `${formatDate(order.date).date} ${formatDate(order.date).time}` : "N/A"}
-              <br />
-              <br />
-              <span className='bg-green-100 text-green-800 p-1 rounded-md capitalize'>scheduled date</span>: {order.scheduledDate ? `${formatDate(order.scheduledDate).date} ${formatDate(order.scheduledDate).time}` : "N/A"}
-          </td>
-          {/* <td className="p-2 border-b border-blue-gray-50 text-sm">{order.deviceId || "N/A"}</td> */}
-          <td className="p-2 border-b border-blue-gray-50">
-            {/* <button className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:underline">
-              Action
-            </button> */}
-            {hasAssignAccess && (
-              <ReAssignTask orderId={order._id}/>
-            )}
-          </td>
-        </tr>
-      ))
-    )}
-  </tbody>
-</table>
-
-<Pagination
-          currentPage={currentPage}
-          totalItems={backendData.length}
-          itemsPerPage={itemsPerPage}
-          paginate={paginate}
+            </div>
+            <div className='flex gap-2 ml-auto'>
+              <button 
+                onClick={handleRefresh}
+                className="p-2 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200"
+                title="Refresh data"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 4v6h-6"/>
+                  <path d="M1 20v-6h6"/>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                </svg>
+              </button>
+              {/* <button
+              type="button"
+              className="inline-flex w-[fit-content] justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50"
+              onClick={toggleDropdown}
+            >
+              Filters 🌪️
+              <svg
+              className="-mr-1 size-5 text-gray-400"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              </button> */}
+              <AssignedFilterDrawer 
+                originalData={originalData} 
+                setFilteredData={setBackendData}
+              />
+            </div>
+      </div>
+      <div className='overflow-x-auto'>
+        <table className="w-full text-left table-auto min-w-max">
+        <thead>
+          <tr className="">
+            <th className="p-2 border-b border-blue-gray-50 min-w-[120px]">
+              <div className="font-semibold text-sm">Task ID</div>
+            </th>
+            <th className="p-2 border-b border-blue-gray-50 min-w-[150px]">
+              <div className="font-semibold text-sm">Contact Person</div>
+            </th>
+            <th className="p-2 border-b border-blue-gray-50 min-w-[150px]">
+              <div className="font-semibold text-sm">Customer Details</div>
+            </th>
+            <th className="p-2 border-b border-blue-gray-50 min-w-[180px]">
+              <div className="font-semibold text-sm">Assigned Technicians</div>
+            </th>
+            <th className="p-2 border-b border-blue-gray-50 min-w-[200px]">
+              <div className="font-semibold text-sm">Issue Reported</div>
+            </th>
+            <th className="p-2 border-b border-blue-gray-50 min-w-[120px]">
+              <div className="font-semibold text-sm">Status</div>
+            </th>
+            <th className="p-2 border-b border-blue-gray-50 min-w-[250px]">
+              <div className="font-semibold text-sm">Customer Address</div>
+            </th>
+            <th className="p-2 border-b border-blue-gray-50 min-w-[120px]">
+              <div className="font-semibold text-sm">Date</div>
+            </th>
+            {/* <th className="p-2 border-b border-blue-gray-50 min-w-[150px]">
+              <div className="font-semibold text-sm">Device ID</div>
+            </th> */}
+            {hasAssignAccess && ( <th className="p-2 border-b border-blue-gray-50 min-w-[100px]">
+              <div className="font-semibold text-sm">Action</div>
+            </th> )}
+          </tr>
+        </thead>
+        <tbody>
+          {backendData.length === 0 ? (
+            <tr>
+              <td colSpan={10} className="text-center p-4">No tasks available</td>
+            </tr>
+          ) : (
+            currentOrders.map((order) => (
+              <tr key={order._id} className="hover:bg-gray-50">
+                <td className="p-2 border-b border-blue-gray-50 text-sm">{order.task_id || "N/A"}</td>
+                <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">{order.contactPerson || "N/A"}</td>
+                <td className="p-2 border-b border-blue-gray-50 text-sm">{order.customerDetails || "N/A"}</td>
+                <td className="p-2 border-b border-blue-gray-50 text-sm">
+                  {order.assignedTechnicians?.length > 0 ? (
+                    <ul className="list-none">
+                      {order.assignedTechnicians.map((technician) => (
+                        <li key={technician._id} className="mb-1">
+                          {technician.name}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    "No technicians assigned"
+                  )}
+                </td>
+                <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">{order.issueReported || "N/A"}</td>
+                <td className="p-2 border-b border-blue-gray-50 text-sm">
+                  <span className={`px-5 py-2 rounded-full text-xs uppercase ${
+                    order.status === 'open' ? 'bg-red-100 text-red-800':
+                    order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                    order.status === 'Completed' ? 'bg-green-100 text-green-800' : 
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {order.status || "N/A"}
+                  </span>
+                </td>
+                <td className="p-2 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs">
+                  {order.address != "N/A" ? order.address : "Non App User"}
+                </td>
+                <td className="p-2 border-b border-blue-gray-50 text-sm">
+                    <span className='bg-red-100 text-red-900 p-1 rounded-md capitalize'>assigned date</span>: {order.date ? `${formatDate(order.date).date} ${formatDate(order.date).time}` : "N/A"}
+                    <br />
+                    <br />
+                    <span className='bg-green-100 text-green-800 p-1 rounded-md capitalize'>scheduled date</span>: {order.scheduledDate ? `${formatDate(order.scheduledDate).date} ${formatDate(order.scheduledDate).time}` : "N/A"}
+                </td>
+                {/* <td className="p-2 border-b border-blue-gray-50 text-sm">{order.deviceId || "N/A"}</td> */}
+                <td className="p-2 border-b border-blue-gray-50">
+                  {/* <button className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:underline">
+                    Action
+                  </button> */}
+                  {hasAssignAccess && (
+                    <ReAssignTask orderId={order._id}/>
+                  )}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+        </table>
+      </div>
+      <Pagination
+            currentPage={currentPage}
+            totalItems={backendData.length}
+            itemsPerPage={itemsPerPage}
+            paginate={paginate}
         />
-
-  </div>
+    </>
   );
 };
 

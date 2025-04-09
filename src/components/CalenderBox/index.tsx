@@ -146,7 +146,7 @@ export default function Calendar({ data = [] }: CalendarProps) {
   }
 
   return (
-    <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+    <div className="rounded-lg bg-card text-card-foreground shadow-sm ">
       <div className="p-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold">
           {monthName} {currentYear}

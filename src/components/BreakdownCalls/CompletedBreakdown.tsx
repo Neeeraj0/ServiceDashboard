@@ -239,161 +239,163 @@ const CompletedBreakdown: React.FC<CompletedBreakdownProps> = ({onLoadingComplet
     triggerRefresh();
   }
   return (
-    <div>
-        <div className="flex items-center justify-between mb-4">    
-          <div className='flex-grow'>
-            <SearchBox 
-              placeholder="Search by customer name"
-              value={searchQuery}
-              onChange={setSearchQuery}
-            />
-          </div>
-          <div className='flex gap-2 ml-auto'>
-          <button 
-              onClick={handleRefresh}
-              className="p-2 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200"
-              title="Refresh data"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M23 4v6h-6"/>
-                <path d="M1 20v-6h6"/>
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-              </svg>
-            </button>
-            <CompletedFilterDrawer 
-              originalData={originalData}
-              setFilteredData={setBackendData}
-            />
-          </div>
-    </div>
-    <table className="w-full text-left table-auto min-w-max">
-      <thead>
-        <tr className="bg-gray-50">
-          <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Task ID</th>
-          <th className="p-2 border-b border-blue-gray-50 w-45 min-w-[70px] text-sm whitespace-normal">Before & After Images</th>
-          <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Technician Names</th>
-          <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Customer Details</th>
-          <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Issue Reported</th>
-          <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Issue Found</th>
-          <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Resolve Note</th>
-          <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Material Used</th>
-          <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm whitespace-normal w-22">Assigned Date & Time</th>
-          <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm whitespace-normal w-25">Closure Date & Time</th>
-          <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm w-25 whitespace-normal">Routine Services Completed</th>
-          <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">TAT 1</th>
-          <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">TAT 2</th>
-          {hasAssignAccess && <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Action</th>}
-        </tr>
-      </thead>
-      <tbody>
-        {backendData.length === 0 ? (
-          <tr>
-            <td colSpan={9} className="text-center p-4">No tasks available</td>
-          </tr>
-        ) : (
-          currentOrders.map((order) => {
-            const formattedAssignedDate = formatDate(order?.assignedDate);
-            const formattedClosureDate = formatDate(order?.endDate);
-            return(
-            <tr key={order._id} className="hover:bg-gray-50">
-              <td className="p-4 border-b border-blue-gray-50 text-xs">{order.task_id || "N/A"}</td>
-              <td className="p-4 border-b border-blue-gray-50 text-sm">
-                  {order.photos?.length > 0 ? (
-                    <button
-                      className="underline text-blue-600"
-                      onClick={() => handleViewImages(order.photos, order)}
-                    >
-                      View Images
-                    </button>
-                  ) : (
-                    "No Images"
-                  )}
-                </td>
-              <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
-              {order.assignedTechnicians?.length > 0 ? (
-                  <ul className="list-none">
-                    {order.assignedTechnicians.map((technician) => (
-                      <li key={technician._id} className="mb-1">
-                        {technician.name}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  "No technicians assigned"
-                )}
-              </td>
-              <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
-                {order.contactPerson || "N/A"}
-                <br />
-                {order.customerDetails || "N/A"}
-              </td>
-              <td className="p-2 border-b border-blue-gray-50 text-sm">{order.issueReported || "N/A"}</td>
-              <td className="p-2 border-b border-blue-gray-50 text-sm max-w-40 flex-wrap">{order.issueObserved || "N/A"}</td>
-              <td className="p-2 border-b border-blue-gray-50 text-sm max-w-40 flex-wrap">{order.note || "N/A"}</td>
-              <td className="p-2 border-b border-blue-gray-50 text-sm">
-                {order.materialsUsed.length > 0 ? (
-                  <ul className="ml-4">
-                    {order.materialsUsed.map((material, index) => (
-                      <li key={index}>
-                        {material.materialName}
-                        {material.sizeUsed ? ` - Size: ${material.sizeUsed}` : ""}
-                        {material.quantityUsed ? ` - Quantity: ${material.quantityUsed}` : ""}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  "No Materials Used"
-                )}
-              </td>
-              <td className="p-4 border-b border-blue-gray-50 text-xs">
-                { formattedAssignedDate.date || "N/A"}
-                {" "}
-                { formattedAssignedDate.time || "N/A"}
-                </td>
-              <td className="p-4 border-b border-blue-gray-50 text-xs">
-                { formattedClosureDate.date || "N/A"}
-                {" "}
-                { formattedClosureDate.time || "N/A"}
-              </td>
-              <td className="p-4 border-b border-blue-gray-50 text-sm">
-                  {order.isPeriodicService !== undefined && order.isPeriodicService !== null ? 
-                (order.isPeriodicService ? "Yes" : "No") : "N/A"}
-              </td>
-              <td className="p-4 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs">
-                {order.TAT1 }
-              </td>
-              <td className="p-4 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs">
-                {order.TAT2 }
-              </td>
-              <td className="p-2 border-b border-blue-gray-50">
-                {/* <button className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:underline">
-                Action
-                </button> */}
-                {/* <ActionButton orderId={order._id}/> */}
-                {hasAssignAccess && (
-                  <CompletedApproveTask 
-                    orderId={order._id}
-                    onTaskApproved={() => removeCompletedTask(order._id)}
-                  />
-                )}
-               </td>
+    <>
+      <div className="top-0 bg-white z-20 flex items-center justify-between mb-4">    
+            <div className='flex-grow'>
+              <SearchBox 
+                placeholder="Search by customer name"
+                value={searchQuery}
+                onChange={setSearchQuery}
+              />
+            </div>
+            <div className='flex gap-2 ml-auto'>
+            <button 
+                onClick={handleRefresh}
+                className="p-2 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200"
+                title="Refresh data"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 4v6h-6"/>
+                  <path d="M1 20v-6h6"/>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                </svg>
+              </button>
+              <CompletedFilterDrawer 
+                originalData={originalData}
+                setFilteredData={setBackendData}
+              />
+            </div>
+      </div>
+      <div className='overflow-x-auto'>
+        <table className="w-full text-left table-auto min-w-max">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Task ID</th>
+              <th className="p-2 border-b border-blue-gray-50 w-45 min-w-[70px] text-sm whitespace-normal">Before & After Images</th>
+              <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Technician Names</th>
+              <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Customer Details</th>
+              <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Issue Reported</th>
+              <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Issue Found</th>
+              <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Resolve Note</th>
+              <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Material Used</th>
+              <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm whitespace-normal w-22">Assigned Date & Time</th>
+              <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm whitespace-normal w-25">Closure Date & Time</th>
+              <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm w-25 whitespace-normal">Routine Services Completed</th>
+              <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">TAT 1</th>
+              <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">TAT 2</th>
+              {hasAssignAccess && <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Action</th>}
             </tr>
-            );
-          })
-        )}
-      </tbody>
-    </table>
-        {isModalOpen && (
-                <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} images={modalImages} />
-        )}
+          </thead>
+          <tbody>
+            {backendData.length === 0 ? (
+              <tr>
+                <td colSpan={9} className="text-center p-4">No tasks available</td>
+              </tr>
+            ) : (
+              currentOrders.map((order) => {
+                const formattedAssignedDate = formatDate(order?.assignedDate);
+                const formattedClosureDate = formatDate(order?.endDate);
+                return(
+                <tr key={order._id} className="hover:bg-gray-50">
+                  <td className="p-4 border-b border-blue-gray-50 text-xs">{order.task_id || "N/A"}</td>
+                  <td className="p-4 border-b border-blue-gray-50 text-sm">
+                      {order.photos?.length > 0 ? (
+                        <button
+                          className="underline text-blue-600"
+                          onClick={() => handleViewImages(order.photos, order)}
+                        >
+                          View Images
+                        </button>
+                      ) : (
+                        "No Images"
+                      )}
+                    </td>
+                  <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
+                  {order.assignedTechnicians?.length > 0 ? (
+                      <ul className="list-none">
+                        {order.assignedTechnicians.map((technician) => (
+                          <li key={technician._id} className="mb-1">
+                            {technician.name}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      "No technicians assigned"
+                    )}
+                  </td>
+                  <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
+                    {order.contactPerson || "N/A"}
+                    <br />
+                    {order.customerDetails || "N/A"}
+                  </td>
+                  <td className="p-2 border-b border-blue-gray-50 text-sm">{order.issueReported || "N/A"}</td>
+                  <td className="p-2 border-b border-blue-gray-50 text-sm max-w-40 flex-wrap">{order.issueObserved || "N/A"}</td>
+                  <td className="p-2 border-b border-blue-gray-50 text-sm max-w-40 flex-wrap">{order.note || "N/A"}</td>
+                  <td className="p-2 border-b border-blue-gray-50 text-sm">
+                    {order.materialsUsed.length > 0 ? (
+                      <ul className="ml-4">
+                        {order.materialsUsed.map((material, index) => (
+                          <li key={index}>
+                            {material.materialName}
+                            {material.sizeUsed ? ` - Size: ${material.sizeUsed}` : ""}
+                            {material.quantityUsed ? ` - Quantity: ${material.quantityUsed}` : ""}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      "No Materials Used"
+                    )}
+                  </td>
+                  <td className="p-4 border-b border-blue-gray-50 text-xs">
+                    { formattedAssignedDate.date || "N/A"}
+                    {" "}
+                    { formattedAssignedDate.time || "N/A"}
+                    </td>
+                  <td className="p-4 border-b border-blue-gray-50 text-xs">
+                    { formattedClosureDate.date || "N/A"}
+                    {" "}
+                    { formattedClosureDate.time || "N/A"}
+                  </td>
+                  <td className="p-4 border-b border-blue-gray-50 text-sm">
+                      {order.isPeriodicService !== undefined && order.isPeriodicService !== null ? 
+                    (order.isPeriodicService ? "Yes" : "No") : "N/A"}
+                  </td>
+                  <td className="p-4 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs">
+                    {order.TAT1 }
+                  </td>
+                  <td className="p-4 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs">
+                    {order.TAT2 }
+                  </td>
+                  <td className="p-2 border-b border-blue-gray-50">
+                    {/* <button className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:underline">
+                    Action
+                    </button> */}
+                    {/* <ActionButton orderId={order._id}/> */}
+                    {hasAssignAccess && (
+                      <CompletedApproveTask 
+                        orderId={order._id}
+                        onTaskApproved={() => removeCompletedTask(order._id)}
+                      />
+                    )}
+                  </td>
+                </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+          {isModalOpen && (
+                  <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} images={modalImages} />
+          )}
 
-        <Pagination
-                  currentPage={currentPage}
-                  totalItems={backendData.length}
-                  itemsPerPage={itemsPerPage}
-                  paginate={paginate}
-          />
-    </div>
+      </div>
+      <Pagination
+                    currentPage={currentPage}
+                    totalItems={backendData.length}
+                    itemsPerPage={itemsPerPage}
+                    paginate={paginate}
+      />
+    </>
   );
 };
 

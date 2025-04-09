@@ -1,7 +1,10 @@
 import * as Dialog from "@radix-ui/react-dialog";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { ACUnit } from "@/types/routine/AcUnit";
+import { useAuth } from "@/app/context/AuthContext";
+import { useTechnicians } from "@/hooks/useTechnicians";
+import toast from "react-hot-toast";
 
 interface Technician {
   name: string;
@@ -33,35 +36,28 @@ export default function RoutineAssignTask({
   const [technicianName, setTechnicianName] = useState("");
   const [servicingDate, setServicingDate] = useState("");
   const [servicingTime, setServicingTime] = useState("");
-  const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [filteredTechnicians, setFilteredTechnicians] = useState<Technician[]>([]);
   const [selectedTechnicians, setSelectedTechnicians] = useState<Technician[]>([]);
   const [acUnits, setAcUnits] = useState<ACUnit[]>([]);
   const [totalQuantity, setTotalQuantity] = useState<number>(0);
+  const {userName} = useAuth();
   const [address, setAddress] = useState<string>("");
   const [deviceName, setDeviceName] = useState("");
-  useEffect(() => {
-    const fetchTechnicians = async () => {
-      try {
-        const response = await axios.get(`http://35.154.208.29:8080/api/technicians/getTechnicians`);
-        setTechnicians(response.data);
-      } catch (error) {
-        console.error("Error fetching technicians:", error);
-      }
-    };
-    fetchTechnicians();
-  }, []);
-
+  const technicians = useTechnicians();
+  const apiCalled = useRef(false);
+  
   useEffect(() => {
     const fetchACDetails = async () => {
+      if (!isOpen || !orderId || apiCalled.current) return;
+      
       try {
+        apiCalled.current = true;
         const response = await axios.get(`http://localhost:5000/api/orders/getOrderById/${orderId}`);
-        const orders = response.data.allOrdersWithDeviceNames;
-        console.log(orderId);
-        console.log(orders);
+        const orders = response.data.data;
+        
         const acDetails = orders.map((order: any) => ({
           model: order.model,
-          quantity: order.quantity,
+          quantity: order.quantity || 1,
           type: order.ac_type === "split" ? "Split AC" : "Cassette AC",
           deviceName: order.deviceName 
         }));
@@ -69,39 +65,21 @@ export default function RoutineAssignTask({
         const quantity = orders.reduce((total: number, order: any) => total + order.quantity, 0);
 
         setAcUnits(acDetails);
-        console.log(acDetails);
         setTotalQuantity(quantity);
       } catch (error) {
         console.error("Error fetching AC details:", error);
       }
     };
 
-    if (orderId) fetchACDetails();
-  }, [orderId]);
-
-  useEffect(() => {
-    const fetchAddress = async () => {
-      try {
-        const loginResponse = await axios.post(
-          'https://testing.backend.summary.circolife.vip/api/login',
-          {
-            email: "admin@gmail.com",
-            password: "admin@123",
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        const token = loginResponse.data.token;
-      } catch (error) {
-        console.error("Error fetching address:", error);
+    fetchACDetails();
+    
+    // Cleanup function to reset the apiCalled ref when the modal closes
+    return () => {
+      if (!isOpen) {
+        apiCalled.current = false;
       }
     };
-
-    fetchAddress();
-  }, [orderId]);
+  }, [orderId, isOpen]);
 
   const handleTechnicianInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
@@ -147,10 +125,8 @@ export default function RoutineAssignTask({
       return;
     }
 
-    console.log(acUnits);
-
     const taskDataCreation = {
-      _id: orderId,
+      orderId: orderId,
       title: "Routine",
       customerComplaint: customerComplaint,
       description: 'Periodic service after every 90 days',
@@ -168,18 +144,18 @@ export default function RoutineAssignTask({
       quantity: totalQuantity,
       taskType: "routine",
       complaintRaised,
+      assignedBy: userName ? [userName] : [], 
       deviceId: deviceId,
       assignedTechnicians: selectedTechnicians.map((tech) => tech.name),
     };
 
     try {
       await axios.post(`http://35.154.208.29:8080/api/tasks`, taskDataCreation, {
-      // await axios.post(`http://localhost:8000/api/tasks`, taskDataCreation, {
         headers: {
           "Content-Type": "application/json",
         },
       });
-      alert("Task assigned successfully");
+      toast.success("Task assigned successfully");
       setIsOpen(false);
     } catch (error) {
       console.error("Error assigning task:", error);
@@ -187,11 +163,23 @@ export default function RoutineAssignTask({
     }
   };
 
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (!open) {
+      // Reset form state when closing the modal
+      setSelectedTechnicians([]);
+      setTechnicianName("");
+      setServicingDate("");
+      setServicingTime("");
+      apiCalled.current = false;
+    }
+  };
+
   return (
     <div className="h-fit w-fit mt-2">
-      <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog.Root open={isOpen} onOpenChange={handleOpenChange}>
         <Dialog.Trigger asChild>
-          <button onClick={() => setIsOpen(true)} className="bg-gray-200 text-gray-500 p-3 rounded-md text-sm">
+          <button className="border border-[#A14996] text-gray-800 p-3 rounded-md text-sm">
             + Assign Task
           </button>
         </Dialog.Trigger>
@@ -200,19 +188,19 @@ export default function RoutineAssignTask({
           <Dialog.Overlay className="fixed inset-0 bg-black/40" />
           <Dialog.Content className="flex items-center justify-center fixed inset-0 w-full h-full bg-transparent">
             <div className="w-[35%] h-auto bg-white rounded-lg p-8 shadow-lg relative">
-              <Dialog.Title className="text-center font-sans text-lg font-medium">Assign Task</Dialog.Title>
+              <Dialog.Title className="text-center font-sans text-lg font-bold">Assign Task</Dialog.Title>
               <Dialog.Description className="text-center text-sm text-gray-600 mt-2">
                 Select technician and enter service details.
               </Dialog.Description>
 
               <Dialog.Close asChild>
-                <button
-                  aria-label="Close"
-                  className="absolute top-4 right-4 text-white hover:text-gray-600 focus:outline-none bg-red-500 p-2 rounded-full"
-                >
-                  &times;
-                </button>
-              </Dialog.Close>
+                  <button
+                      aria-label="Close"
+                      className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  >
+                      &times;
+                  </button>
+               </Dialog.Close>
 
               <form onSubmit={handleAssignTask} className="mt-4">
                 <div className="mb-6 relative">
@@ -244,7 +232,11 @@ export default function RoutineAssignTask({
                   {selectedTechnicians.map((tech) => (
                     <div key={tech.technician_id} className="bg-blue-100 text-blue-800 px-3 py-2 rounded-md flex items-center justify-between mb-2">
                       {tech.name}
-                      <button onClick={() => handleRemoveTechnician(tech.technician_id)} className="text-red-500 font-bold">
+                      <button 
+                        type="button" 
+                        onClick={() => handleRemoveTechnician(tech.technician_id)} 
+                        className="text-red-500 font-bold"
+                      >
                         ×
                       </button>
                     </div>
@@ -272,8 +264,7 @@ export default function RoutineAssignTask({
                 </div>
 
                 <div className="flex justify-center mt-8">
-                  <button type="submit" className="bg-purple-600 text-white py-2 px-8 rounded text-[16px] hover:bg-purple-700"
-                  onClick={handleAssignTask}>
+                  <button type="submit" className="bg-purple-600 text-white py-2 px-8 rounded text-[16px] hover:bg-purple-700">
                     Submit
                   </button>
                 </div>

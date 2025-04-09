@@ -2,7 +2,7 @@ import Link from "next/link";
 
 interface BreadcrumbProps {
   pageName: string;
-  category: string;
+  category?: string;
 }
 
 const Breadcrumb = ({ pageName, category}: BreadcrumbProps) => {

@@ -14,6 +14,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { RefreshProvider } from "./context/RefreshContext";
 import { ClarityTracking } from "./context/ClarityInit";
 import Script from 'next/script';
+import { SSEProvider } from "./context/SSEContext";
 
 export default function RootLayout({
   children,
@@ -79,18 +80,20 @@ export default function RootLayout({
             <UserProvider>
               <AuthProvider>
                 <RefreshProvider>
-                  {loading ? (
-                    <Loader />
-                  ) : isPublicRoute || isAuthenticated ? (
-                    children
-                  ) : null}
+                  {isAuthenticated ? (
+                      <SSEProvider>
+                        {loading ? <Loader /> : children}
+                      </SSEProvider>
+                    ) : (
+                      loading ? <Loader /> : isPublicRoute ? children : null
+                    )}
                 </RefreshProvider>
               </AuthProvider>
             </UserProvider>
           </ReactQueryProvider>
           <Toaster position="top-center" />
         </div>
-        <Script id="clarity-script" strategy="afterInteractive">
+        {/* <Script id="clarity-script" strategy="afterInteractive">
           {`
             (function(c,l,a,r,i,t,y){
                 c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
@@ -98,7 +101,7 @@ export default function RootLayout({
                 y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
             })(window, document, "clarity", "script", "qu7rdw8lj6");
           `}
-        </Script>
+        </Script> */}
       </body>
     </html>
   );

@@ -4,6 +4,7 @@ export default async function handler(req, res) {
     }
     
     console.log('SSE connection established');
+    // Send initial message to confirm connection
     // Set headers for SSE
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',

@@ -16,7 +16,6 @@ const CalendarPage = () => {
     <DefaultLayout>
       <div className="mx-auto max-w-7xl">
         <Breadcrumb pageName="Routine" category="Calendar" />
-
         <Calendar />
       </div>
     </DefaultLayout>

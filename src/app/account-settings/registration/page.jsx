@@ -31,8 +31,8 @@ export default function TechnicianProfile() {
 
       const refreshTechnicians = async () => {
         try {
-          const response = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/technicians/getTechnicians`);
-          // const response = await axios.get(`http://localhost:8000/api/technicians/getTechnicians`);
+          // const response = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/technicians/getTechnicians`);
+          const response = await axios.get(`http://localhost:8000/api/technicians/getTechnicians`);
           localStorage.setItem("technicians", JSON.stringify(response.data));
           toast.success("Technicians list updated");
         } catch (error) {
@@ -42,12 +42,10 @@ export default function TechnicianProfile() {
       };
 
       // useEffect(() => {
-      //   const eventSource = new EventSource('/api/technicians/updates');
-      
-      //   eventSource.onopen = (event) => {
+      //   const eventSource = new EventSource('http://localhost:8000/api/technicians/updates');
+      //   eventSource.onopen = () => {
       //     console.log('SSE connection opened successfully');
       //   };
-      
       //   eventSource.onmessage = (event) => {
       //     try {
       //       console.log('Received SSE message:', event.data);
@@ -55,10 +53,11 @@ export default function TechnicianProfile() {
             
       //       if (data.message === 'CONNECTION_ESTABLISHED') {
       //         console.log('SSE connection is active');
-      //       }
-            
-      //       if (data.message === 'TECHNICIAN_UPDATED') {
-      //         refreshTechnicians();
+      //       } else if (data.message === 'TECHNICIAN_UPDATED') {
+      //         console.log('Updating technicians list:', data.technicians);
+      //         localStorage.setItem('technicians', JSON.stringify(data.technicians));
+      //         // setTechnicians(data.technicians);
+      //         toast.success("Technicians list updated");
       //       }
       //     } catch (error) {
       //       console.error('Error parsing SSE message:', error);
@@ -67,10 +66,11 @@ export default function TechnicianProfile() {
       
       //   eventSource.onerror = (error) => {
       //     console.error('SSE connection error:', error);
-          
       //     console.log('EventSource readyState:', eventSource.readyState);
           
-      //     eventSource.close();
+      //     setTimeout(() => {
+      //       eventSource.close();
+      //     }, 5000);
       //   };
       
       //   return () => {
@@ -78,39 +78,22 @@ export default function TechnicianProfile() {
       //   };
       // }, []);
 
-      useEffect(() => {
-        const channel = new BroadcastChannel('technician-updates');
-        
-        channel.onmessage = (event) => {
-          if (event.data.type === 'TECHNICIAN_UPDATED') {
-            localStorage.setItem('technicians', JSON.stringify(event.data.technicians));
-          }
-        };
-      
-        return () => {
-          channel.close();
-        };
-      }, []);
       const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             const response = await axios.post(
-                `${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/technicians/register`,
+                // `${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/technicians/register`,
+                "http://localhost:8000/api/technicians/register",
                 formData, 
                 {
                   headers: { "Content-Type": "application/json" }
                 }
             );              
     
-          if (response.status === 201) {
-            toast.success("Technician registered successfully!");
-            sendMessage({
-              type: 'TECHNICIAN_ADDED',
-              technician: response.data.technician
-            });
-            refreshTechnicians();
-            setFormData({ name: "", email: "", phoneNumber: "", role: "serviceengineer" }); // Reset form
-          }
+            if (response.status === 201) {
+              toast.success("Technician registered successfully!");
+              setFormData({ name: "", email: "", phoneNumber: "", role: "serviceengineer" }); // Reset form
+            }
         } catch (error) {
           console.error("Registration failed:", error);
           toast.error("An error occurred. Please try again.");

@@ -72,9 +72,15 @@ const DropdownDefaultTwo = ({
                 }
                 onTaskAssigned={onTaskAssigned}
               />
-             <MarkAsResolved
+             {/* <MarkAsResolved
                   orderId={orderId}
+                  order={order}
                   onResolved={onResolved}
+              /> */}
+              <MarkAsResolved 
+                orderId={orderId}
+                order= {order}
+                onResolved={onResolved}
               />
             </div>
           </div>

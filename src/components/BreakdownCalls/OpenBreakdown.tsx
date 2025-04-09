@@ -19,6 +19,8 @@ import ClickOutside from "../ClickOutside";
 import Loader from "../common/Loader";
 import { Loader2 } from "lucide-react";
 import FilterDrawer from "../Filters/Filters";
+import { useRouter } from 'next/navigation';
+import Image from "next/image";
 
 interface OpenBreakdownProps {
   onLoadingComplete?: () => void;
@@ -38,7 +40,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
   const [hasAssignAccess, setHasAssignAccess] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const { triggerRefresh, refreshKey } = useRefresh();
-
+  const router = useRouter();
   // Check token
   useEffect(() => {
     const checkUserAccess = () => {
@@ -68,6 +70,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
     const fetchTasks = async () => {
       try {
         const res = await axios.get("https://production.circolife.vip/api/query/queries/all", {
+          // const res = await axios.get("http://localhost:5000/api/query/queries/all", {
           headers: {
             "Content-Type": "application/json",
           },
@@ -79,7 +82,16 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
           contactnumber: order.contactnumber || "N/A",
           subject: order.subject || "N/A",
           summary: order.summery || "N/A",
-          address: order?.address || "N/A",
+          address: [
+            order.flat || '',
+            order.area || '',
+            order.address || '',
+            order.city || '',
+            order.state || '',
+            order.pincode || ''
+        ]
+            .filter(part => part.trim() !== '') // Remove empty parts
+            .join(', ') || "N/A", // Join non-empty parts with a comma
           deviceid: order.deviceid || "N/A",
           orderModels: order.orderModels || [],
         }));
@@ -112,39 +124,39 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
     return acUnits;
   };
 
-  useEffect(() => {
-    const fetchShippingAddresses = async () => {
-      try {
-        const loginResponse = await axios.post(
-          "https://testing.backend.summary.circolife.vip/api/login",
-          {
-            email: "admin@gmail.com",
-            password: "admin@123",
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+  // useEffect(() => {
+  //   const fetchShippingAddresses = async () => {
+  //     try {
+  //       const loginResponse = await axios.post(
+  //         "https://testing.backend.summary.circolife.vip/api/login",
+  //         {
+  //           email: "admin@gmail.com",
+  //           password: "admin@123",
+  //         },
+  //         {
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //           },
+  //         }
+  //       );
 
-        const token = loginResponse.data.token;
+  //       const token = loginResponse.data.token;
 
-        const res = await axios.get("https://testing.backend.summary.circolife.vip/api/summary/address", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+  //       const res = await axios.get("https://testing.backend.summary.circolife.vip/api/summary/address", {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //           "Content-Type": "application/json",
+  //         },
+  //       });
 
-        setShippingAddresses(res.data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
+  //       setShippingAddresses(res.data);
+  //     } catch (err) {
+  //       console.error(err);
+  //     }
+  //   };
 
-    fetchShippingAddresses();
-  }, []);
+  //   fetchShippingAddresses();
+  // }, []);
 
   const getShippingAddress = (orderId: string) => {
     const address = shippingAddresses.find((address) => address._id === orderId);
@@ -247,14 +259,18 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
     triggerRefresh();
   }
 
+  const handleRaiseQuery = () => {
+    window.location.href = "https://complaints.circolife.vip";
+  }
+
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   if (loading) return <Loader />;
   if (error) return <div>Error fetching data: {error}</div>;
 
   return (
-    <div className="overflow-x-auto">
-      <div className="flex items-center justify-between mb-4">
+    <>
+      <div className="top-0 bg-white z-20 flex items-center justify-between mb-4">
         <div className="flex-grow">
           <SearchBox 
             placeholder="Search by customer name"
@@ -262,8 +278,19 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
             onChange={setSearchQuery} 
           />
         </div>
+        <div className="flex items-center gap-2 ml-auto">
+          <div className="relative group inline-block">
+            <button className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-[#A14996] border border-[#A14996] rounded-lg hover:bg-[#f9f0f9]" onClick={handleRaiseQuery}>
+              <img src="/images/task/raiseQuery.png" width={30} height={30} alt="Query icon" />
+              Raise A Query
+            </button>
 
-        <div className="flex gap-2 ml-auto">
+            <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-max px-3 py-2 text-sm text-white bg-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+              <img src="/images/task/raiseQuery.png" width={50} height={50}/>
+              <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
+            </div>
+          </div>
+  
           <button 
             onClick={handleRefresh}
             className="p-2 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200"
@@ -275,14 +302,15 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
               <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
             </svg>
           </button>
-          
-          <FilterDrawer 
-            originalData={originalData} 
+  
+          <FilterDrawer
+            originalData={originalData}
             setFilteredData={setFilteredData}
             shippingAddresses={shippingAddresses}
           />
         </div>
       </div>
+    <div className="overflow-x-auto">
 
       {showAnimation && (
         <div className="animation-overlay">
@@ -361,13 +389,14 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
         </tbody>
       </table>
 
-      <Pagination
-        currentPage={currentPage}
-        totalItems={searchFilteredOrders.length}
-        itemsPerPage={itemsPerPage}
-        paginate={paginate}
-      />
     </div>
+    <Pagination
+      currentPage={currentPage}
+      totalItems={searchFilteredOrders.length}
+      itemsPerPage={itemsPerPage}
+      paginate={paginate}
+    />
+    </>
   );
 };
 

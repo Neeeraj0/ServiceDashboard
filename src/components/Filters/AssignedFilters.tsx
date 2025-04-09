@@ -8,6 +8,7 @@ import issuesList from "../utils/IssuesList";
 import locationPinCodes, { LocationKey } from "@/types/filters/LocationKeys";
 import { formatDate } from "../utils/dateUtils";
 import { Calendar1, RotateCcwIcon } from "lucide-react";
+import { ACUnit } from "@/types/breakdown/Order";
 
 interface Technician {
   _id: string;
@@ -15,6 +16,11 @@ interface Technician {
   email: string;
   phone: string;
   technician_id: string;
+}
+interface Device {
+  deviceName: string;
+  model: string;
+  status: string;
 }
 
 interface Order {
@@ -26,6 +32,7 @@ interface Order {
   status: string;
   address: string;
   date: string;
+  device?: Device[];
   scheduledDate: string;
   deviceId: string;
   assignedTechnicians: Technician[];
@@ -81,15 +88,14 @@ const AssignedFilterDrawer: React.FC<FilterDrawerProps> = ({ originalData, setFi
       toast.success("Preparing download...");
 
       const exportData = originalData.map((order) => ({
-        "Task ID": order._id,
+        "ID": order._id,
+        "Task ID": order.task_id,
         "Contact Person": order.contactPerson,
         "Customer Details": order.customerDetails,
-        "Issue Reported": order.issueReported,
         "Assigned Technicians": order.assignedTechnicians.map((tech) => tech.name).join(", ") || "N/A",
         "Status": order.status,
         "Customer Address": order.address,
         "Date": order.date ? `${formatDate(order.date).date} ${formatDate(order.date).time}` : "N/A",
-        "AC Details": order.deviceId,
       }));
 
       const ws = XLSX.utils.json_to_sheet(exportData);

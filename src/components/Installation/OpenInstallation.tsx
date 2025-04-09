@@ -143,7 +143,7 @@ const OpenInstallation = () => {
         // Filter orders where orderingStatus is true
         const ordersWithOrderingStatus = preordersRes.data.filter(
           (order: PreorderResponse) =>
-          order.AcDetails.length > 0 && order.orderingStatus === true
+          order.AcDetails.length > 0 && order.orderingStatus === true && order.DateofInstallation && order.TimeofInstallation
         );
         // Extract assigned task `preOrderId` for filtering
         const assignedPreorderIds = new Set(
@@ -181,7 +181,6 @@ const OpenInstallation = () => {
       (order: PreorderResponse) => !assignedPreorderIds.has(order._id)
     );
     
-    // Apply search filter
     const searchFiltered = unassignedOrders.filter(order => 
       order.customer.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -300,7 +299,8 @@ const OpenInstallation = () => {
               return (
                 <tr key={order._id} className={removingId === order._id ? 'fade-out' : ''}>
                   <td className="p-2 border-b border-blue-gray-50 text-sm">{serialNumber}</td>
-                  <td className="p-2 border-b border-blue-gray-50 text-sm">
+                  <td className={`p-2 border-b border-blue-gray-50 text-sm'
+                  }`}>
                     {order.customer_shipping_address.contactPerson && order.customer_shipping_address.contactNumber
                       ? (
                         <>
@@ -308,7 +308,11 @@ const OpenInstallation = () => {
                           {order.customer_shipping_address.contactNumber}
                         </>
                       )
-                      : "N/A"}
+                      : (
+                        <div className="flex items-center justify-center text-red-500 font-extrabold bg-red-100 px-2 py-1 rounded-md shadow-[0_0_5px_rgba(239,68,68,0.5)] h-full w-fit text-xs">
+                          Not Mentioned
+                        </div>
+                      )}
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm whitespace-normal w-50">{order.customer.name}</td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm whitespace-pre-line w-40">

@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import { formatDate } from '../utils/dateUtils';
 import AssignSiteSurvey from '../Dialogs/AssignSiteSurvey';
 import Pagination from '../Pagination';
+import GrowingSearchVariant1, { SearchBar2 } from '../SearchBox/SearchBox2';
 
 interface PreorderResponse {
   _id: string;

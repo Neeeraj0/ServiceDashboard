@@ -30,6 +30,8 @@ export const useBroadcastChannel = (channelName: string = 'technician-updates') 
   }, [channelName]);
 
   const sendMessage = useCallback((message: TechnicianUpdateData) => {
+    console.log('sendMessage', message);
+    // Check if the channel is available before sending a message 
     channel?.postMessage(message);
   }, [channel]);
 
