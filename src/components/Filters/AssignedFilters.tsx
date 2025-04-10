@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FiFilter, FiX, FiDownload } from "react-icons/fi";
-import * as XLSX from "xlsx";
+// import * as XLSX from "xlsx";
 import toast from "react-hot-toast";
 import issuesList from "../utils/IssuesList";
 import locationPinCodes, { LocationKey } from "@/types/filters/LocationKeys";
@@ -85,6 +85,7 @@ const AssignedFilterDrawer: React.FC<FilterDrawerProps> = ({ originalData, setFi
   const downloadExcel = async () => {
     try {
       setLoading(true);
+      const XLSX = await import("xlsx"); 
       toast.success("Preparing download...");
 
       const exportData = originalData.map((order) => ({

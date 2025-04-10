@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FiFilter, FiX, FiDownload, FiCheck } from "react-icons/fi";
-import * as XLSX from "xlsx";
+// import * as XLSX from "xlsx";
 import issuesList from '../utils/IssuesList';
 import locationPinCodes, { LocationKey } from "@/types/filters/LocationKeys";
 import { Order } from "@/types/breakdown/Order";
@@ -74,6 +74,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
     try {
       setLoading(true);
       toast.success("Preparing download...");
+      const XLSX = await import("xlsx"); 
       
       // Prepare data for export
       const exportData = originalData

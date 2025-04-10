@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FiFilter, FiX, FiDownload } from "react-icons/fi";
-import * as XLSX from "xlsx";
+// import * as XLSX from "xlsx";
 import toast from "react-hot-toast";
 import { Calendar1, RotateCcwIcon } from "lucide-react";
 import { formatDate } from "../utils/dateUtils";
@@ -112,6 +112,7 @@ const CompletedFilterDrawer: React.FC<FilterDrawerProps> = ({ originalData, setF
     try {
       setLoading(true);
       toast.success("Preparing download...");
+      const XLSX = await import("xlsx"); 
 
       const exportData = originalData.map((order) => ({
         "Task ID": order.task_id,

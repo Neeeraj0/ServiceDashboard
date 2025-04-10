@@ -1,5 +1,9 @@
 /** @type {import("next").NextConfig} */
 const nextConfig = {
+  experimental: {
+    serverActions: {}
+  },
+  memoryLimit: 5120,
   images: {
     domains: ["localhost"],
     remotePatterns: [
