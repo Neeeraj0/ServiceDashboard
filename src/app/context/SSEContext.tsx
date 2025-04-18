@@ -25,7 +25,7 @@ export function SSEProvider({ children }: SSEProviderProps) {
       }
     }
     
-    const eventSource = new EventSource('http://localhost:8000/api/technicians/updates');
+    const eventSource = new EventSource('http://35.154.208.29/api/technicians/updates');
     
     eventSource.onopen = () => {
       console.log('SSE connection opened successfully');

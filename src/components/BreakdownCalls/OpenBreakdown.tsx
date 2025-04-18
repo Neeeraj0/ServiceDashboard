@@ -62,14 +62,14 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const res = await axios.get("https://production.circolife.vip/api/query/queries/all", {
-          // const res = await axios.get("http://localhost:5000/api/query/queries/all", {
+        // const res = await axios.get("https://production.circolife.vip/api/query/queries/all", {
+          const res = await axios.get("http://35.154.99.208:5000/api/query/queries/all", {
           headers: {
             "Content-Type": "application/json",
           },
         });
 
-        const fetchedData = res.data.data.map((order: any) => ({
+        const fetchedData = res.data.allQueries.map((order: any) => ({
           ...order,
           contactperson: order.contactperson || "N/A",
           contactnumber: order.contactnumber || "N/A",
@@ -253,8 +253,18 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
   }
 
   const handleRaiseQuery = () => {
-    window.location.href = "https://complaints.circolife.vip";
-  }
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      toast.error('Authentication required');
+      return;
+    }
+    
+    const queryURL = new URL('https://devquerys.circolives.in');
+    // const queryURL = new URL('http://192.168.0.111:5174/');
+    queryURL.searchParams.append('from', "service");
+    queryURL.searchParams.append('auth', token);
+    window.location.href = queryURL.toString();
+  };
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
@@ -271,37 +281,38 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
             onChange={setSearchQuery} 
           />
         </div>
-        <div className="flex items-center gap-2 ml-auto">
-          <div className="relative group inline-block">
-            <button className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-[#A14996] border border-[#A14996] rounded-lg hover:bg-[#f9f0f9]" onClick={handleRaiseQuery}>
+        <div className="flex flex-col sm:flex-row items-center gap-2 ml-auto">
+          <div className="relative group inline-block w-full sm:w-auto mb-2 sm:mb-0">
+            <button className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-[#A14996] border border-[#A14996] rounded-lg hover:bg-[#f9f0f9] w-full sm:w-auto" onClick={handleRaiseQuery}>
               <img src="/images/task/raiseQuery.png" width={30} height={30} alt="Query icon" />
               Raise A Query
             </button>
 
-            <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-max px-3 py-2 text-sm text-white bg-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+            <div className="absolute left-1/2 -translate-x-1/2 mt-2 hidden lg:inline-block w-max px-3 py-2 text-sm text-white bg-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
               <img src="/images/task/raiseQuery.png" width={50} height={50}/>
               <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
             </div>
           </div>
-  
-          <button 
-            onClick={handleRefresh}
-            className="p-2 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200"
-            title="Refresh data"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M23 4v6h-6"/>
-              <path d="M1 20v-6h6"/>
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-            </svg>
-          </button>
-  
-          <FilterDrawer
-            originalData={originalData}
-            setFilteredData={setFilteredData}
-            shippingAddresses={shippingAddresses}
-          />
-        </div>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={handleRefresh}
+              className="p-2 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200"
+              title="Refresh data"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 4v6h-6"/>
+                <path d="M1 20v-6h6"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
+            </button>
+
+            <FilterDrawer
+              originalData={originalData}
+              setFilteredData={setFilteredData}
+              shippingAddresses={shippingAddresses}
+            />
+          </div>
+</div>
       </div>
     <div className="overflow-x-auto">
 

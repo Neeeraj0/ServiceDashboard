@@ -145,8 +145,9 @@ const OpenSiteSurvey = () => {
       
           const ordersWithOrderingStatus = preordersRes.data.filter(
             (order: PreorderResponse) => 
-              order.DateofSiteSurvey &&
-              order.TimeofSiteSurvey
+              order?.DateofSiteSurvey &&
+              order?.TimeofSiteSurvey 
+              // !order.orderingStatus
           );
 
           console.log('site survey orders',ordersWithOrderingStatus);

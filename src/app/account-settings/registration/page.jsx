@@ -18,7 +18,6 @@ export default function TechnicianProfile() {
         phoneNumber: "",
         role: "serviceengineer", 
       });
-      const { sendMessage } = useBroadcastChannel();
     
       const handleChange = (e) => {
         let { name, value } = e.target;
@@ -28,55 +27,6 @@ export default function TechnicianProfile() {
     
         setFormData((prev) => ({ ...prev, [name]: value }));
       };
-
-      const refreshTechnicians = async () => {
-        try {
-          // const response = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/technicians/getTechnicians`);
-          const response = await axios.get(`http://localhost:8000/api/technicians/getTechnicians`);
-          localStorage.setItem("technicians", JSON.stringify(response.data));
-          toast.success("Technicians list updated");
-        } catch (error) {
-          console.error("Error refreshing technicians:", error);
-          toast.error("Failed to refresh technicians");
-        }
-      };
-
-      // useEffect(() => {
-      //   const eventSource = new EventSource('http://localhost:8000/api/technicians/updates');
-      //   eventSource.onopen = () => {
-      //     console.log('SSE connection opened successfully');
-      //   };
-      //   eventSource.onmessage = (event) => {
-      //     try {
-      //       console.log('Received SSE message:', event.data);
-      //       const data = JSON.parse(event.data);
-            
-      //       if (data.message === 'CONNECTION_ESTABLISHED') {
-      //         console.log('SSE connection is active');
-      //       } else if (data.message === 'TECHNICIAN_UPDATED') {
-      //         console.log('Updating technicians list:', data.technicians);
-      //         localStorage.setItem('technicians', JSON.stringify(data.technicians));
-      //         // setTechnicians(data.technicians);
-      //         toast.success("Technicians list updated");
-      //       }
-      //     } catch (error) {
-      //       console.error('Error parsing SSE message:', error);
-      //     }
-      //   };
-      
-      //   eventSource.onerror = (error) => {
-      //     console.error('SSE connection error:', error);
-      //     console.log('EventSource readyState:', eventSource.readyState);
-          
-      //     setTimeout(() => {
-      //       eventSource.close();
-      //     }, 5000);
-      //   };
-      
-      //   return () => {
-      //     eventSource.close();
-      //   };
-      // }, []);
 
       const handleSubmit = async (e) => {
         e.preventDefault();
@@ -91,7 +41,6 @@ export default function TechnicianProfile() {
             );              
     
             if (response.status === 201) {
-              toast.success("Technician registered successfully!");
               setFormData({ name: "", email: "", phoneNumber: "", role: "serviceengineer" }); // Reset form
             }
         } catch (error) {

@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import TimePicker from "../TimePicker/TimePicker";
 import '../BreakdownCalls/module.style.css';
 import { useAuth } from "@/app/context/AuthContext";
+import { useTechnicians } from "@/hooks/useTechnicians";
 
 interface ACUnit {
   type: string;
@@ -46,39 +47,13 @@ export default function AssignInstallation({
   const [technicianName, setTechnicianName] = useState("");
   const [servicingDate, setServicingDate] = useState("");
   const [servicingTime, setServicingTime] = useState("");
-  const [technicians, setTechnicians] = useState<Technician[]>([]);
+  // const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [filteredTechnicians, setFilteredTechnicians] = useState<Technician[]>([]);
   const [selectedTechnicians, setSelectedTechnicians] = useState<Technician[]>([]); // Track selected technicians
   const [isAnimating, setIsAnimating] = useState(false);
   const { userName, loading } = useAuth();
   console.log(ac_units);
-  useEffect(() => {
-    const fetchTechnicians = async () => {
-      // Check if technicians exist in localStorage
-      const cachedTechnicians = JSON.parse(localStorage.getItem("technicians") || "[]");
-  
-      // If we find cached data, set it immediately
-      if (cachedTechnicians.length > 0) {
-        setTechnicians(cachedTechnicians);
-      }
-  
-      // If cached technicians is empty or not available, fetch from API
-      if (cachedTechnicians.length === 0) {
-        try {
-          const response = await axios.get('https://servicebackend.circolife.vip/api/technicians/getTechnicians');
-          localStorage.setItem("technicians", JSON.stringify(response.data)); // Cache the data
-          setTechnicians(response.data); // Update state with fresh data
-          console.log('Fetched technicians:', response);
-        } catch (error) {
-          console.error('Error fetching technicians:', error);
-          toast.error('Failed to load technicians');
-        }
-      }
-    };
-  
-    fetchTechnicians();
-  }, []);
-  
+  const technicians = useTechnicians();
   const handleTechnicianInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
     setTechnicianName(input);
