@@ -63,7 +63,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
     const fetchTasks = async () => {
       try {
         // const res = await axios.get("https://production.circolife.vip/api/query/queries/all", {
-          const res = await axios.get("http://35.154.99.208:5000/api/query/queries/all", {
+          const res = await axios.get("http://app.dev.circolife.vip/api/query/queries/all", {
           headers: {
             "Content-Type": "application/json",
           },
@@ -284,14 +284,9 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
         <div className="flex flex-col sm:flex-row items-center gap-2 ml-auto">
           <div className="relative group inline-block w-full sm:w-auto mb-2 sm:mb-0">
             <button className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-[#A14996] border border-[#A14996] rounded-lg hover:bg-[#f9f0f9] w-full sm:w-auto" onClick={handleRaiseQuery}>
-              <img src="/images/task/raiseQuery.png" width={30} height={30} alt="Query icon" />
+              {/* <img src="/images/task/raiseQuery.png" width={30} height={30} alt="Query icon" /> */}
               Raise A Query
             </button>
-
-            <div className="absolute left-1/2 -translate-x-1/2 mt-2 hidden lg:inline-block w-max px-3 py-2 text-sm text-white bg-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-              <img src="/images/task/raiseQuery.png" width={50} height={50}/>
-              <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
-            </div>
           </div>
           <div className="flex items-center gap-2">
             <button 
