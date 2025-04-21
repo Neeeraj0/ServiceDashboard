@@ -9,6 +9,7 @@ import { formatDate } from '../utils/dateUtils';
 import FilterDrawer from '../Filters/Filters';
 import InstallationFilterDrawer from '../Filters/OpenInstallationFilters';
 import Pagination from '../Pagination';
+import ErrorPage from '../ErrorPage/Error';
 
 interface PreorderResponse {
   _id: string;
@@ -163,7 +164,7 @@ const OpenInstallation = () => {
         setFilteredPreorders(unassignedOrders);
       } catch (err: any) {
         console.error('Error fetching data:', err);
-        setError(err.message);
+        setError(err.response?.data);
       } finally {
         setLoading(false);
       }
@@ -220,7 +221,7 @@ const OpenInstallation = () => {
   }, []);
 
   if (loading) return <div>Loading...</div>;
-  if (error) return <div>No Records found: {error}</div>;
+  if (error) return <ErrorPage error={error} />;
 
   const indexOfLastOrder = currentPage * itemsPerPage;
   const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;

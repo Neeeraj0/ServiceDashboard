@@ -25,7 +25,7 @@ export function SSEProvider({ children }: SSEProviderProps) {
       }
     }
     
-    const eventSource = new EventSource('http://35.154.208.29:8080/api/technicians/updates');
+    const eventSource = new EventSource(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/technicians/updates`);
     
     eventSource.onopen = () => {
       console.log('SSE connection opened successfully');

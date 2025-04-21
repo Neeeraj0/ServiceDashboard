@@ -31,6 +31,7 @@ interface Order {
   task_id: string;
   contactPerson: string;
   customerDetails: string;
+  
   issueReported: string;
   status: string;
   address: string;

@@ -119,8 +119,8 @@ const ApprovalPending: React.FC<ApprovalPendingInstallationProps> = ({onLoadingC
     }, []);
   const fetchPipingData = async () => {
     try {
-      // const res = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/installation/getApprovalPending`);
-      const res = await axios.get('http://localhost:8000/api/installation/getApprovalPending');
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/installation/getApprovalPending`);
+      // const res = await axios.get('http://localhost:8000/api/installation/getApprovalPending');
       const filteredData = res.data.filter((task: PipingResponse) => !approvedTasks.has(task.task_id));
       setPipingData(filteredData);
       setOriginalData(filteredData);

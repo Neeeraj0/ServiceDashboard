@@ -14,6 +14,7 @@ import toast from "react-hot-toast";
 import Loader from "../common/Loader";
 import FilterDrawer from "../Filters/Filters";
 import { useRouter } from 'next/navigation';
+import ErrorPage from "../ErrorPage/Error";
 
 interface OpenBreakdownProps {
   onLoadingComplete?: () => void;
@@ -62,8 +63,8 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        // const res = await axios.get("https://production.circolife.vip/api/query/queries/all", {
-          const res = await axios.get("http://app.dev.circolife.vip/api/query/queries/all", {
+        const res = await axios.get("https://production.circolife.vip/api/query/queries/all", {
+          // const res = await axios.get("http://localhost:5000/api/query/queries/all", {
           headers: {
             "Content-Type": "application/json",
           },
@@ -117,40 +118,6 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
     return acUnits;
   };
 
-  // useEffect(() => {
-  //   const fetchShippingAddresses = async () => {
-  //     try {
-  //       const loginResponse = await axios.post(
-  //         "https://testing.backend.summary.circolife.vip/api/login",
-  //         {
-  //           email: "admin@gmail.com",
-  //           password: "admin@123",
-  //         },
-  //         {
-  //           headers: {
-  //             "Content-Type": "application/json",
-  //           },
-  //         }
-  //       );
-
-  //       const token = loginResponse.data.token;
-
-  //       const res = await axios.get("https://testing.backend.summary.circolife.vip/api/summary/address", {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //           "Content-Type": "application/json",
-  //         },
-  //       });
-
-  //       setShippingAddresses(res.data);
-  //     } catch (err) {
-  //       console.error(err);
-  //     }
-  //   };
-
-  //   fetchShippingAddresses();
-  // }, []);
-
   const getShippingAddress = (orderId: string) => {
     const address = shippingAddresses.find((address) => address._id === orderId);
     return address?.customerData?.shipping_address[0] || null;
@@ -201,16 +168,16 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
     }, 5000);
   };
 
-  // Filter active orders and apply search query
   const activeOrders = filteredData.filter(
-    (order) => !order.queryStatus && order.status === true
+    (order) =>
+      order.status === true &&
+      (!order.queryStatus || order.queryStatus.toLowerCase() === "open")
   );
   
   const searchFilteredOrders = activeOrders.filter((order) =>
     order.contactperson.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Get current page items
   const indexOfLastOrder = currentPage * itemsPerPage;
   const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
   const currentOrders = searchFilteredOrders.slice(
@@ -252,7 +219,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
     triggerRefresh();
   }
 
-  const handleRaiseQuery = () => {
+  const handleRaiseQueryBeta = () => {
     const token = localStorage.getItem('authToken');
     if (!token) {
       toast.error('Authentication required');
@@ -266,10 +233,21 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
     window.location.href = queryURL.toString();
   };
 
+  const handleRaiseQueryClassic = () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      toast.error('Authentication required');
+      return;
+    }
+    
+    const queryURL = new URL('https://complaints.circolife.vip');
+    window.location.href = queryURL.toString();
+  };
+
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   if (loading) return <Loader />;
-  if (error) return <div>Error fetching data: {error}</div>;
+  if (error) return <ErrorPage error={error} />;
 
   return (
     <>
@@ -282,10 +260,12 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
           />
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-2 ml-auto">
-          <div className="relative group inline-block w-full sm:w-auto mb-2 sm:mb-0">
-            <button className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-[#A14996] border border-[#A14996] rounded-lg hover:bg-[#f9f0f9] w-full sm:w-auto" onClick={handleRaiseQuery}>
-              {/* <img src="/images/task/raiseQuery.png" width={30} height={30} alt="Query icon" /> */}
-              Raise A Query
+          <div className="relative group gap-2 lg:flex lg:gap-3 w-full sm:w-auto mb-2 sm:mb-0">
+            <button className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-[#A14996] border border-[#A14996] rounded-lg hover:bg-[#f9f0f9] w-full sm:w-auto" onClick={handleRaiseQueryBeta}>
+              Raise A Query New
+            </button>
+            <button className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-[#A14996] border border-[#A14996] rounded-lg hover:bg-[#f9f0f9] w-full sm:w-auto mt-2 lg:mt-0" onClick={handleRaiseQueryClassic}>
+              Raise A Query Old
             </button>
           </div>
           <div className="flex items-center gap-2">
