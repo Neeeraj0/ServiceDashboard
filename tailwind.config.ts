@@ -394,6 +394,10 @@ const config: Config = {
   					transform: 'rotate(360deg)'
   				}
   			},
+			spin: {
+			'0%': { transform: 'rotate(0deg)' },
+			'100%': { transform: 'rotate(360deg)' },
+			},
   			easespin: {
   				'12.5%': {
   					transform: 'rotate(135deg)'
@@ -484,6 +488,7 @@ const config: Config = {
   			}
   		},
   		animation: {
+			spin: 'spin 1s linear infinite',
   			linspin: 'linspin 1568.2353ms linear infinite',
   			easespin: 'easespin 5332ms cubic-bezier(0.4, 0, 0.2, 1) infinite both',
   			'left-spin': 'left-spin 1333ms cubic-bezier(0.4, 0, 0.2, 1) infinite both',

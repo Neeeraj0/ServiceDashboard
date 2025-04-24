@@ -261,11 +261,11 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-2 ml-auto">
           <div className="relative group gap-2 lg:flex lg:gap-3 w-full sm:w-auto mb-2 sm:mb-0">
-            <button className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-[#A14996] border border-[#A14996] rounded-lg hover:bg-[#f9f0f9] w-full sm:w-auto" onClick={handleRaiseQueryBeta}>
+            {/* <button className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-[#A14996] border border-[#A14996] rounded-lg hover:bg-[#f9f0f9] w-full sm:w-auto" onClick={handleRaiseQueryBeta}>
               Raise A Query New
-            </button>
+            </button> */}
             <button className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-[#A14996] border border-[#A14996] rounded-lg hover:bg-[#f9f0f9] w-full sm:w-auto mt-2 lg:mt-0" onClick={handleRaiseQueryClassic}>
-              Raise A Query Old
+              Raise A Query
             </button>
           </div>
           <div className="flex items-center gap-2">

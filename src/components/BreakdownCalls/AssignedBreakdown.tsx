@@ -31,7 +31,7 @@ interface Order {
   task_id: string;
   contactPerson: string;
   customerDetails: string;
-  
+  complaintRaised?: string;
   issueReported: string;
   status: string;
   address: string;
@@ -86,10 +86,12 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
     const fetchAssignedOrders = async () => {
       try {
         const res = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/breakdown/getAssigned`);
+        // const res = await axios.get(`http://localhost:8000/api/breakdown/getAssigned`);
         const orders = res.data.map((order: any) => ({
           _id: order._id,
           task_id: order.task_id,
           contactPerson: order.client_name,
+          complaintRaised: order.complaintRaised,
           customerDetails: order.client_number,
           issueReported: order.description,
           status: order.status,
@@ -301,10 +303,13 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
                   {order.address != "N/A" ? order.address : "Non App User"}
                 </td>
                 <td className="p-2 border-b border-blue-gray-50 text-sm">
-                    <span className='bg-red-100 text-red-900 p-1 rounded-md capitalize'>assigned date</span>: {order.date ? `${formatDate(order.date).date} ${formatDate(order.date).time}` : "N/A"}
+                    <span className='bg-blue-200 text-blue-800 p-1 rounded-md capitalize'>assigned date</span>: {order.date ? `${formatDate(order.date).date} ${formatDate(order.date).time}` : "N/A"}
                     <br />
                     <br />
                     <span className='bg-green-100 text-green-800 p-1 rounded-md capitalize'>scheduled date</span>: {order.scheduledDate ? `${formatDate(order.scheduledDate).date} ${formatDate(order.scheduledDate).time}` : "N/A"}
+                    <br />
+                    <br />
+                    <span className='bg-red-200 text-red-900 p-1 rounded-md capitalize'>Complaint Raised date</span>: {order.complaintRaised ? `${formatDate(order.complaintRaised).date} ${formatDate(order.complaintRaised).time}` : "N/A"}
                 </td>
                 {/* <td className="p-2 border-b border-blue-gray-50 text-sm">{order.deviceId || "N/A"}</td> */}
                 <td className="p-2 border-b border-blue-gray-50">

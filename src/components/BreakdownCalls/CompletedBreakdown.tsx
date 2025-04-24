@@ -170,8 +170,8 @@ const CompletedBreakdown: React.FC<CompletedBreakdownProps> = ({onLoadingComplet
   
         const resQueries = await axios.get('https://production.circolife.vip/api/query/queries/all');
         console.log('line 93', resQueries);
-        const completedQueryIds = resQueries?.data.data
-          .filter((query: any) => query.queryStatus === 'complete')
+        const completedQueryIds = resQueries?.data.allQueries
+          .filter((query: any) => query?.queryStatus === 'complete')
           .map((query: any) => query._id);
   
         const filteredOrders = orders.filter((order: any) => !completedQueryIds.includes(order._id));
@@ -287,7 +287,7 @@ const CompletedBreakdown: React.FC<CompletedBreakdownProps> = ({onLoadingComplet
             </tr>
           </thead>
           <tbody>
-            {backendData.length === 0 ? (
+            {currentOrders.length === 0 ? (
               <tr>
                 <td colSpan={9} className="text-center p-4">No tasks available</td>
               </tr>

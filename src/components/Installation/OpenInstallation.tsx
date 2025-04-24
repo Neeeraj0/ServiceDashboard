@@ -144,7 +144,7 @@ const OpenInstallation = () => {
         // Filter orders where orderingStatus is true
         const ordersWithOrderingStatus = preordersRes.data.filter(
           (order: PreorderResponse) =>
-          order.AcDetails.length > 0 && order.orderingStatus === true && order.DateofInstallation && order.TimeofInstallation
+          order.AcDetails.length > 0 && order.orderingStatus === true
         );
         // Extract assigned task `preOrderId` for filtering
         const assignedPreorderIds = new Set(

@@ -1,5 +1,5 @@
 import * as Dialog from "@radix-ui/react-dialog";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import TimePicker from "../TimePicker/TimePicker";
@@ -52,8 +52,18 @@ export default function AssignInstallation({
   const [selectedTechnicians, setSelectedTechnicians] = useState<Technician[]>([]); // Track selected technicians
   const [isAnimating, setIsAnimating] = useState(false);
   const { userName, loading } = useAuth();
-  console.log(ac_units);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const technicians = useTechnicians();
+
+   useEffect(() => {
+    return () => {
+      if (submitTimeoutRef.current) {
+        clearTimeout(submitTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleTechnicianInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
     setTechnicianName(input);
@@ -143,9 +153,15 @@ export default function AssignInstallation({
 
   const handleAssignTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsAnimating(true)
+    setIsSubmitting(true);
+    setIsAnimating(true);
     const timeIn24Hour = convertTo24HourFormat(servicingTime);
     const servicingDateTime = mergeDateTimeToISO(servicingDate, timeIn24Hour);
+    if (!servicingDateTime) {
+      setIsSubmitting(false);
+      setIsAnimating(false);
+      return;
+    }
     if (!servicingDateTime) {
       alert("Invalid servicing date or time.");
       return;
@@ -236,19 +252,15 @@ export default function AssignInstallation({
         headers: {
           "Content-Type": "application/json",
         },
-      })
-        .then((res) => {
-          setTimeout(() => {
-            onTaskAssigned(preOrderId); // Notify parent component
-            toast.success("Task assigned successfully");
-            setIsOpen(false); // Close modal
-            setIsAnimating(false)
-          }, 5000); 
-        })
-        .catch((err) => {
-          console.log(err);
-          toast.error("Error occured while assigning Task!", err);
-        });
+      });
+
+       submitTimeoutRef.current = setTimeout(() => {
+        onTaskAssigned(preOrderId);
+        toast.success("Task assigned successfully");
+        setIsOpen(false);
+        setIsAnimating(false);
+        setIsSubmitting(false);
+      }, 5000);
 
       // toast.success("Task assigned successfully");
     } catch (error) {
@@ -380,8 +392,9 @@ export default function AssignInstallation({
                   <button
                     type="submit"
                     className={`order ${isAnimating ? "animate" : ""}`}
+                    disabled={isSubmitting}
                   >
-                    <span className="default">Submit</span>
+                    <span className="default">{isSubmitting ? "Processing..." : "Submit"}</span>
                     <span className="success">Installation will be done ✅</span>
                     <svg viewBox="0 0 12 10">
                       <polyline points="1.5 6 4.5 9 10.5 1" />

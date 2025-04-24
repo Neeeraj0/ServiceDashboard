@@ -47,6 +47,8 @@ export default React.memo(function AssignTask({
   const [selectedTechnicians, setSelectedTechnicians] = useState<Technician[]>([]);
   const [isButtonClicked, setIsButtonClicked] = useState(false);
   const {userName} = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitTimeout = useRef<NodeJS.Timeout>();
   useEffect(() => {
     const fetchTechnicians = async () => {
       const cachedTechnicians = JSON.parse(localStorage.getItem("technicians") || "[]");
@@ -221,6 +223,13 @@ export default React.memo(function AssignTask({
 
   const handleAssignTask = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) {
+      return;
+    }
+    if (submitTimeout.current) {
+      clearTimeout(submitTimeout.current);
+    }
+    setIsSubmitting(true);
     const timeIn24Hour = convertTo24HourFormat(servicingTime);
     const servicingDateTime = mergeDateTimeToISO(servicingDate, timeIn24Hour);
     if (!servicingDateTime) {
@@ -261,10 +270,11 @@ export default React.memo(function AssignTask({
       );
 
       toast.success("Task assigned successfully");
-      setTimeout(() => {
-        onTaskAssigned(orderId); // Notify parent component
-        setIsOpen(false); // Close modal
-      }, 5000); 
+      submitTimeout.current = setTimeout(() => {
+        onTaskAssigned(orderId);
+        setIsOpen(false);
+        setIsSubmitting(false);
+      }, 5000);
     } catch (error) {
       console.error("Error assigning task:", error);
       toast.error("Failed to assign task");
@@ -423,12 +433,42 @@ export default React.memo(function AssignTask({
                 </button> */}
 
                 <div className="flex justify-center mt-8">
-                  <button
+                  {/* <button
                     type="submit"
                     disabled={!isButtonClicked}
                     className={`bg-purple-600 text-white py-2 px-8 rounded text-sm hover:bg-purple-700`}
                   >
                     Submit
+                  </button> */}
+                  <button
+                    type="submit"
+                    disabled={!isButtonClicked || isSubmitting}
+                    className={`bg-purple-600 text-white py-2 px-8 rounded text-sm hover:bg-purple-700 
+                      ${(isSubmitting || !isButtonClicked) ? 'opacity-50 cursor-not-allowed w-10vw' : ''}`}
+                  >
+                    {/* {isSubmitting ? 'Submitting...' : 'Submit'} */}
+                    {isSubmitting ? (
+                      <svg
+                        className="animate-spin h-5 w-5 text-white mx-auto"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 1 1 16 0A8 8 0 0 1 4 12z"
+                        ></path>
+                      </svg>
+                    ) : (
+                      'Submit'
+                    )}
                   </button>
                 </div>
               </form>
