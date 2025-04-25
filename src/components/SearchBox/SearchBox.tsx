@@ -8,7 +8,7 @@ interface SearchBoxProps {
 
 const SearchBox: React.FC<SearchBoxProps> = ({ placeholder = "Search...", value, onChange }) => {
   return (
-    <div className="flex m-5 rounded-md border-2 overflow-hidden w-[fit-content] p-2 justify-start">
+    <div className="flex m-5 rounded-md border-2 overflow-hidden w-[fit-content] p-2 justify-start z-0">
       <button type="button" className="flex items-center justify-center pr-2">
         <svg
           xmlns="http://www.w3.org/2000/svg"
