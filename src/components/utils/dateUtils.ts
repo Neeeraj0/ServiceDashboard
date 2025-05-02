@@ -1,5 +1,4 @@
 export const formatDate = (dateString?: string) => {
-  console.log(dateString);
   if (!dateString) {
     return { date: "N/A", time: "N/A" };
 }

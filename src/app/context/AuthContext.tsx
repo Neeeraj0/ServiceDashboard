@@ -24,42 +24,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // const sendActiveUserEvent = async (userId: string | null, userRole: string | null) => {
-  //   if (!userId) return;
-  
-  //   try {
-  //     const track = await fetch('https://api.trench.dev/events', {
-  //       method: 'POST',
-  //       headers: { 
-  //         'Content-Type': 'application/json',
-  //         'Authorization': 'Bearer public-b219dab1-0330-4bac-9149-e0c3d2f04682',
-  //       },
-  //       body: JSON.stringify({
-  //         events: [
-  //           {
-  //             userId: userId, // Matches expected format
-  //             type: "track", // Add type field
-  //             event: "active_user", // Matches the reference
-  //             properties: {
-  //               role: userRole,
-  //               timestamp: new Date().toISOString(),
-  //             },
-  //           }
-  //         ]
-  //       }),
-  //     });
-  
-  //     if (!track.ok) {
-  //       const errorData = await track.json();
-  //       console.error("Error tracking active user:", errorData);
-  //     } else {
-  //       console.log("Active user event sent successfully");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error tracking active user:", error);
-  //   }
-  // };  
-
   const decodeToken = (token: string) => {
     try {
       const base64Url = token.split(".")[1];
@@ -91,16 +55,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const decodedToken = decodeToken(token);
-    console.log(decodedToken.admin_id);
-    console.log(decodedToken.name);
+    console.log(decodedToken);
     if (decodedToken) {
       setUserName(decodedToken.name || null);
       setUserEmail(decodedToken.email || null);
       setUserRole(decodedToken.role || null);
       setUserPhone(decodedToken.phone || null);
       setUserId(decodedToken.admin_id || null);
-      // sendActiveUserEvent(decodedToken.admin_id, decodedToken.role);
-
     } else {
       console.warn("Invalid token or decoding failed");
       setUserName(null);
@@ -119,6 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     localStorage.removeItem("authToken");
+    localStorage.removeItem('technicians');
     setUserName(null);
     setUserEmail(null);
     setUserRole(null);
@@ -127,19 +89,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     window.location.reload();
   };
 
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     if (userId) {
-  //       sendActiveUserEvent(userId, userRole);
-  //     }
-  //   }, 1800000 ); 
-  
-  //   return () => clearInterval(interval);
-  // }, [userId, userRole]);
-
   return (
     <AuthContext.Provider value={{ userName, userEmail, userRole, userPhone, userId, loading, logout, loadUserFromToken }}>
-      {!loading && children} {/* Prevents rendering until auth is loaded */}
+      {children}
     </AuthContext.Provider>
   );
 };

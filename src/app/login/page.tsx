@@ -9,6 +9,7 @@ import { UserRole } from '../../types/user';
 import Image from 'next/image';
 import OtpInput from 'react-otp-input';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 interface LoginFormData {
   phone: string;
@@ -83,6 +84,81 @@ export default function Login() {
     }
   };
 
+  // const verifyOtp = async () => {
+  //   if (!formData.role) {
+  //     toast.error('Please select a role');
+  //     return;
+  //   }
+    
+  //   setIsVerifying(true);
+    
+  //   try {
+  //     // Confirm OTP with Firebase
+  //     const result = await window.confirmationResult.confirm(otp);
+  //     const user = result.user;
+      
+  //     // Determine which endpoint to use based on role
+  //     let endpoint;
+  //     if (formData.role === 'servicehead') {
+  //       endpoint = `${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/users/checkUser`;
+  //     } else if (formData.role === 'viewAccess') {
+  //       endpoint = `${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/users/checkUser`;
+  //     } else {
+  //       endpoint = `${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/technicians/checkTechnician`;
+  //     }
+      
+  //     // Check if user exists
+  //     const response = await fetch(endpoint, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({
+  //         phone: `+91${formData.phone}`,
+  //       }),
+  //     });
+      
+  //     const data = await response.json();
+      
+  //     if (response.ok && data.exists) {
+  //       // Store authentication token
+  //       localStorage.setItem('authToken', data.token);
+        
+  //       // Fetch technicians list
+  //       try {
+  //         const techResponse = await fetch(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/technicians/getTechnicians`, {
+  //           method: 'GET',
+  //           headers: {
+  //             'Content-Type': 'application/json',
+  //             'Authorization': `Bearer ${data.token}` // Using the token for authorization
+  //           }
+  //         });
+          
+  //         if (techResponse.ok) {
+  //           const techniciansData = await techResponse.json();
+  //           // Store technicians data in localStorage
+  //           localStorage.setItem('technicians', JSON.stringify(techniciansData));
+  //         } else {
+  //           console.error('Failed to fetch technicians list');
+  //         }
+  //       } catch (techError) {
+  //         console.error('Error fetching technicians:', techError);
+  //       }
+        
+  //       // Success message and redirect
+  //       toast.success(`${formData.role === 'servicehead' ? 'Service Head' : formData.role === 'viewAccess' ? 'View Access' : 'Technician'} authenticated successfully!`);
+  //       router.push('/');
+  //     } else {
+  //       toast.error(`${formData.role === 'servicehead' ? 'Service Head' : formData.role === 'viewAccess' ? 'View Access' : 'Technician'} not found`);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error verifying OTP:', error);
+  //     toast.error('Invalid OTP. Please try again.');
+  //   } finally {
+  //     setIsVerifying(false);
+  //   }
+  // };  
+
   const verifyOtp = async () => {
     if (!formData.role) {
       toast.error('Please select a role');
@@ -117,7 +193,7 @@ export default function Login() {
 
       if (response.ok && data.exists) {
         localStorage.setItem('authToken', data.token);
-        toast.success(`Service Head authenticated successfully!`);
+        toast.success(`${formData.role === 'servicehead' ? 'Service Head' : formData.role === 'viewAccess' ? 'View Access' : 'Technician'} authenticated successfully!`);
         router.push('/');
       } else {
         toast.error(`${formData.role === 'servicehead' ? 'Service Head' : 'Technician'} not found`);
@@ -129,7 +205,6 @@ export default function Login() {
       setIsVerifying(false);
     }
   };
-
   const handleRoleChange = (selectedRole: string) => {
     if (selectedRole === 'viewAccess' || selectedRole === 'servicehead') {
       setFormData(prev => ({ ...prev, role: selectedRole }));

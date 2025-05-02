@@ -10,11 +10,18 @@ import { formatDate } from '../utils/dateUtils';
 import AssignedFilterDrawer from '../Filters/AssignedFilters';
 import { ACUnit } from '@/types/breakdown/Order';
 import AcInstallationDetails from '../ToolTips/AcInstallationDetails';
+import AssignedFilter from '../Filters/AssignedFilter';
 
 interface Address {
   location: string;
   latitude: string;
   longitude: string;
+}
+
+interface FilterParams {
+  startDate: string | null;   // ← previously Date | null
+  endDate: string | null;
+  statuses: string[];
 }
 
 interface Technician {
@@ -113,6 +120,45 @@ const AssignedInstallation: React.FC = () => {
     fetchAssignedOrders();
   }, []);
 
+  const fetchFilteredData = async (filters: FilterParams) => {
+    try {
+      const requestBody: any = {};
+  
+      if (filters.startDate) requestBody.startDate = filters.startDate;
+      if (filters.endDate) requestBody.endDate = filters.endDate;
+      if (filters.statuses?.length) requestBody.statuses = filters.statuses;
+  
+      if (Object.keys(requestBody).length === 0) {
+        setBackendData(originalData);
+        return;
+      }
+  
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/installation/getFilteredAssigned`,
+        requestBody
+      );
+  
+      const orders = res.data.map((order: any) => ({
+        _id: order._id,
+        task_id: order.task_id,
+        contactPerson: order.client_name,
+        customerDetails: order.client_number,
+        issueReported: order.description,
+        status: order.status,
+        devices: order.devices || [],
+        address: order.address.map((addr: Address) => addr.location).join(", ") || "N/A",
+        date: order.servicingDate,
+        deviceId: order.ac_units?.map((unit: any) => `${unit.type} (${unit.capacity})`).join(", ") || "N/A",
+        assignedTechnicians: order.assignedTechnicians || []
+      }));
+  
+      setBackendData(orders);
+    } catch (err) {
+      console.error("Failed to fetch filtered installation data", err);
+    }
+  };
+  
+
     useEffect(() => {
       if (selectedStartDate || selectedEndDate) {
         const filteredData = originalData.filter((order) => {
@@ -178,25 +224,6 @@ const AssignedInstallation: React.FC = () => {
       setCurrentPage(1);
   }, [searchQuery]);
 
-  const toggleDropdown = () => {
-    setIsOpen(!isOpen);
-  };
-
-  
-  const openDatePicker = () => {
-    setShowDatePicker(true);
-  };
-
-  const closeDatePicker = () => {
-    setShowDatePicker(false);
-  };
-
-  const resetDatePicker = () => {
-    setSelectedStartDate(null);
-    setSelectedEndDate(null);
-    setBackendData(originalData);
-  };
-
   return (
     <div>
         <div className="flex items-center justify-between mb-4">  
@@ -207,10 +234,7 @@ const AssignedInstallation: React.FC = () => {
               onChange={setSearchQuery}
             />
           </div>  
-          <AssignedFilterDrawer 
-                        originalData={originalData} 
-                        setFilteredData={setBackendData}
-                      />
+          <AssignedFilter fetchFilteredData={fetchFilteredData} />
         </div>
     <table className="w-full text-left table-auto min-w-max">
       <thead>
@@ -307,11 +331,11 @@ const AssignedInstallation: React.FC = () => {
     </table>
     <Pagination
           currentPage={currentPage}
-          totalItems={backendData.length}
+          totalItems={filteredOrders.length}
           itemsPerPage={itemsPerPage}
           paginate={paginate}
         />
-</div>
+  </div>
   );
 };
 

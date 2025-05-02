@@ -15,6 +15,7 @@ import Loader from "../common/Loader";
 import FilterDrawer from "../Filters/Filters";
 import { useRouter } from 'next/navigation';
 import ErrorPage from "../ErrorPage/Error";
+import AssignedFilter from "../Filters/AssignedFilter";
 
 interface OpenBreakdownProps {
   onLoadingComplete?: () => void;
@@ -131,41 +132,6 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
         <span>{date.toLocaleTimeString()}</span>
       </div>
     );
-  };
-
-  const downloadCSV = () => {
-    setShowAnimation(true);
-    const csvData = filteredData
-      .filter(order => !order.queryStatus && order.status === true)
-      .map((order) => ({
-        "Task ID": order._id,
-        "Contact Person": order.contactperson,
-        "Contact Number": order.contactnumber,
-        "Issue Reported": order.subject,
-        "Actual Address": order?.address,
-        "Customer Address": shippingAddresses.find((address) => address._id === order._id)
-          ?.customerData?.shipping_address[0]?.line1 || "N/A",
-        "Date": new Date(order.TimeStamp).toLocaleString(),
-        "Device ID": order.deviceid,
-      }));
-
-    // Generate and download CSV
-    const csv = Papa.unparse(csvData);
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    setTimeout(() => {
-      link.download = "complaints.csv";
-      link.style.display = "none";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }, 2000)
-    // Hide animation after 5 seconds
-    setTimeout(() => {
-      setShowAnimation(false);
-    }, 5000);
   };
 
   const activeOrders = filteredData.filter(
@@ -287,7 +253,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
               shippingAddresses={shippingAddresses}
             />
           </div>
-</div>
+        </div>
       </div>
     <div className="overflow-x-auto">
 

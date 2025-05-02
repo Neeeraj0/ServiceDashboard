@@ -1,6 +1,7 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import toast from 'react-hot-toast';
+import axios from 'axios'; // Make sure axios is imported
 
 type SSEContextType = {
   technicians: any[]; 
@@ -15,7 +16,25 @@ type SSEProviderProps = {
 export function SSEProvider({ children }: SSEProviderProps) {
   const [technicians, setTechnicians] = useState<any[]>([]); 
   
+  // Function to fetch fresh technicians list
+  const fetchTechnicians = async () => {
+    try {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/technicians/getTechnicians`);
+      const freshTechnicians = response.data;
+      
+      // Update localStorage with fresh data
+      localStorage.setItem('technicians', JSON.stringify(freshTechnicians));
+      // Update context state
+      setTechnicians(freshTechnicians);
+      toast.success("Technicians list refreshed");
+    } catch (error) {
+      console.error('Error fetching technicians:', error);
+      toast.error("Failed to refresh technicians list");
+    }
+  };
+  
   useEffect(() => {
+    // Initially load from localStorage
     const storedTechnicians = localStorage.getItem('technicians');
     if (storedTechnicians) {
       try {
@@ -29,6 +48,8 @@ export function SSEProvider({ children }: SSEProviderProps) {
     
     eventSource.onopen = () => {
       console.log('SSE connection opened successfully');
+      // Fetch fresh technicians list when connection is established
+      fetchTechnicians();
     };
     
     eventSource.onmessage = (event) => {

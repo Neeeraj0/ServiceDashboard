@@ -6,6 +6,7 @@ import { UserProvider } from "./context/UserContext";
 import OpenBreakdown from "@/components/BreakdownCalls/OpenBreakdown";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import OpenSetup from "@/components/SetupInstallation/OpenSetup";
+import Dashboard from "@/components/DataStats/DataStatsOne";
 
 export const metadata: Metadata = {
   title:
@@ -18,7 +19,7 @@ export default function Home() {
     <>
     <UserProvider>
           <DefaultLayout>
-            <OpenBreakdown /> 
+            <Dashboard /> 
           </DefaultLayout>
     </UserProvider>
     </>
