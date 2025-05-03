@@ -23,6 +23,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userPhone, setUserPhone] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [authToken, setAuthToken] = useState<string | null>(null);
 
   const decodeToken = (token: string) => {
     try {
@@ -41,7 +42,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loadUserFromToken = () => {
     setLoading(true);
+    // Get the token from localStorage
     const token = localStorage.getItem("authToken");
+    setAuthToken(token); // Update the authToken state
 
     if (!token) {
       console.log("No token found in localStorage");
@@ -74,9 +77,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(false);
   };
 
+  // Add event listener for localStorage changes
   useEffect(() => {
+    // Initial load of user data
     loadUserFromToken();
+
+    // Setup storage event listener for cross-tab sync
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === "authToken") {
+        loadUserFromToken();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
   }, []);
+
+  // Watch for token changes within the same tab
+  useEffect(() => {
+    const checkToken = setInterval(() => {
+      const currentToken = localStorage.getItem("authToken");
+      if (currentToken !== authToken) {
+        loadUserFromToken();
+      }
+    }, 1000); // Check every second
+
+    return () => clearInterval(checkToken);
+  }, [authToken]);
 
   const logout = () => {
     localStorage.removeItem("authToken");
@@ -86,6 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUserRole(null);
     setUserPhone(null);
     setUserId(null);
+    setAuthToken(null);
     window.location.reload();
   };
 

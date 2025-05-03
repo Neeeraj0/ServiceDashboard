@@ -79,7 +79,7 @@ const OverdueTasks: React.FC = () => {
       <div className="flex justify-between">
         <h2 className="text-lg font-semibold mb-4">Overdue Complaints</h2>
         <button
-          onClick={() => (window.location.href = "/queries/all")}
+          onClick={() => (window.location.href = "/breakdown/open")}
           className="text-blue-600"
         >
           Show All

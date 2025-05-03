@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '@/app/context/AuthContext';
 import Chart from 'chart.js/auto';
-import { Loader2, Plus, RefreshCwIcon } from 'lucide-react';
+import { Bell, CalendarCheck, CircleCheckBig, FolderOpenDot, Loader2, Plus, RefreshCwIcon, TriangleAlert, Wrench } from 'lucide-react';
 import AssignedTasks from './getAssigned';
 import OverdueTasks from './getOverdue';
 
@@ -121,12 +121,20 @@ function Dashboard() {
   const [timeFilter, setTimeFilter] = useState('7 Days');
   const [todayTasks, setTodayTasks] = useState<any[]>([]);
 
+  // Helper function to check if a date is today
+  const isToday = (dateString: string) => {
+    const taskDate = new Date(dateString);
+    const today = new Date();
+    
+    return taskDate.getFullYear() === today.getFullYear() &&
+           taskDate.getMonth() === today.getMonth() &&
+           taskDate.getDate() === today.getDate();
+  };
+
   // Calculate tasks by subject for today
   const calculateTodayTasksBySubject = (tasks: BreakdownSummary[]) => {
-    const todayDate = new Date().toISOString().split('T')[0];
-    const todayTasks = tasks.filter(task => 
-      task.TimeStamp.split('T')[0] === todayDate
-    );
+    // Filter for today's tasks using the helper function
+    const todayTasks = tasks.filter(task => isToday(task.TimeStamp));
 
     console.log("Today's tasks:", todayTasks);
 
@@ -147,13 +155,10 @@ function Dashboard() {
 
   // Calculate breakdown status counts
   const calculateBreakdownCounts = (tasks: BreakdownSummary[]) => {
-    const todayDate = new Date().toISOString().split('T')[0];
     const now = new Date();
     
-    // Today's tasks
-    const todayTasks = tasks.filter(task => 
-      task.TimeStamp.split('T')[0] === todayDate
-    ).length;
+    // Today's tasks - using the helper function
+    const todayTasks = tasks.filter(task => isToday(task.TimeStamp)).length;
     
     // Pending tasks (no resolvedAt and status is not complete)
     const pendingTasks = tasks.filter(task => 
@@ -168,7 +173,9 @@ function Dashboard() {
     // Overdue tasks (older than today and not resolved)
     const overdueTasks = tasks.filter(task => {
       const taskDate = new Date(task.TimeStamp);
-      return taskDate < now && !task.resolvedAt && task.queryStatus !== 'complete';
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      return taskDate < todayStart && !task.resolvedAt && task.queryStatus !== 'complete';
     }).length;
     
     setBreakdownCounts({
@@ -331,6 +338,8 @@ function Dashboard() {
         deviceid: order.deviceid || "N/A",
         orderModels: order.orderModels || [],
       }));
+      
+      // Filter active/open orders
       const activeOrders = processedData.filter(
         (order: any) =>
           order.status === true &&
@@ -338,10 +347,18 @@ function Dashboard() {
       );
       setBackendData(activeOrders);
       
-      // Get the latest 3 tasks (sort by timestamp desc)
-      const sortedTasks = [...activeOrders].sort((a, b) => 
+      // Get today's tasks using our helper function
+      const todaysActiveOrders = activeOrders.filter((order: any) => isToday(order.TimeStamp));
+      
+      // Sort today's tasks by timestamp (newest first)
+      const sortedTasks = [...todaysActiveOrders].sort((a, b) => 
         new Date(b.TimeStamp).getTime() - new Date(a.TimeStamp).getTime()
       );
+      
+      // Debug log for today's tasks
+      console.log("Today's active orders:", todaysActiveOrders.length);
+      console.log("First task timestamp:", sortedTasks[0]?.TimeStamp);
+      console.log("Current date for comparison:", new Date().toISOString());
       
       // Take first 3 tasks
       setTodayTasks(sortedTasks.slice(0, 3));
@@ -407,7 +424,6 @@ function Dashboard() {
   
   const { greeting, icon } = getTimeBasedGreeting();
 
-  // If auth is still loading, show a loading spinner
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -420,16 +436,29 @@ function Dashboard() {
     <>
       <div className="flex items-center justify-center">
         <div className="flex flex-col w-full">
-          {/* User Greeting Section */}
-          <div className="pb-6 pt-2 flex">
-            <h1 className="text-4xl font-extrabold text-black dark:text-white flex items-center space-x-3">
-              <img src={icon} alt={greeting} className="w-20 h-20" />
-              <span className="text-gray-500 dark:text-gray-400">
-                {greeting}
-              </span>, 
-              {userName?.split(' ')[0] || "User"}
-            </h1>
+          <div className="mt-[-8vh] lg:mt-[-10vh]">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+              
+              <div className="flex items-center space-x-3">
+                <img src={icon} alt={greeting} className="w-15 h-15 lg:w-25 lg:h-25" />
+                <h1 className="text-3xl sm:text-4xl font-extrabold text-black dark:text-white flex flex-wrap">
+                  <span className="text-gray-500 dark:text-gray-400 mr-1">{greeting}</span>
+                  <span>,&nbsp;{userName?.split(' ')[0] || "User"}</span>
+                </h1>
+              </div>
+
+              {/* Date */}
+              <p className="sm:text-lg text-black text-semibold dark:text-white">
+                {new Date().toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </p>
+            </div>
           </div>
+
 
           {isLoading ? (
             <div className="flex justify-center mt-[40vh] lg:mt-[50vh] items-center py-10">
@@ -450,28 +479,43 @@ function Dashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-10">
                 {/* Routine Servicing Section */}
                 <div className="rounded-lg p-6">
-                  <h2 className="text-xl font-extrabold text-gray-800 mb-4 dark:text-white">Routine Servicing</h2>
+                  <h2 className="text-xl flex gap-3 font-extrabold text-gray-800 mb-4 dark:text-white">
+                    <CalendarCheck />
+                    Routine Servicing
+                  </h2>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="rounded-lg shadow-md bg-white border-b  p-4">
-                      <p className="text-gray-700 font-medium">Today&apos;s tasks</p>
+                      <p className="text-gray-700 flex gap-2 font-medium">
+                        <FolderOpenDot />
+                        Today&apos;s tasks
+                      </p>
                       <div className="mt-2 flex items-center justify-center rounded-full bg-pink-100 text-pink-700 font-bold text-sm w-16 h-16">
                         1 
                       </div>
                     </div>
                     <div className="rounded-lg shadow-md bg-white border-b  p-4">
-                      <p className="text-gray-700 font-medium">Pending</p>
+                      <p className="text-gray-700 flex gap-2 font-medium">
+                        <TriangleAlert />
+                        Pending
+                      </p>
                       <div className="mt-2 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-700 font-bold text-sm w-16 h-16">
                         1 
                       </div>
                     </div>
                     <div className="rounded-lg shadow-md bg-white border-b p-4">
-                      <p className="text-gray-700 font-medium">Completed</p>
+                      <p className="text-gray-700 flex gap-2 font-medium">
+                        <CircleCheckBig />
+                        Completed
+                      </p>
                       <div className="mt-2 flex items-center justify-center rounded-full bg-green-100 text-green-700 font-bold text-sm w-16 h-16">
                         1 
                       </div>
                     </div>
                     <div className="rounded-lg shadow-md bg-white border-b p-4">
-                      <p className="text-gray-700 font-medium">Overdue</p>
+                      <p className="text-gray-700 flex gap-2 font-medium">
+                        <Bell />
+                        Overdue
+                      </p>
                       <div className="mt-2 flex items-center justify-center rounded-full bg-red-100 text-red-700 font-bold text-sm w-16 h-16">
                         1 
                       </div>
@@ -481,28 +525,43 @@ function Dashboard() {
 
                 {/* Breakdown Call Section */}
                 <div className="rounded-lg p-6">
-                  <h2 className="text-xl font-extrabold text-gray-800 mb-4 dark:text-white">Breakdown Calls</h2>
+                  <h2 className="text-xl flex gap-3 font-extrabold text-gray-800 mb-4 dark:text-white">
+                    <Wrench />
+                    Breakdown Calls
+                  </h2>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="rounded-lg shadow-md bg-white border-b p-4">
-                      <p className="text-gray-700 font-medium">Today&apos;s tasks</p>
+                      <p className="text-gray-700 flex gap-2 font-medium">
+                        <FolderOpenDot />
+                        Today&apos;s tasks
+                      </p>
                       <div className="mt-2 flex items-center justify-center rounded-full bg-pink-100 text-pink-700 font-bold text-sm w-16 h-16">
                         {displayCount}
                       </div>
                     </div>
                     <div className="rounded-lg shadow-md bg-white border-b p-4">
-                      <p className="text-gray-700 font-medium">Pending</p>
+                      <p className="text-gray-700 flex gap-2 font-medium">
+                        <TriangleAlert />
+                        Pending
+                      </p>
                       <div className="mt-2 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-700 font-bold text-sm w-16 h-16">
                         {breakdownCounts.pending}
                       </div>
                     </div>
                     <div className="rounded-lg shadow-md bg-white border-b p-4">
-                      <p className="text-gray-700 font-medium">Completed</p>
+                      <p className="text-gray-700 flex gap-2 font-medium">
+                        <CircleCheckBig />
+                        Completed
+                      </p>
                       <div className="mt-2 flex items-center justify-center rounded-full bg-green-100 text-green-700 font-bold text-sm w-16 h-16">
                         {breakdownCounts.completed}
                       </div>
                     </div>
                     <div className="rounded-lg shadow-md bg-white border-b p-4">
-                      <p className="text-gray-700 font-medium">Overdue</p>
+                      <p className="text-gray-700 flex gap-2 font-medium">
+                        <Bell />
+                        Overdue
+                      </p>
                       <div className="mt-2 flex items-center justify-center rounded-full bg-red-100 text-red-700 font-bold text-sm w-16 h-16">
                         {breakdownCounts.overdue}
                       </div>
@@ -513,7 +572,6 @@ function Dashboard() {
               
               {/* Chart Section - MODIFIED */}
               <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Left side: Chart Section */}
                 <div className="rounded-lg p-6 bg-white shadow-sm">
                   <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold text-gray-800">Breakdown Issues</h2>
