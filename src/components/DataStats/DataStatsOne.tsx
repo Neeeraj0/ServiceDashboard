@@ -609,7 +609,7 @@ function Dashboard() {
                 {/* Right side: Today's Open Tasks */}
                 <div className="flex flex-col">
                   <div className="bg-green-300 shadow-lg rounded-lg inline-block px-8 py-4 mb-6">
-                    <h2 className="text-xl font-bold text-gray-800">Today's Open Tasks</h2>
+                    <h2 className="text-xl font-bold text-gray-800">Today&apos;s Open Tasks</h2>
                   </div>
                   <div className="bg-white rounded-xl p-6 shadow-sm flex-grow overflow-y-auto max-h-[500px]">
                     {todayTasks.length > 0 ? (

@@ -57,7 +57,7 @@ const AssignedTasks: React.FC = () => {
   return (
     <div className="p-4">
       <div className="flex justify-between">
-        <h2 className="text-lg font-semibold mb-4">Today's Assigned Tasks</h2>
+        <h2 className="text-lg font-semibold mb-4">Today&apos;s Assigned Tasks</h2>
 
         <p className="text-blue-600 cursor-pointer">
             <button onClick={() => window.location.href="/breakdown/assigned"} className="text-blue-600">
