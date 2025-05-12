@@ -1,27 +1,27 @@
-import React, { useState, useCallback, useEffect, useMemo } from "react";
-import { format } from "date-fns";
+import React, { useState, useCallback } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { FiFilter, FiX, FiDownload, FiCheck } from "react-icons/fi";
-// import * as XLSX from "xlsx";
+import { FiFilter, FiX, FiDownload } from "react-icons/fi";
 import issuesList from '../utils/IssuesList';
 import locationPinCodes, { LocationKey } from "@/types/filters/LocationKeys";
 import { Order } from "@/types/breakdown/Order";
-import { ShippingAddress } from "@/types/breakdown/ShippingAddress";
 import toast from "react-hot-toast";
 import { Calendar1, RotateCcwIcon } from "lucide-react";
+import axios from "axios";
 
 interface FilterDrawerProps {
-  originalData: Order[];
-  setFilteredData: (data: Order[]) => void;
-  shippingAddresses: ShippingAddress[];
+  fetchFilteredData: (filters: FilterParams) => void;
+  handleDownloadExcel: () => void;
 }
 
-const FilterDrawer: React.FC<FilterDrawerProps> = ({ 
-  originalData, 
-  setFilteredData,
-  shippingAddresses
-}) => {
+interface FilterParams {
+  startDate: string | null;
+  endDate: string | null;
+  issues: string[];
+  locations: string[];
+}
+
+const FilterDrawer: React.FC<FilterDrawerProps> = ({ fetchFilteredData, handleDownloadExcel}) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
@@ -29,34 +29,20 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Helper function to get shipping address for an order
-  const getShippingAddress = useCallback((orderId: string) => {
-    const address = shippingAddresses.find((address) => address._id === orderId);
-    return address?.customerData?.shipping_address[0] || null;
-  }, [shippingAddresses]);
-
-  const handleToggleDrawer = () => {
-    setIsOpen((prev) => !prev);
-  };
-
-  const handleClickOutside = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).classList.contains("overlay")) {
-      setIsOpen(false);
-    }
-  };
+  const handleToggleDrawer = () => setIsOpen(prev => !prev);
 
   const handleIssueToggle = (value: string) => {
-    setSelectedIssues((prev) =>
+    setSelectedIssues(prev =>
       prev.includes(value)
-        ? prev.filter((item) => item !== value)
+        ? prev.filter(item => item !== value)
         : [...prev, value]
     );
   };
 
   const handleLocationToggle = (value: string) => {
-    setSelectedLocations((prev) =>
+    setSelectedLocations(prev =>
       prev.includes(value)
-        ? prev.filter((item) => item !== value)
+        ? prev.filter(item => item !== value)
         : [...prev, value]
     );
   };
@@ -66,96 +52,30 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
     setEndDate(null);
     setSelectedIssues([]);
     setSelectedLocations([]);
-    setFilteredData(originalData);
+    fetchFilteredData({
+      startDate: null,
+      endDate: null,
+      issues: [],
+      locations: []
+    });
     toast.success("Filters reset");
   };
-
-  const downloadExcel = async () => {
-    try {
-      setLoading(true);
-      toast.success("Preparing download...");
-      const XLSX = await import("xlsx"); 
-      
-      // Prepare data for export
-      const exportData = originalData
-        .filter(order => !order.queryStatus && order.status === true)
-        .map((order) => {
-          const shippingAddress = getShippingAddress(order._id);
-          const addressDisplay = shippingAddress
-            ? `${shippingAddress.line1}, ${shippingAddress.line2 || ""}, ${shippingAddress.city}, ${shippingAddress.state}, ${shippingAddress.pincode}`
-            : "N/A";
-            
-          return {
-            "Task ID": order._id,
-            "Contact Person": order.contactperson,
-            "Contact Number": order.contactnumber,
-            "Issue Reported": order.subject,
-            "Summary": order.summary,
-            "Customer Address": addressDisplay,
-            "Date": new Date(order.TimeStamp).toLocaleString(),
-            "Device ID": order.deviceid,
-          };
-        });
-      
-      const ws = XLSX.utils.json_to_sheet(exportData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Tasks");
-      XLSX.writeFile(wb, "service_tasks.xlsx");
-      toast.success("Download complete!");
-    } catch (error) {
-      console.error("Download failed:", error);
-      toast.error("Download failed. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  
 
   const applyFilters = useCallback(() => {
-    let filtered = [...originalData].filter(order => !order.queryStatus && order.status === true);
+    const formatToLocalDateString = (date: Date | null) =>
+      date ? `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}-${date.getDate().toString().padStart(2,'0')}` : null;
 
-    // Apply date filter
-    if (startDate && endDate) {
-      filtered = filtered.filter((order) => {
-        const orderDate = new Date(order.TimeStamp);
-        return orderDate >= startDate && orderDate <= endDate;
-      });
-    }
+    const filters: FilterParams = {
+      startDate: formatToLocalDateString(startDate),
+      endDate: formatToLocalDateString(endDate),
+      issues: selectedIssues,
+      locations: selectedLocations
+    };
 
-    // Apply issue filter
-    if (selectedIssues.length > 0) {
-      filtered = filtered.filter((order) => 
-        selectedIssues.includes(order.subject)
-      );
-    }
-
-    // Apply location filter
-    if (selectedLocations.length > 0) {
-      filtered = filtered.filter((order) => {
-        const shippingAddress = getShippingAddress(order._id);
-        return shippingAddress
-          ? selectedLocations.some((location) => 
-              locationPinCodes[location as LocationKey]?.includes(shippingAddress.pincode)
-            )
-          : false;
-      });
-    }
-
-    setFilteredData(filtered);
-    toast.success(`${filtered.length} tasks found`);
-  }, [startDate, endDate, selectedIssues, selectedLocations, originalData, getShippingAddress, setFilteredData]);
-
-  useEffect(() => {
-    if (isOpen) return; // Don't auto-apply when drawer opens
-    console.log("startDate", startDate);
-    console.log("endDate", endDate);
-    console.log("selectedIssues", selectedIssues);
-    console.log("selectedLocations", selectedLocations);
-    // Apply filters automatically when filter values change
-    if (startDate || endDate || selectedIssues.length > 0 || selectedLocations.length > 0) {
-      applyFilters();
-    }
-  }, [startDate, endDate, selectedIssues, selectedLocations, applyFilters, isOpen]);
-
+    fetchFilteredData(filters);
+    setIsOpen(false);
+  }, [startDate, endDate, selectedIssues, selectedLocations, fetchFilteredData]);
   return (
     <div className="relative">
       <button
@@ -169,7 +89,6 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
       {isOpen && (
         <div
           className="overlay fixed inset-0 z-40 bg-black bg-opacity-50 transition-opacity"
-          onClick={handleClickOutside}
         >
           <div
             className="absolute right-0 h-full w-full max-w-md transform bg-white p-6 shadow-xl transition-transform duration-300 ease-in-out sm:w-96 rounded-l-2xl"
@@ -241,7 +160,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
                 </div>
               </div>
 
-              <div>
+              {/* <div>
                 <h3 className="text-lg font-medium text-gray-900">Locations</h3>
                 <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
                   {Object.keys(locationPinCodes).map((location) => (
@@ -259,7 +178,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
                     </label>
                   ))}
                 </div>
-              </div>
+              </div> */}
 
               <div className="pt-4 border-t border-gray-200">
                 <div className="flex space-x-4">
@@ -277,7 +196,8 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
                 </div>
 
                 <button
-                  onClick={downloadExcel}
+                  onClick={handleDownloadExcel}
+                  type="button"
                   disabled={loading}
                   className="w-full mt-4 flex items-center justify-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
                 >

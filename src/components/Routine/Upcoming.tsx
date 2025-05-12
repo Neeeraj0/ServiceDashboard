@@ -33,8 +33,8 @@ const Upcoming: React.FC = () => {
   useEffect(() => {
     const fetchData = async (): Promise<void> => {
       setLoading(true);
-      const url = `http://35.154.208.29:8080/api/routine/orders/service-due/${filter}`;
-      // const url = `http://localhost:8000/api/routine/orders/service-due/${filter}`;
+      // const url = `https://app.dev.circolife.vip/api/routine/orders/service-due/${filter}`;
+      const url = `http://localhost:8000/api/routine/orders/service-due/${filter}`;
       try {
         const response = await axios.get<ServiceItem[]>(url);
         setData(response.data); 

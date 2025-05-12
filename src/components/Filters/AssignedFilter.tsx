@@ -82,8 +82,8 @@ const AssignedFilter: React.FC<FilterDrawerProps> = ({ fetchFilteredData }) => {
       // You'll need to modify this to get the filtered data from the API
       const formatDateToYMD = (date: Date | null) =>
         date ? `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}` : null;
-      // const response = await fetch(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/breakdown/getFilteredAssigned`, {
-        const response = await fetch(`http://localhost:8080/api/breakdown/getFilteredAssigned`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/breakdown/getFilteredAssigned`, {
+        // const response = await fetch(`http://localhost:8080/api/breakdown/getFilteredAssigned`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

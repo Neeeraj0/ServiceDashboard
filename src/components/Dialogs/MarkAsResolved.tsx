@@ -19,10 +19,11 @@ interface MarkAsResolvedProps {
   // customerComplaint: string ,
   // ac_units: ACUnit[],
   onResolved: (id: string) => void;
+  ac_units?: ACUnit[];
   order: Order
 }
 
-export default function MarkAsReolved({ orderId, onResolved, order}: MarkAsResolvedProps) {
+export default function MarkAsReolved({ orderId, onResolved, order, ac_units}: MarkAsResolvedProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [resolveNote, setResolveNote] = useState("");
   const [issueIdentified, setIssueIdentified] = useState("");
@@ -86,17 +87,84 @@ export default function MarkAsReolved({ orderId, onResolved, order}: MarkAsResol
         return;
       }
 
+      const transformedACUnit =
+  ac_units && ac_units.length > 0
+    ? ac_units.map((unit) => {
+        let type, capacity;
+        console.log("units", unit);
+
+        if (
+          unit?.model === "1 Ton" ||
+          unit?.model === "1.5 Ton" ||
+          unit?.model === "2 Ton" ||
+          unit?.model === "3 Ton"
+        ) {
+          type = "Split AC";
+          capacity =
+            unit.model === "1 Ton"
+              ? "S10"
+              : unit.model === "1.5 Ton"
+              ? "S15"
+              : unit.model === "2 Ton"
+              ? "S20"
+              : unit.model === "3 Ton"
+              ? "S30"
+              : unit.model;
+        } 
+        else if (unit?.model.startsWith("S")) {
+          type = "Split AC";
+          capacity =
+            unit.model === "S10"
+              ? "S10"
+              : unit.model === "S15"
+              ? "S15"
+              : unit.model === "S20"
+              ? "S20"
+              : unit.model;
+        } 
+        else if (unit?.model.startsWith("C")) {
+          type = "Cassette AC";
+          capacity =
+            unit.model === "C10"
+              ? "C10"
+              : unit.model === "C15"
+              ? "C15"
+              : unit.model === "C20"
+              ? "C20"
+              : unit.model === "C30"
+              ? "C30"
+              : unit.model;
+        } 
+        else {
+          type = "Split AC";
+          capacity = unit?.model;
+        }
+
+        return {
+          type,
+          capacity,
+          quantity: unit?.quantity,
+        };
+      })
+    : [
+        {
+          type: "Split AC",
+          capacity: "S10",
+          quantity: 1,
+        },
+      ];
+
       console.log('inside handle submit');
       console.log(token);
       const payload = {
         _id: orderId,
         address: order.address ,
         title: "Breakdown",
-        customerComplaint: order.customerComplaint ,
-        ac_units: [],
-        servicingDate: new Date().toISOString(),
+        customerComplaint: order.subject,
+        ac_units: transformedACUnit,
         assignedTechnicians: [""], 
         deviceId: order.deviceid,
+        complaintRaised: order.TimeStamp,
         quantity: 1,
         taskType: "breakdown",
         client_number: order.contactnumber,
@@ -111,6 +179,7 @@ export default function MarkAsReolved({ orderId, onResolved, order}: MarkAsResol
       console.log("Payload:", payload);
 
       const saveTaskResponse = await axios.post(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/tasks/saveMarkAsResolved`, payload, {
+      // const saveTaskResponse = await axios.post(`http://localhost:8080/api/tasks/saveMarkAsResolved`, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",

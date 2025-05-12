@@ -16,9 +16,17 @@ import FilterDrawer from "../Filters/Filters";
 import { useRouter } from 'next/navigation';
 import ErrorPage from "../ErrorPage/Error";
 import AssignedFilter from "../Filters/AssignedFilter";
+import CustomerInfoButton from "../ToolTips/CustomerContact";
 
 interface OpenBreakdownProps {
   onLoadingComplete?: () => void;
+}
+
+interface FilterParams {
+  startDate: string | null;
+  endDate: string | null;
+  issues: string[];
+  locations: string[];
 }
 
 const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
@@ -61,49 +69,48 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
     checkUserAccess();
   }, []);
 
+  const fetchTasks = async () => {
+    try {
+      const res = await axios.get("https://production.circolife.vip/api/query/queries/all", {
+        // const res = await axios.get("http://localhost:5000/api/query/queries/all", {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const fetchedData = res.data.allQueries.map((order: any) => ({
+        ...order,
+        contactperson: order.contactperson || "N/A",
+        contactnumber: order.contactnumber || "N/A",
+        subject: order.subject || "N/A",
+        summary: order.summery || "N/A",
+        address: [
+          order.flat || '',
+          order.area || '',
+          order.address || '',
+          order.city || '',
+          order.state || '',
+          order.pincode || ''
+      ]
+          .filter(part => part.trim() !== '') // Remove empty parts
+          .join(', ') || "N/A", // Join non-empty parts with a comma
+        deviceid: order.deviceid || "N/A",
+        orderModels: order.orderModels || [],
+      }));
+
+      setBackendData(fetchedData);
+      setOriginalData(fetchedData);
+      setFilteredData(fetchedData);
+      
+    } catch (err: any) {
+      console.error("Error fetching data: ", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+      onLoadingComplete?.();
+    }
+  };
   useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const res = await axios.get("https://production.circolife.vip/api/query/queries/all", {
-          // const res = await axios.get("http://localhost:5000/api/query/queries/all", {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        const fetchedData = res.data.allQueries.map((order: any) => ({
-          ...order,
-          contactperson: order.contactperson || "N/A",
-          contactnumber: order.contactnumber || "N/A",
-          subject: order.subject || "N/A",
-          summary: order.summery || "N/A",
-          address: [
-            order.flat || '',
-            order.area || '',
-            order.address || '',
-            order.city || '',
-            order.state || '',
-            order.pincode || ''
-        ]
-            .filter(part => part.trim() !== '') // Remove empty parts
-            .join(', ') || "N/A", // Join non-empty parts with a comma
-          deviceid: order.deviceid || "N/A",
-          orderModels: order.orderModels || [],
-        }));
-
-        setBackendData(fetchedData);
-        setOriginalData(fetchedData);
-        setFilteredData(fetchedData);
-        
-      } catch (err: any) {
-        console.error("Error fetching data: ", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-        onLoadingComplete?.();
-      }
-    };
-
     fetchTasks();
   }, [onLoadingComplete, refreshKey]);
 
@@ -141,14 +148,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
   );
   
   const searchFilteredOrders = activeOrders.filter((order) =>
-    order.contactperson.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const indexOfLastOrder = currentPage * itemsPerPage;
-  const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
-  const currentOrders = searchFilteredOrders.slice(
-    indexOfFirstOrder,
-    indexOfLastOrder
+    order?.contactperson?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleTaskAssigned = (id: string) => {
@@ -185,6 +185,121 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
     triggerRefresh();
   }
 
+  const fetchFilteredData = async (filters: FilterParams) => {
+    try {
+      setLoading(true);
+      // Prepare request body
+      const requestBody: any = {};
+
+      if (filters.startDate) {
+        requestBody.startDate = filters.startDate;
+      }
+      
+      if (filters.endDate) {
+        requestBody.endDate = filters.endDate;
+      }
+
+      if (filters.issues.length > 0) {
+        requestBody.issues = filters.issues;
+      }else{
+        requestBody.issues = [];
+      }
+      
+      if (filters.locations.length > 0) {
+        requestBody.locations = filters.locations;
+      }else{
+        requestBody.locations = [];
+      }
+      
+      // If no filters applied, fetch all data
+      if (Object.keys(requestBody).length === 0) {
+        return fetchTasks();
+      }
+      
+      const res = await axios.post(
+        `http://localhost:5000/api/query/queries/filter`,
+        requestBody
+      );
+
+      const orders = res.data.filteredQueries.map((order: any) => ({
+        ...order,
+        contactperson: order.contactperson || "N/A",
+        contactnumber: order.contactnumber || "N/A",
+        subject: order.subject || "N/A",
+        summary: order.summery || "N/A",
+        address: [
+          order.flat || '',
+          order.area || '',
+          order.address || '',
+          order.city || '',
+          order.state || '',
+          order.pincode || ''
+      ]
+          .filter(part => part.trim() !== '') // Remove empty parts
+          .join(', ') || "N/A", // Join non-empty parts with a comma
+        deviceid: order.deviceid || "N/A",
+        orderModels: order.orderModels || [],
+      }));
+      
+      setBackendData(orders);
+      setFilteredData(orders); 
+    } catch (error) {
+      console.error("Error fetching filtered data:", error);
+      toast.error("Failed to apply filters");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDownloadExcel = async () => {
+    try {
+      setLoading(true);
+      toast.success("Preparing download...");
+  
+      const XLSX = await import("xlsx");
+  
+      const formatDate = (dateStr: string) => {
+        const date = new Date(dateStr);
+        return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+      };
+  
+      // Export exactly what's shown in UI (active, open, search-filtered)
+      const dataToExport = searchFilteredOrders;
+  
+      const exportData = dataToExport.map((order: Order, index) => {
+        const shippingAddress = getShippingAddress(order._id);
+        const addressDisplay = shippingAddress
+          ? `${shippingAddress.line1}, ${shippingAddress.line2 || ""}, ${shippingAddress.city}, ${shippingAddress.state}, ${shippingAddress.pincode}`
+          : order.address;
+  
+        return {
+          "S.No": index + 1,
+          "Contact Person": order.contactperson,
+          "Contact Number": order.contactnumber,
+          "Issue Reported": order.subject,
+          "Issue Summary": order.summary,
+          "Customer Address": addressDisplay || "N/A",
+          "Date": formatDate(order.TimeStamp),
+          "Device ID": order.deviceid || "N/A",
+        };
+      });
+  
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Breakdowns");
+  
+      XLSX.writeFile(wb, "breakdown_tasks.xlsx");
+  
+      toast.success("Download complete!");
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to download Excel.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+
   const handleRaiseQueryBeta = () => {
     const token = localStorage.getItem('authToken');
     if (!token) {
@@ -210,7 +325,15 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
     window.location.href = queryURL.toString();
   };
 
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+    // Pagination logic
+    const indexOfLastOrder = currentPage * itemsPerPage;
+    const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
+    const filteredOrders = searchFilteredOrders.filter((order) =>
+      order?.contactperson?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
+  
+    const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   if (loading) return <Loader />;
   if (error) return <ErrorPage error={error} />;
@@ -248,9 +371,8 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
             </button>
 
             <FilterDrawer
-              originalData={originalData}
-              setFilteredData={setFilteredData}
-              shippingAddresses={shippingAddresses}
+              fetchFilteredData={fetchFilteredData}
+              handleDownloadExcel={handleDownloadExcel}
             />
           </div>
         </div>
@@ -272,6 +394,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Issue Reported</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Issue Description</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer Address</th>
+            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Contact Customer</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Date</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Device ID</th>
             {hasAssignAccess && <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Assign Task</th>}
@@ -309,6 +432,15 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
                   <td className="p-2 border-b border-blue-gray-50 text-wrap max-w-50">
                     {(order.address !== "N/A" && order.address !== "Not Available") ? order?.address : addressDisplay}
                   </td>
+                  <td className="p-2 border-b border-blue-gray-50 text-wrap max-w-50">
+                    <CustomerInfoButton
+                      queryId = {order._id}
+                      customerId = {order.userid}
+                      customerEmail = {order.contactemail}
+                      customerName = {order.contactperson}
+                      customerPhone = {order.contactnumber} 
+                    />
+                  </td>
                   <td className="p-2 border-b border-blue-gray-50 text-wrap text-sm flex-wrap">
                     {formatDate(order.TimeStamp)}
                   </td>
@@ -335,12 +467,18 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
       </table>
 
     </div>
-    <Pagination
-      currentPage={currentPage}
-      totalItems={searchFilteredOrders.length}
-      itemsPerPage={itemsPerPage}
-      paginate={paginate}
-    />
+      {/* <Pagination
+        currentPage={currentPage}
+        totalItems={searchFilteredOrders.length}
+        itemsPerPage={itemsPerPage}
+        paginate={paginate}
+      /> */}
+      <Pagination
+        currentPage={currentPage}
+        totalItems={filteredOrders.length}
+        itemsPerPage={itemsPerPage}
+        paginate={paginate}
+      />
     </>
   );
 };

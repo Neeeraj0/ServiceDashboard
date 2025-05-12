@@ -5,6 +5,8 @@ export type ACUnit = {
 
 export type Order = {
     _id: string;
+    userid?: string;
+    contactemail?: string;
     contactperson: string;
     contactnumber: string;
     address: string;
