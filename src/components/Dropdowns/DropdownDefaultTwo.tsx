@@ -80,6 +80,11 @@ const DropdownDefaultTwo = ({
               <MarkAsResolved 
                 orderId={orderId}
                 order= {order}
+                ac_units={
+                  Array.isArray(order.orderModels) && typeof order.orderModels[0] === "string"
+                    ? transformOrderModels(order.orderModels as (string | number | null)[])
+                    : (order.orderModels as ACUnit[])
+                }
                 onResolved={onResolved}
               />
             </div>

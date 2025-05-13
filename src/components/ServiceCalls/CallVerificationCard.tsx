@@ -53,7 +53,7 @@ const CallVerificationCard = ({ call, onCallUpdated, status }: {
     try {
       setIsVerifying(true);
       toast.loading('Verifying call...');
-      const res = await axios.put(`http://localhost:5000/api/query/customerCalls/verifyCustomerCall/${callId}`);
+      const res = await axios.put(`https://production.circolife.vip/api/query/customerCalls/verifyCustomerCall/${callId}`);
       toast.dismiss();
 
       if (res.status === 200) {

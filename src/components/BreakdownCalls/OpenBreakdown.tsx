@@ -72,7 +72,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
   const fetchTasks = async () => {
     try {
       const res = await axios.get("https://production.circolife.vip/api/query/queries/all", {
-        // const res = await axios.get("http://localhost:5000/api/query/queries/all", {
+        // const res = await axios.get("https://app.dev.circolife.vip/api/query/queries/all", {
         headers: {
           "Content-Type": "application/json",
         },
@@ -217,7 +217,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
       }
       
       const res = await axios.post(
-        `http://localhost:5000/api/query/queries/filter`,
+        `https://production.circolife.vip/api/query/queries/filter`,
         requestBody
       );
 

@@ -14,7 +14,7 @@ const CallVerificationPanel = () => {
   // Fetch pending calls
   const fetchPendingCalls = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/query/customerCalls/PendingVerifications`)
+      const response = await fetch(`https://production.circolife.vip/api/query/customerCalls/PendingVerifications`)
       const data = await response.json()
       
       if (data.success) {
@@ -28,7 +28,7 @@ const CallVerificationPanel = () => {
   // Fetch verified calls
   const fetchVerifiedCalls = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/query/customerCalls/verified')
+      const response = await fetch('https://production.circolife.vip/api/query/customerCalls/verified')
       const data = await response.json()
       
       if (data.success) {
@@ -42,7 +42,7 @@ const CallVerificationPanel = () => {
   // Fetch flagged calls
   const fetchFlaggedCalls = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/query/customerCalls/flagged')
+      const response = await fetch('https://production.circolife.vip/api/query/customerCalls/flagged')
       const data = await response.json()
       
       if (data.success) {

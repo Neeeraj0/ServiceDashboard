@@ -97,7 +97,7 @@ export default function CustomerInfoButton({
           queries: QueryData[];
           stats?: any;
         };
-      }>(`http://35.154.99.208:5000/api/query/userInfo/${customerId || customerEmail}`, {
+      }>(`https://production.circolife.vip/api/query/userInfo/${customerId || customerEmail}`, {
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem('authToken')}`
@@ -235,7 +235,7 @@ export default function CustomerInfoButton({
     console.log("Submitting contact information:", note);
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/query/queries/${queryId}/contact-log`,
+        `https://production.circolife.vip/api/query/queries/${queryId}/contact-log`,
         {
           note,
           contactedBy: userName, // e.g. from context or auth
@@ -259,7 +259,7 @@ export default function CustomerInfoButton({
 
   return (
     <div className="relative">
-      <div className="relative inline-block group">
+      <div className="relative inline-block group ml-10">
         <button
           type="button"
           onClick={() => setShowPanel(true)}
