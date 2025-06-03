@@ -121,7 +121,7 @@ export default function ReAssignTask({
     };
 
     const queryData = {
-        queryStatus: "assign",
+        queryStatus: "Assigned",
       };
 
     try {
@@ -132,7 +132,8 @@ export default function ReAssignTask({
       })
       axios({
         method: "PUT",
-        url: `${'http://35.154.99.208:5000/api/query/changeQueryStatus'}/${orderId}`,
+        // url: `${'http://35.154.99.208:5000/'}/${orderId}`,
+        url: `${'https://production.circolife.vip/api/queryApi/updateQueryStatus'}/${orderId}`,
         headers: {
           "Content-Type": "application/json",
         },

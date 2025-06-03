@@ -51,7 +51,7 @@ const ProfileSection = () => {
     <div className="relative p-4 border-t border-gray-200 dark:border-gray-700">
       <div className="flex items-center space-x-3 cursor-pointer" onClick={togglePopover}>
         <div className="flex-shrink-0">
-          <User2 className="h-7 w-7 text-black rounded-xl bg-gray-100 shadow-lg" />
+          <User2 className="h-7 w-7 text-black rounded-xl" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{userName}</p>
@@ -62,9 +62,9 @@ const ProfileSection = () => {
         </div>
       </div>
 
-      {/* {isPopoverOpen && (
+      {isPopoverOpen && (
         <ProfilePopover userName={userName} userRole={userRole} userEmail={userEmail} userPhone={userPhone} userId={userId} onClose={togglePopover} />
-      )} */}
+      )}
     </div>
   );
 };

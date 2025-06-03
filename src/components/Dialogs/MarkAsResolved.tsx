@@ -190,16 +190,25 @@ export default function MarkAsReolved({ orderId, onResolved, order, ac_units}: M
         toast.error("Failed to save task resolution");
       }
 
+      const now = new Date();
+      const istDateTime = now.toLocaleString('sv-SE', { 
+          timeZone: 'Asia/Kolkata' 
+      }).replace(' ', 'T');
+
       const summaryResponse = await fetch(
-        `https://testing.backend.summary.circolife.vip/api/summary/queryresolved/?id=${orderId}`,
+        // `https://app.dev.circolife.vip/api/queryApi/updateQueryStatus/?id=${orderId}`,
+        `https://production.circolife.vip/api/queryApi/updateQueryStatus/${orderId}`,
         {
-          method: "POST",
+          method: "PUT",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            resolvenote: resolveNote,
+            status: false,
+            queryStatus: "Completed",
+            resolvedNote: resolveNote,
+            resolvedTimeStamp: istDateTime,
           }),
         }
       );

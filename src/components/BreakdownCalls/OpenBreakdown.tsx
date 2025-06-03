@@ -418,10 +418,13 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
                 <tr key={order._id} className={removingId === order._id ? "fade-out" : ""}>
                   <td className="p-2 border-b border-blue-gray-50 text-sm">{index + 1}</td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
-                    {order.contactperson} <br /> {order.contactnumber}
+                    {order.contactperson} <br /> {order.contactnumber} <br />
+                    {order.alternateContactPersonName && order.alternateNumber && (
+                      <b className="font-bold">Alternate: {order.alternateContactPersonName} <br /> {order.alternateNumber} </b>
+                    )}
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
-                    {order.contactperson} <br /> {order.contactnumber}
+                    {order.customerName ? order.customerName : order.contactperson} <br /> {order.contactnumber}
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
                     {order.subject}

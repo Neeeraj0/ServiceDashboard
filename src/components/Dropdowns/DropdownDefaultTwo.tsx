@@ -54,9 +54,12 @@ const DropdownDefaultTwo = ({
             <div className="py-1 gap-1 flex flex-col items-center justify-center mx-auto">
               <AssignTask
                 orderId={orderId}
+                customerName={order.customerName || ''}
                 clientName={order.contactperson}
                 clientNumber={order.contactnumber}
                 description={order.summary}
+                customerId={order?.customer_id || ''}
+                deviceId={order.deviceid}
                 complaintRaised={order.TimeStamp}
                 customerComplaint={order.subject}
                 // addressDisplay={

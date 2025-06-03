@@ -1,0 +1,65 @@
+{
+    "piny.project_settings": {
+        "open-pages": [
+            "pinyfakepage.html"
+        ],
+        "urls": {
+            "pinyfakepage.html": {
+                "open-page-views": [
+                    {
+                        "w": 480,
+                        "h": 0
+                    }
+                ]
+            }
+        },
+        "component-settings": {
+            "src/app/account-settings/manageTechnicians/page.jsx:::TechnicianGanttChart": {}
+        },
+        "app-routes": {
+            "routes": [
+                "/",
+                "/account-settings",
+                "/account-settings/manageTechnicians",
+                "/account-settings/registration",
+                "/api/technicians/updates",
+                "/auth/signin",
+                "/breakdown/assigned",
+                "/breakdown/completed",
+                "/breakdown/open",
+                "/calendar",
+                "/charts/basic-chart",
+                "/forms/form-elements",
+                "/forms/form-layout",
+                "/installation/approvalPending",
+                "/installation/assigned",
+                "/installation/completed",
+                "/installation/open",
+                "/login",
+                "/piping/approvalPending",
+                "/piping/assigned",
+                "/piping/completed",
+                "/piping/open",
+                "/profile",
+                "/routine/assigned",
+                "/routine/completed",
+                "/routine/overdue",
+                "/routine/upcoming",
+                "/serviceCalls",
+                "/settings/page",
+                "/setup/approvalPending",
+                "/setup/assigned",
+                "/setup/completed",
+                "/setup/open",
+                "/site-survey/approvalPending",
+                "/site-survey/assigned",
+                "/site-survey/completed",
+                "/site-survey/open",
+                "/tables",
+                "/ui-elements/alerts",
+                "/ui-elements/buttons"
+            ],
+            "current_route": "/breakdown/open"
+        }
+    }
+}

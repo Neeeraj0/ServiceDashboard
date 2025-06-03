@@ -1,10 +1,10 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { ACUnit } from "@/types/routine/AcUnit";
 import { useAuth } from "@/app/context/AuthContext";
 import { useTechnicians } from "@/hooks/useTechnicians";
 import toast from "react-hot-toast";
+import { ACUnit } from "@/types/routine/AcUnit";
 
 interface Technician {
   name: string;
@@ -19,7 +19,12 @@ interface AssignTaskProps {
   complaintRaised: string;
   addressDisplay: string;
   customerComplaint: string;
-  deviceId: string;
+  deviceId?: string;
+  deviceIds?: string[];     
+  acUnits?: ACUnit[];
+  totalQuantity?: number;
+  isPartial: boolean;
+  onTaskAssigned?: () => void; // Add callback prop
 }
 
 export default function RoutineAssignTask({
@@ -30,7 +35,12 @@ export default function RoutineAssignTask({
   complaintRaised,
   addressDisplay,
   customerComplaint,
-  deviceId
+  deviceId,
+  deviceIds = [], // Default to empty array if not provided
+  acUnits = [], // Default to empty array if not provided
+  totalQuantity = 0,// Default to 0 if not provided
+  isPartial,
+  onTaskAssigned // Add callback prop
 }: AssignTaskProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [technicianName, setTechnicianName] = useState("");
@@ -38,48 +48,36 @@ export default function RoutineAssignTask({
   const [servicingTime, setServicingTime] = useState("");
   const [filteredTechnicians, setFilteredTechnicians] = useState<Technician[]>([]);
   const [selectedTechnicians, setSelectedTechnicians] = useState<Technician[]>([]);
-  const [acUnits, setAcUnits] = useState<ACUnit[]>([]);
-  const [totalQuantity, setTotalQuantity] = useState<number>(0);
+  const [localAcUnits, setLocalAcUnits] = useState<ACUnit[]>(acUnits);
+  const [localTotalQuantity, setLocalTotalQuantity] = useState<number>(totalQuantity);
   const {userName} = useAuth();
-  const [address, setAddress] = useState<string>("");
-  const [deviceName, setDeviceName] = useState("");
   const technicians = useTechnicians();
   const apiCalled = useRef(false);
+  console.log("address display", addressDisplay);
   
+  // Update local state when props change
   useEffect(() => {
-    const fetchACDetails = async () => {
-      if (!isOpen || !orderId || apiCalled.current) return;
-      
-      try {
-        apiCalled.current = true;
-        const response = await axios.get(`http://localhost:5000/api/orders/getOrderById/${orderId}`);
-        const orders = response.data.data;
-        
-        const acDetails = orders.map((order: any) => ({
-          model: order.model,
-          quantity: order.quantity || 1,
-          type: order.ac_type === "split" ? "Split AC" : "Cassette AC",
-          deviceName: order.deviceName 
-        }));
+    setLocalAcUnits(acUnits);
+    setLocalTotalQuantity(totalQuantity);
+  }, [acUnits, totalQuantity]);
 
-        const quantity = orders.reduce((total: number, order: any) => total + order.quantity, 0);
-
-        setAcUnits(acDetails);
-        setTotalQuantity(quantity);
-      } catch (error) {
-        console.error("Error fetching AC details:", error);
-      }
-    };
-
-    fetchACDetails();
+  const formatSelectedDevices = (deviceId: string, isPartial: boolean, totalQuantity: number) => {
+    if (!deviceId) return "No device selected";
     
-    // Cleanup function to reset the apiCalled ref when the modal closes
-    return () => {
-      if (!isOpen) {
-        apiCalled.current = false;
-      }
-    };
-  }, [orderId, isOpen]);
+    const deviceIds = deviceId.split(', ').filter(id => id.trim() !== '');
+    const deviceCount = deviceIds.length;
+    
+    if (!isPartial && deviceCount > 3) {
+      return `All devices selected (${deviceCount} devices)`;
+    }
+    
+    if (deviceCount > 3) {
+      const firstThree = deviceIds.slice(0, 3).join(', ');
+      return `${firstThree} + ${deviceCount - 3} more`;
+    }
+    
+    return deviceId;
+  };
 
   const handleTechnicianInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
@@ -121,43 +119,54 @@ export default function RoutineAssignTask({
     e.preventDefault();
     const servicingDateTime = mergeDateTimeToISO(servicingDate, servicingTime);
     if (!servicingDateTime) {
-      alert("Invalid servicing date or time.");
+      toast.error("Invalid servicing date or time.");
       return;
+    }else if(selectedTechnicians.length === 0){
+      toast.error("Need to select at least one technician");
+      return;
+    }else if(localAcUnits.length === 0){
+      return toast.error("You need to select atleast one AC unit for multiple units case");
     }
 
     const taskDataCreation = {
       orderId: orderId,
       title: "Routine",
       customerComplaint: customerComplaint,
-      description: 'Periodic service after every 90 days',
+      description: description || 'Periodic service after every 90 days',
       servicingDate: servicingDateTime,
       status: "open",
-      address: [{ location: address ? address : "N/A" }],
+      address: [{ location: addressDisplay ? addressDisplay : "N/A" }],
       client_number: clientNumber,
       client_name: clientName,
-      ac_units: acUnits.map((unit) => ({
-        type: 'Split AC',
-        capacity: unit.model,
-        quantity: unit.quantity,
-        deviceName: unit.deviceName
-      })),
-      quantity: totalQuantity,
+      ac_units: localAcUnits,
+      quantity: localTotalQuantity || 1,
       taskType: "routine",
       complaintRaised,
       assignedBy: userName ? [userName] : [], 
-      deviceId: deviceId,
+      // deviceId: deviceId,
+      // deviceIds: deviceIds, // Pass the deviceIds prop
+      ...(deviceIds.length > 0
+      ? { deviceIds }
+      : { deviceId }),
       assignedTechnicians: selectedTechnicians.map((tech) => tech.name),
+      isPartial: isPartial,
     };
 
+    console.log("payload", taskDataCreation);
+
     try {
-      await axios.post(`http://35.154.208.29:8080/api/tasks`, taskDataCreation, {
-      // await axios.post(`http://localhost:8000/api/tasks`, taskDataCreation, {
+      await axios.post(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/tasks`, taskDataCreation, {
+      // await axios.post(`http://localhost:8080/api/tasks`, taskDataCreation, {
         headers: {
           "Content-Type": "application/json",
         },
       });
       toast.success("Task assigned successfully");
       setIsOpen(false);
+      
+      if (onTaskAssigned) {
+        onTaskAssigned();
+      }
     } catch (error) {
       console.error("Error assigning task:", error);
       alert("Failed to assign task");
@@ -195,15 +204,31 @@ export default function RoutineAssignTask({
               </Dialog.Description>
 
               <Dialog.Close asChild>
-                  <button
-                      aria-label="Close"
-                      className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none"
-                  >
-                      &times;
-                  </button>
-               </Dialog.Close>
+                <button
+                  aria-label="Close"
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none"
+                >
+                  &times;
+                </button>
+              </Dialog.Close>
 
               <form onSubmit={handleAssignTask} className="mt-4">
+                <div className="mb-4">
+                  <label className="block font-sans text-[14px] text-gray-700 mb-1">Customer Details</label>
+                  <div className="bg-gray-50 p-3 rounded-md">
+                    <p className="text-sm"><span className="font-medium">Customer:</span> {clientName}</p>
+                    <p className="text-sm"><span className="font-medium">Contact:</span> {clientNumber}</p>
+                    {/* <p className="text-sm"><span className="font-medium truncate">Selected Devices:</span> {deviceId ? deviceId : "No device selected"}</p> */}
+                    <p className="text-sm">
+                      <span className="font-medium">Selected Devices:</span>{' '}
+                      <span className="break-words">
+                        {formatSelectedDevices(deviceId || "", isPartial, totalQuantity)}
+                      </span>
+                    </p>
+                    <p className="text-sm"><span className="font-medium">Address:</span> {addressDisplay}</p>
+                  </div>
+                </div>
+
                 <div className="mb-6 relative">
                   <label className="block font-sans text-[14px] text-gray-700 mb-1">Technician Name</label>
                   <input

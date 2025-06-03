@@ -19,7 +19,7 @@ const ProfilePopover: React.FC<ProfilePopoverProps> = ({ userName, userRole, use
     const router = useRouter();
 
     const handleProfileClick = () => {
-        router.push('https://complaints.circolife.vip');
+        router.push('/account-settings');
         onClose();
     };
     return (
@@ -30,22 +30,22 @@ const ProfilePopover: React.FC<ProfilePopoverProps> = ({ userName, userRole, use
         >
         <div className="mb-2 flex items-center justify-between gap-4">
             <UserCircle2Icon width={50} height={50}/>
-            {/* <button
-                className="select-none rounded-lg bg-gradient-to-tr from-pink-600 to-pink-400 py-2 px-4 text-center align-middle font-sans text-xs font-medium capitalize text-white shadow-md shadow-pink-500/20 transition-all hover:shadow-lg hover:shadow-pink-500/40 active:opacity-[0.85] disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-                type="button"
-                data-ripple-light="true"
-                onClick={handleProfileClick}
-                >
-                Go To Profile
-            </button> */}
             <button
                 className="select-none rounded-lg bg-gradient-to-tr from-pink-600 to-pink-400 py-2 px-4 text-center align-middle font-sans text-xs font-medium capitalize text-white shadow-md shadow-pink-500/20 transition-all hover:shadow-lg hover:shadow-pink-500/40 active:opacity-[0.85] disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
                 type="button"
                 data-ripple-light="true"
                 onClick={handleProfileClick}
                 >
-                Raise A Query
+                Go To Profile
             </button>
+            {/* <button
+                className="select-none rounded-lg bg-gradient-to-tr from-pink-600 to-pink-400 py-2 px-4 text-center align-middle font-sans text-xs font-medium capitalize text-white shadow-md shadow-pink-500/20 transition-all hover:shadow-lg hover:shadow-pink-500/40 active:opacity-[0.85] disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+                type="button"
+                data-ripple-light="true"
+                onClick={handleProfileClick}
+                >
+                Raise A Query
+            </button> */}
         </div>
         <h6 className="mb-2 flex items-center gap-2 font-sans text-base font-medium leading-relaxed tracking-normal text-blue-gray-900 antialiased">
             <span>{userName}</span> 

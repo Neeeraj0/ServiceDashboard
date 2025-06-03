@@ -15,6 +15,9 @@ interface Technician {
 interface AssignTaskProps {
   orderId: string;
   clientName: string;
+  deviceId: string;
+  customerId: string;
+  customerName: string;
   clientNumber: string;
   description: string;
   complaintRaised: string;
@@ -30,6 +33,9 @@ let techniciansCache: Technician[] | null = null;
 export default React.memo(function AssignTask({
   orderId,
   clientName,
+  customerName,
+  deviceId,
+  customerId,
   clientNumber,
   description,
   complaintRaised,
@@ -59,7 +65,7 @@ export default React.memo(function AssignTask({
   
       if (cachedTechnicians.length === 0) {
         try {
-          const response = await axios.get('https://servicebackend.circolife.vip/api/technicians/getTechnicians');
+          const response = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/technicians/getTechnicians`);
           localStorage.setItem("technicians", JSON.stringify(response.data)); // Cache the data
           setTechnicians(response.data); // Update state with fresh data
           console.log('Fetched technicians:', response);
@@ -244,9 +250,11 @@ export default React.memo(function AssignTask({
       description,
       servicingDate: servicingDateTime,
       status: "open",
+      deviceId: deviceId,
       address: [{ location: addressDisplay }],
+      customerId: customerId,
       client_number: clientNumber,
-      client_name: clientName,
+      client_name: customerName ? customerName : clientName,
       ac_units: transformedACUnit,
       taskType: "breakdown",
       complaintRaised,
@@ -258,14 +266,15 @@ export default React.memo(function AssignTask({
       await axios.post(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/tasks`, taskDataCreation, {
         headers: { "Content-Type": "application/json" },
       });
-      // await axios.post(`http://35.154.208.29:8080/api/tasks`, taskDataCreation, {
+      // await axios.post(`http://localhost:8080/api/tasks`, taskDataCreation, {
       //   headers: { "Content-Type": "application/json" },
       // });
 
       // Update query status
-      await axios.put(
-        `https://production.circolife.vip/api/query/changeQueryStatus/${orderId}`,
-        { queryStatus: "assign" },
+      await axios.patch(
+        // `https://production.circolife.vip/api/query/changeQueryStatus/${orderId}`,
+        `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/queryApi/updateQueryStatus/${orderId}`,
+        { queryStatus: "Assigned" },
         { headers: { "Content-Type": "application/json" } }
       );
 

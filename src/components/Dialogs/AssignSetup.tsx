@@ -10,8 +10,8 @@ interface ACUnit {
   type: string;
   capacity: string;
   quantity: number;
-  model: string;
-  orderId: string; // Make sure this matches the property you are using
+  model?: string;
+  orderId?: string; // Make sure this matches the property you are using
 }
 
 interface Technician {
@@ -217,13 +217,13 @@ export default function AssignSetup({
         // Dynamically generate the device name
         const deviceName =
           unit.type === "Split AC"
-            ? `S${unit.capacity}-${i + 1}`
+            ? `${unit.capacity}-${i + 1}`
             : unit.type === "Cassette AC"
-            ? `C${unit.capacity}-${i + 1}`
+            ? `${unit.capacity}-${i + 1}`
             : `${unit.capacity}-${i + 1}`; // Default case if the type is neither Split nor Cassette
     
         return {
-          type: unit.type + " AC",
+          type: unit.type,
           capacity: modelCapacity,
           quantity: 1,
           deviceName: deviceName, // Correct dynamic device name

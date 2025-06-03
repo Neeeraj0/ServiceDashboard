@@ -24,19 +24,18 @@ export default function CompletedApproveTask({
     counterMeasures: correctiveAction,
   };
   const queryData = {
-    queryStatus: "complete",
+    queryStatus: "Resolved",
+    resolvedAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })),
+    issueRCA: correctiveAction
   };
 
   const handleApproveTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (orderId) {
       try {
-        await axios.post("https://production.circolife.vip/api/query/resolveQuery", taskDataCreation, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        await axios.put(`https://production.circolife.vip/api/query/changeQueryStatus/${orderId}`, queryData, {
+        // await axios.put(`https://production.circolife.vip/api/query/changeQueryStatus/${orderId}`, queryData, {
+        await axios.patch(`https://production.circolife.vip/api/queryApi/updateQueryStatus/${orderId}`
+        , queryData, {
           headers: {
             "Content-Type": "application/json",
           },

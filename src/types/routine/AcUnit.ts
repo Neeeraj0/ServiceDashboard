@@ -1,5 +1,5 @@
 export type ACUnit = {
-    model: string;
+    model?: string;
     quantity: number;
     deviceName: string;
 };

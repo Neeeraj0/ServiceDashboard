@@ -11,6 +11,13 @@ interface CustomerInfoButtonProps {
   customerName?: string;
   customerPhone?: string;
 }
+interface RecentInteraction {
+  queryId: string;
+  subject: string;
+  contactedBy: string;
+  note: string;
+  timestamp: string;
+}
 
 interface Address {
     flat?: string;
@@ -80,6 +87,7 @@ export default function CustomerInfoButton({
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [showContactDialog, setShowContactDialog] = useState(false);
+  const [recentInteractions, setRecentInteractions] = useState<RecentInteraction[]>([]);
   const [note, setNote] = useState('');
   const {userName} = useAuth();
 
@@ -95,9 +103,11 @@ export default function CustomerInfoButton({
         data: {
           user: UserData;
           queries: QueryData[];
+          recentInteractions?: RecentInteraction[]; 
           stats?: any;
         };
       }>(`https://production.circolife.vip/api/query/userInfo/${customerId || customerEmail}`, {
+      // }>(`http://localhost:5000/api/query/userInfo/${customerId || customerEmail}`, {
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem('authToken')}`
@@ -124,6 +134,8 @@ export default function CustomerInfoButton({
       };
       
       setCustomer(formattedCustomer);
+      setRecentInteractions(res.data.data.recentInteractions || []);
+      console.log("recent interactions:", recentInteractions);
     } catch (err) {
       console.error("Error fetching customer data:", err);
       setError("Customer Not Found");
@@ -143,6 +155,7 @@ export default function CustomerInfoButton({
           deviceIds: []
         });
       }
+      
     } finally {
       setLoading(false);
     }
@@ -236,6 +249,7 @@ export default function CustomerInfoButton({
     try {
       const response = await axios.put(
         `https://production.circolife.vip/api/query/queries/${queryId}/contact-log`,
+        // `http://localhost:5000/api/query/queries/${queryId}/contact-log`,
         {
           note,
           contactedBy: userName, // e.g. from context or auth
@@ -406,15 +420,41 @@ export default function CustomerInfoButton({
                 )}
                 
                 {/* Notes section */}
-                <div>
+                {/* <div>
                   <h4 className="flex items-center text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
                     <FileText size={14} className="mr-2" />
                     Recent Interactions
                   </h4>
                   <div className="bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-300">
-                    <p className="text-sm text-gray-700 whitespace-pre-line">{customer.notes}</p>
+                    <p className="text-sm text-gray-700 whitespace-pre-line">{customer.contact}</p>
                   </div>
-                </div>
+                </div> */}
+                {recentInteractions.length > 0 && (
+                  <div>
+                    <h4 className="flex items-center text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                      <FileText size={14} className="mr-2" />
+                      Recent Interactions
+                    </h4>
+
+                    <div className="space-y-3">
+                      {recentInteractions.map((interaction, idx) => (
+                        <div
+                          key={idx}
+                          className="bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-300"
+                        >
+                          <p className="text-xs text-gray-600">
+                            Contacted By: <span className="font-semibold">{interaction.contactedBy}</span> on{" "}
+                            {formatDate(interaction.timestamp)}
+                          </p>
+                          <p className="text-sm text-gray-800 mt-1 whitespace-pre-line">
+                            {interaction.note}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 
                 {/* Actions */}
                 <div className="mt-6 pt-6 border-t border-gray-200 cursor-pointer">
@@ -427,7 +467,7 @@ export default function CustomerInfoButton({
                     className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
                   >
                     <Phone size={16} />
-                    Contact Customer
+                    Customer Contacted
                   </a>
                 </div>
               </>

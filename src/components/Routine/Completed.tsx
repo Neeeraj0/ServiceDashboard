@@ -4,6 +4,7 @@ import Modal from '../Modal/Modal';
 import CompletedApproveTask from '../Dialogs/ApproveTask';
 import RoutineAssignTask from '../Dialogs/RoutineAssignTask';
 import RoutineApproveTask from '../Dialogs/RoutineApprove';
+import { formatDate } from '../utils/dateUtils';
 
 interface Address {
   location: string;
@@ -65,7 +66,7 @@ const Completed: React.FC = () => {
   useEffect(() => {
     const fetchCompletedOrders = async () => {
       try {
-        const res = await axios.get('http://35.154.208.29:8080/api/routine/getCompleted');
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/routine/getCompleted`);
         const orders = res.data.map((order: any) => ({
           _id: order._id,
           task_id: order.task_id,
@@ -78,8 +79,8 @@ const Completed: React.FC = () => {
           TAT1: order.TAT1,
           TAT2: order.TAT2,
           address: order.address.map((addr: Address) => addr.location).join(", ") || "N/A",
-          date: new Date(order.assignedDate).toLocaleDateString(),
-          closureDate: new Date(order.servicingDate).toLocaleDateString(),
+          date: order.assignedDate,
+          closureDate: order.endDate,
           deviceId: order.deviceId || "N/A",
           assignedTechnicians: order.assignedTechnicians || [],
           photos: order.photos || [] // Assuming photos are included in the API response
@@ -108,14 +109,14 @@ const Completed: React.FC = () => {
       <thead>
         <tr className="bg-gray-50">
           <th className="p-4 border-b border-blue-gray-50 min-w-[120px]">Task ID</th>
-          <th className="p-4 border-b border-blue-gray-50 min-w-[90px] whitespace-normal w-25">Before & After Images</th>
+          <th className="p-4 border-b border-blue-gray-50 min-w-[90px] whitespace-normal">Before & After Images</th>
           <th className="p-4 border-b border-blue-gray-50 min-w-[150px]">Technician Names</th>
-          <th className="p-4 border-b border-blue-gray-50 min-w-[150px]">Issue Reported</th>
+          {/* <th className="p-4 border-b border-blue-gray-50 min-w-[150px]">Issue Reported</th> */}
           <th className="p-4 border-b border-blue-gray-50 min-w-[180px]">Material Used</th>
-          <th className="p-4 border-b border-blue-gray-50  whitespace-normal w-25">Assigned Date & Time</th>
-          <th className="p-4 border-b border-blue-gray-50 min-w-[120px] whitespace-normal w-25">Closure Date & Time</th>
-          <th className="p-4 border-b border-blue-gray-50 min-w-[80px] whitespace-normal w-25">Routine Service Completed</th>
-          <th className="p-4 border-b border-blue-gray-50 min-w-[120px] whitespace-normal w-25">TAT1</th>
+          <th className="p-4 border-b border-blue-gray-50  whitespace-normal">Assigned Date & Time</th>
+          <th className="p-4 border-b border-blue-gray-50 min-w-[120px] whitespace-normal">Closure Date & Time</th>
+          {/* <th className="p-4 border-b border-blue-gray-50 min-w-[80px] whitespace-normal">Routine Service Completed</th> */}
+          <th className="p-4 border-b border-blue-gray-50 min-w-[120px] whitespace-normal">TAT1</th>
           <th className="p-4 border-b border-blue-gray-50 min-w-[150px]">TAT2</th>
           <th className="p-4 border-b border-blue-gray-50 min-w-[150px]">Action</th>
         </tr>
@@ -154,7 +155,7 @@ const Completed: React.FC = () => {
                   "No technicians assigned"
                 )}
               </td>
-              <td className="p-4 border-b border-blue-gray-50">{order.issueReported || "N/A"}</td>
+              {/* <td className="p-4 border-b border-blue-gray-50">{order.issueReported || "N/A"}</td> */}
               <td className="p-2 border-b border-blue-gray-50 text-sm">
                   {order.materialsUsed?.length > 0 ? (
                     <ul className="list-disc ml-4">
@@ -170,12 +171,14 @@ const Completed: React.FC = () => {
                     "No Materials Used"
                   )}
                 </td>
-              <td className="p-4 border-b border-blue-gray-50">{order.date || "N/A"}</td>
-              <td className="p-4 border-b border-blue-gray-50">{order.closureDate || "N/A"}</td>
+              {/* <td className="p-4 border-b border-blue-gray-50">{order.date || "N/A"}</td> */}
+              <td className="text-gray-700">{formatDate(order.date).date} {formatDate(order.date).time}</td>
+              {/* <td className="p-4 border-b border-blue-gray-50">{order.closureDate || "N/A"}</td> */}
+              <td className="text-gray-700">{formatDate(order.closureDate).date} {formatDate(order.closureDate).time}</td>
               
-              <td className="p-4 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs">
+              {/* <td className="p-4 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs">
                 {order.isPeriodicService|| "N/A"}
-              </td>
+              </td> */}
               <td className="p-4 border-b border-blue-gray-50">{order.TAT1 ? order.TAT1 : "0"}</td>
               <td className="p-4 border-b border-blue-gray-50">{order.TAT2 ? order.TAT2 : "0"}</td>
               <td className="p-4 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs z-99999">

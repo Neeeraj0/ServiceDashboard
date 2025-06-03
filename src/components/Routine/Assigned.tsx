@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Modal from '../Modal/Modal';
 import ReAssignTask from '../Dialogs/ReAssignTask';
+import { formatDate } from '../utils/dateUtils';
 
 interface Address {
   location: string;
@@ -41,7 +42,8 @@ interface Order {
   issueReported: string;
   status: string;
   address: string;
-  date: string;
+  assignedDate: string;
+  scheduledDate: string;
   deviceId: string;
   assignedTechnicians: Technician[];
   photos: Photo[]; 
@@ -49,15 +51,15 @@ interface Order {
 
 }
 
-const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const options: Intl.DateTimeFormatOptions = { 
-      day: 'numeric', 
-      month: 'long', 
-      year: 'numeric' 
-    };
-    return date.toLocaleDateString('en-US', options);
-};
+// const formatDate = (dateString: string) => {
+//     const date = new Date(dateString);
+//     const options: Intl.DateTimeFormatOptions = { 
+//       day: 'numeric', 
+//       month: 'long', 
+//       year: 'numeric' 
+//     };
+//     return date.toLocaleDateString('en-US', options);
+// };
   
 
 const Assigned: React.FC = () => {
@@ -68,7 +70,7 @@ const Assigned: React.FC = () => {
   useEffect(() => {
     const fetchCompletedOrders = async () => {
       try {
-        const res = await axios.get('http://35.154.208.29:8080/api/routine/getAssigned');
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/routine/getAssigned`);
         const orders = res.data.map((order: any) => ({
           _id: order._id,
           task_id: order.task_id,
@@ -78,7 +80,8 @@ const Assigned: React.FC = () => {
           status: order.status,
           ac_units: order.ac_units || [],
           address: order.address.map((addr: Address) => addr.location).join(", ") || "N/A",
-          date: new Date(order.assignedDate).toLocaleDateString(),
+          assignedDate: order.assignedDate,
+          scheduledDate: order.servicingDate,
           deviceId: order.deviceId || "N/A",
           assignedTechnicians: order.assignedTechnicians || [],
           photos: order.photos || [] 
@@ -113,7 +116,8 @@ const Assigned: React.FC = () => {
           <th className="p-4 border-b border-blue-gray-50 min-w-[150px]">Contact Person</th>
           <th className="p-4 border-b border-blue-gray-50 min-w-[180px]">Csutomer Details</th>
           <th className="p-4 border-b border-blue-gray-50 min-w-[200px]">Customer Address</th>
-          <th className="p-4 border-b border-blue-gray-50 min-w-[120px] whitespace-normal w-25">Assigned Date & Time</th>
+          <th className="p-4 border-b border-blue-gray-50 min-w-[120px] whitespace-normal">Assigned Date & Time</th>
+          <th className="p-4 border-b border-blue-gray-50 min-w-[120px] whitespace-normal">Scheduled Date & Time</th>
           <th className="p-4 border-b border-blue-gray-50 min-w-[250px]">Device ID</th>
           <th className="p-4 border-b border-blue-gray-50 min-w-[120px]">Action</th>
         </tr>
@@ -134,7 +138,7 @@ const Assigned: React.FC = () => {
                     <div className="text-center">
                       {order.ac_units.map((unit, index) => (
                         <div key={index}>
-                          {unit.type}: {unit.quantity}
+                          {unit.type}: {unit.quantity} ({unit.capacity})
                         </div>
                       ))}
                     </div>
@@ -157,7 +161,10 @@ const Assigned: React.FC = () => {
                 ) : "N/A"}
               </td>
               <td className="p-4 border-b border-blue-gray-50 text-sm max-w-50 flex-wrap">{order.address|| "N/A"}</td>
-              <td className="p-4 border-b border-blue-gray-50 text-sm">{order.date || "N/A"}</td>
+              {/* <td className="p-4 border-b border-blue-gray-50 text-sm">{formatDate(order.assignedDate) || "N/A"}</td> */}
+              <td className="text-gray-700">{formatDate(order.assignedDate).date} {formatDate(order.assignedDate).time}</td>
+              {/* <td className="p-4 border-b border-blue-gray-50 text-sm">{formatDate(order.scheduledDate) || "N/A"}</td> */}
+              <td className="text-gray-700">{formatDate(order.scheduledDate).date} {formatDate(order.scheduledDate).time}</td>
               <td className="p-4 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs">
                 {order.deviceId || "N/A"}
               </td>
