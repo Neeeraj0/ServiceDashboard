@@ -84,6 +84,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
         contactnumber: order.contactnumber || "N/A",
         subject: order.subject || "N/A",
         summary: order.summery || "N/A",
+        deviceCount: order.deviceCount || 1,
         address: [
           order.flat || '',
           order.area || '',
@@ -227,7 +228,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
         contactnumber: order.contactnumber || "N/A",
         subject: order.subject || "N/A",
         summary: order.summery || "N/A",
-        deviceCount: 1,
+        deviceCount: order?.deviceCount || 1,
         address: [
           order.flat || '',
           order.area || '',
@@ -323,6 +324,8 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
     }
     
     const queryURL = new URL(`${process.env.NEXT_PUBLIC_QUERY_DASHBOARD}`);
+    queryURL.searchParams.append('from', "service");
+    queryURL.searchParams.append('auth', token);
     window.location.href = queryURL.toString();
   };
 

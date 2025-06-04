@@ -266,7 +266,7 @@ export default React.memo(function AssignTask({
       await axios.post(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/tasks`, taskDataCreation, {
         headers: { "Content-Type": "application/json" },
       });
-      // await axios.post(`http://localhost:8080/api/tasks`, taskDataCreation, {
+      // await axios.post(`http://35.154.208.29:8080/api/tasks`, taskDataCreation, {
       //   headers: { "Content-Type": "application/json" },
       // });
 
