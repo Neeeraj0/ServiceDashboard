@@ -88,7 +88,7 @@ const Upcoming: React.FC = () => {
   // Fetch assigned tasks
   const fetchAssignedTasks = async (): Promise<void> => {
     try {
-      const response = await axios.get<AssignedTask[]>(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/routine/getAssigned`);
+      const response = await axios.get<AssignedTask[]>(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/routine/getRoutineServices`);
       // const response = await axios.get<AssignedTask[]>('http://localhost:8080/api/routine/getRoutineServices');
       setAssignedTasks(response.data);
     } catch (error) {

@@ -227,6 +227,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
         contactnumber: order.contactnumber || "N/A",
         subject: order.subject || "N/A",
         summary: order.summery || "N/A",
+        deviceCount: 1,
         address: [
           order.flat || '',
           order.area || '',
@@ -300,19 +301,19 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
   };
   
 
-  const handleRaiseQueryBeta = () => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      toast.error('Authentication required');
-      return;
-    }
+  // const handleRaiseQueryBeta = () => {
+  //   const token = localStorage.getItem('authToken');
+  //   if (!token) {
+  //     toast.error('Authentication required');
+  //     return;
+  //   }
     
-    const queryURL = new URL('https://devquerys.circolives.in');
-    // const queryURL = new URL('http://192.168.0.111:5174/');
-    queryURL.searchParams.append('from', "service");
-    queryURL.searchParams.append('auth', token);
-    window.location.href = queryURL.toString();
-  };
+  //   const queryURL = new URL('https://devquerys.circolives.in');
+  //   // const queryURL = new URL('http://192.168.0.111:5174/');
+  //   queryURL.searchParams.append('from', "service");
+  //   queryURL.searchParams.append('auth', token);
+  //   window.location.href = queryURL.toString();
+  // };
 
   const handleRaiseQueryClassic = () => {
     const token = localStorage.getItem('authToken');
@@ -321,7 +322,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
       return;
     }
     
-    const queryURL = new URL('https://complaints.circolife.vip');
+    const queryURL = new URL(`${process.env.NEXT_PUBLIC_QUERY_DASHBOARD}`);
     window.location.href = queryURL.toString();
   };
 
@@ -430,6 +431,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
                     {order.subject}
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
+                    {"Count: " + (order?.deviceCount ?? "1")} <br />
                     {order.summary}
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-wrap max-w-50">

@@ -271,7 +271,7 @@ export default React.memo(function AssignTask({
       // });
 
       // Update query status
-      await axios.patch(
+      await axios.put(
         // `https://production.circolife.vip/api/query/changeQueryStatus/${orderId}`,
         `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/queryApi/updateQueryStatus/${orderId}`,
         { queryStatus: "Assigned" },

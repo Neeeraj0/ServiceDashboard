@@ -171,7 +171,7 @@ const CompletedBreakdown: React.FC<CompletedBreakdownProps> = ({onLoadingComplet
         const resQueries = await axios.get('https://production.circolife.vip/api/query/queries/all');
         console.log('line 93', resQueries);
         const completedQueryIds = resQueries?.data.allQueries
-          .filter((query: any) => query?.queryStatus === 'complete')
+          .filter((query: any) => query?.queryStatus === 'Resolved')
           .map((query: any) => query._id);
   
         const filteredOrders = orders.filter((order: any) => !completedQueryIds.includes(order._id));

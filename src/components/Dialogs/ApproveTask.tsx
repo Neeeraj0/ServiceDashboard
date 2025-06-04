@@ -34,7 +34,7 @@ export default function CompletedApproveTask({
     if (orderId) {
       try {
         // await axios.put(`https://production.circolife.vip/api/query/changeQueryStatus/${orderId}`, queryData, {
-        await axios.patch(`https://production.circolife.vip/api/queryApi/updateQueryStatus/${orderId}`
+        await axios.put(`https://production.circolife.vip/api/queryApi/updateQueryStatus/${orderId}`
         , queryData, {
           headers: {
             "Content-Type": "application/json",
