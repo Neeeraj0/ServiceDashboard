@@ -14,14 +14,16 @@ interface Technician {
 
 interface AssignTaskProps {
   orderId: string;
-  clientName: string;
+  contactPerson: string;
+  contactNumber: string;
   deviceId: string;
   customerId: string;
   customerName: string;
-  clientNumber: string;
+  customerNumber: string;
   description: string;
   complaintRaised: string;
   addressDisplay: string;
+  addressId: string;
   customerComplaint: string;
   ac_units: ACUnit[];
   onTaskAssigned: (id: string) => void; // Callback prop
@@ -32,15 +34,17 @@ let techniciansCache: Technician[] | null = null;
 
 export default React.memo(function AssignTask({
   orderId,
-  clientName,
   customerName,
+  customerNumber,
+  contactPerson,
+  contactNumber,
   deviceId,
   customerId,
-  clientNumber,
   description,
   complaintRaised,
   addressDisplay,
   customerComplaint,
+  addressId,
   ac_units,
   onTaskAssigned
 }: AssignTaskProps) {
@@ -52,7 +56,7 @@ export default React.memo(function AssignTask({
   const [filteredTechnicians, setFilteredTechnicians] = useState<Technician[]>([]);
   const [selectedTechnicians, setSelectedTechnicians] = useState<Technician[]>([]);
   const [isButtonClicked, setIsButtonClicked] = useState(false);
-  const {userName} = useAuth();
+  const {userName, userId} = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submitTimeout = useRef<NodeJS.Timeout>();
   useEffect(() => {
@@ -77,22 +81,7 @@ export default React.memo(function AssignTask({
     };
   
     fetchTechnicians();
-  }, []);
-  
-  
-  const refreshTechnicians = async () => {
-    try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/technicians/getTechnicians`);
-      localStorage.setItem("technicians", JSON.stringify(response.data));
-      setTechnicians(response.data);
-      toast.success("Technicians list updated");
-    } catch (error) {
-      console.error("Error refreshing technicians:", error);
-      toast.error("Failed to refresh technicians");
-    }
-  };
-  
-
+  }, []);  
 
   const handleTechnicianInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
@@ -253,8 +242,11 @@ export default React.memo(function AssignTask({
       deviceId: deviceId,
       address: [{ location: addressDisplay }],
       customerId: customerId,
-      client_number: clientNumber,
-      client_name: customerName ? customerName : clientName,
+      addressId: addressId,
+      contactPerson: contactPerson ? contactPerson : "Not available",
+      contactNumber: contactNumber ? contactNumber : "Not available",
+      client_number: customerNumber || contactNumber || "not available",
+      client_name: customerName,
       ac_units: transformedACUnit,
       taskType: "breakdown",
       complaintRaised,
@@ -266,13 +258,14 @@ export default React.memo(function AssignTask({
       await axios.post(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/tasks`, taskDataCreation, {
         headers: { "Content-Type": "application/json" },
       });
-      // await axios.post(`http://35.154.208.29:8080/api/tasks`, taskDataCreation, {
+      // await axios.post(`http://localhost:8080/api/tasks`, taskDataCreation, {
       //   headers: { "Content-Type": "application/json" },
       // });
 
+      console.log("task data", taskDataCreation);
+
       // Update query status
       await axios.put(
-        // `https://production.circolife.vip/api/query/changeQueryStatus/${orderId}`,
         `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/queryApi/updateQueryStatus/${orderId}`,
         { queryStatus: "Assigned" },
         { headers: { "Content-Type": "application/json" } }

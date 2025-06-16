@@ -7,6 +7,7 @@ import Chart from 'chart.js/auto';
 import { Bell, CalendarCheck, CircleCheckBig, FolderOpenDot, Loader2, Plus, RefreshCwIcon, TriangleAlert, Wrench } from 'lucide-react';
 import AssignedTasks from './getAssigned';
 import OverdueTasks from './getOverdue';
+import MapOne from "../Maps/MapOne";
 
 // Define the type based on the actual API response structure
 type BreakdownSummary = {
@@ -311,9 +312,10 @@ function Dashboard() {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await axios.get('https://production.circolife.vip/api/query/queries/all', {
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/query/queries/all`, {
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_TOKEN}`
         },
       });
       console.log("Fetched Data: ", res.data.allQueries);
@@ -628,6 +630,9 @@ function Dashboard() {
           )}
         </div>
       </div>
+      {/* <div className="mt-8">
+        <MapOne />
+      </div> */}
       <AssignedTasks />
       <OverdueTasks />
     </>

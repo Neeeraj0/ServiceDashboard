@@ -197,7 +197,7 @@ export default function MarkAsReolved({ orderId, onResolved, order, ac_units}: M
 
       const summaryResponse = await fetch(
         // `https://app.dev.circolife.vip/api/queryApi/updateQueryStatus/?id=${orderId}`,
-        `https://production.circolife.vip/api/queryApi/updateQueryStatus/${orderId}`,
+        `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/queryApi/updateQueryStatus/${orderId}`,
         {
           method: "PUT",
           headers: {

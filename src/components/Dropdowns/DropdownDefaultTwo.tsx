@@ -55,18 +55,15 @@ const DropdownDefaultTwo = ({
               <AssignTask
                 orderId={orderId}
                 customerName={order.customerName || ''}
-                clientName={order.contactperson}
-                clientNumber={order.contactnumber}
+                customerNumber={order.customerNumber || ''}
+                contactPerson={order.contactperson}
+                contactNumber={order.contactnumber}
                 description={order.summary}
                 customerId={order?.customer_id || ''}
                 deviceId={order.deviceid}
+                addressId={order.addressId || ''}
                 complaintRaised={order.TimeStamp}
                 customerComplaint={order.subject}
-                // addressDisplay={
-                //   shippingAddrDetail
-                //     ? `${shippingAddrDetail.line1}, ${shippingAddrDetail.city}`
-                //     : "N/A"
-                // }
                 addressDisplay={order.address}
                 ac_units={
                   Array.isArray(order.orderModels) && typeof order.orderModels[0] === "string"

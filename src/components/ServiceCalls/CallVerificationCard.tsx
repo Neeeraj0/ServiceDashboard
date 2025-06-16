@@ -53,7 +53,17 @@ const CallVerificationCard = ({ call, onCallUpdated, status }: {
     try {
       setIsVerifying(true);
       toast.loading('Verifying call...');
-      const res = await axios.put(`https://production.circolife.vip/api/query/customerCalls/verifyCustomerCall/${callId}`);
+      // const res = await axios.put(`${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/query/customerCalls/verifyCustomerCall/${callId}`);
+      const res = await axios.put(
+        `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/query/customerCalls/verifyCustomerCall/${callId}`,
+        {}, // empty body, since you're not passing any data
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_TOKEN}`
+          }
+        }
+      );
       toast.dismiss();
 
       if (res.status === 200) {

@@ -133,7 +133,7 @@ export default function ReAssignTask({
       axios({
         method: "PUT",
         // url: `${'http://35.154.99.208:5000/'}/${orderId}`,
-        url: `${'https://production.circolife.vip/api/queryApi/updateQueryStatus'}/${orderId}`,
+        url: `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/queryApi/updateQueryStatus/${orderId}`,
         headers: {
           "Content-Type": "application/json",
         },

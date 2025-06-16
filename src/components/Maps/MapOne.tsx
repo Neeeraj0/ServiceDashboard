@@ -1,60 +1,86 @@
 "use client";
 import jsVectorMap from "jsvectormap";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import "../../js/us-aea-en";
 
 const MapOne: React.FC = () => {
-  useEffect(() => {
-    const mapElement = document.getElementById("mapOne");
+  const mapRef = useRef<any>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    // Clean up existing map instance first
+    if (mapRef.current) {
+      try {
+        mapRef.current.destroy();
+        mapRef.current = null;
+      } catch (error) {
+        console.warn("Error destroying existing map:", error);
+      }
+    }
+
+    const mapElement = document.getElementById("mapOne");
     if (!mapElement) {
       console.error("Map element not found");
       return;
     }
 
-    const vectorMapOne = new jsVectorMap({
-      selector: "#mapOne",
-      map: "us_aea_en",
-      zoomButtons: true,
+    // Clear the map container content
+    mapElement.innerHTML = '';
 
-      regionStyle: {
-        initial: {
-          fill: "#C8D0D8",
-        },
-        hover: {
-          fillOpacity: 1,
-          fill: "#3056D3",
-        },
-      },
-      regionLabelStyle: {
-        initial: {
-          fontFamily: "Satoshi",
-          fontWeight: "semibold",
-          fill: "#fff",
-        },
-        hover: {
-          cursor: "pointer",
-        },
-      },
+    try {
+      const vectorMapOne = new jsVectorMap({
+        selector: "#mapOne",
+        map: "us_aea_en",
+        zoomButtons: true,
 
-      labels: {
-        regions: {
-          render(code: string) {
-            return code.split("-")[1];
+        regionStyle: {
+          initial: {
+            fill: "#C8D0D8",
+          },
+          hover: {
+            fillOpacity: 1,
+            fill: "#3056D3",
           },
         },
-      },
-    });
+        regionLabelStyle: {
+          initial: {
+            fontFamily: "Satoshi",
+            fontWeight: "semibold",
+            fill: "#fff",
+          },
+          hover: {
+            cursor: "pointer",
+          },
+        },
 
+        labels: {
+          regions: {
+            render(code: string) {
+              return code.split("-")[1];
+            },
+          },
+        },
+      });
+
+      mapRef.current = vectorMapOne;
+      console.log("Map created successfully");
+    } catch (error) {
+      console.error("Error creating map:", error);
+    }
+
+    // Cleanup function
     return () => {
-      if (vectorMapOne) {
-        console.log(vectorMapOne)
-        // vectorMapOne?.destroy();
-      } else {
-        console.error("Vector map instance not found during cleanup");
+      if (mapRef.current) {
+        try {
+          mapRef.current.destroy();
+          mapRef.current = null;
+          console.log("Map destroyed successfully");
+        } catch (error) {
+          console.warn("Error destroying map during cleanup:", error);
+        }
       }
     };
-  }, []);
+  }, []); // Empty dependency array to run only once
 
   return (
     <div className="col-span-12 rounded-[10px] bg-white p-7.5 shadow-1 dark:bg-gray-dark dark:shadow-card xl:col-span-7">
@@ -62,7 +88,7 @@ const MapOne: React.FC = () => {
         Region labels
       </h4>
       <div className="h-[422px]">
-        <div id="mapOne" className="mapOne map-btn"></div>
+        <div ref={mapContainerRef} id="mapOne" className="mapOne map-btn"></div>
       </div>
     </div>
   );

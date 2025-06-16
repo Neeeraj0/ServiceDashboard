@@ -33,8 +33,7 @@ export default function CompletedApproveTask({
     e.preventDefault();
     if (orderId) {
       try {
-        // await axios.put(`https://production.circolife.vip/api/query/changeQueryStatus/${orderId}`, queryData, {
-        await axios.put(`https://production.circolife.vip/api/queryApi/updateQueryStatus/${orderId}`
+        await axios.put(`${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/queryApi/updateQueryStatus/${orderId}`
         , queryData, {
           headers: {
             "Content-Type": "application/json",

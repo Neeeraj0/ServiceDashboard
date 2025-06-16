@@ -167,7 +167,7 @@ export default function AssignInstallation({
       return;
     }
 
-    const orderResponse = await axios.get(`https://salestrackbackend.circolife.vip/api/preOrder/orders/detail/${preOrderId}`);
+    const orderResponse = await axios.get(`${process.env.NEXT_PUBLIC_SALES_BACKEND_API}/api/preOrder/orders/detail/${preOrderId}`);
     // const orderResponse = await axios.get(`http://35.154.208.29:1883/api/preOrder/orders/detail/${preOrderId}`);
     const orders = orderResponse.data;
 

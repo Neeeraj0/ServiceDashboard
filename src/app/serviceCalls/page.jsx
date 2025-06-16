@@ -14,7 +14,15 @@ const CallVerificationPanel = () => {
   // Fetch pending calls
   const fetchPendingCalls = async () => {
     try {
-      const response = await fetch(`https://production.circolife.vip/api/query/customerCalls/PendingVerifications`)
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_TOKEN}/api/query/customerCalls/PendingVerifications`,
+            requestBody,
+              {
+                headers: {
+                  "Authorization": `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_TOKEN}`
+                }
+              }
+      );
       const data = await response.json()
       
       if (data.success) {
@@ -28,7 +36,15 @@ const CallVerificationPanel = () => {
   // Fetch verified calls
   const fetchVerifiedCalls = async () => {
     try {
-      const response = await fetch('https://production.circolife.vip/api/query/customerCalls/verified')
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_TOKEN}/api/query/customerCalls/verified`,
+            requestBody,
+              {
+                headers: {
+                  "Authorization": `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_TOKEN}`
+                }
+              }
+      );
       const data = await response.json()
       
       if (data.success) {
@@ -42,7 +58,15 @@ const CallVerificationPanel = () => {
   // Fetch flagged calls
   const fetchFlaggedCalls = async () => {
     try {
-      const response = await fetch('https://production.circolife.vip/api/query/customerCalls/flagged')
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_TOKEN}/api/query/customerCalls/flagged`,
+            requestBody,
+              {
+                headers: {
+                  "Authorization": `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_TOKEN}`
+                }
+              }
+      );
       const data = await response.json()
       
       if (data.success) {

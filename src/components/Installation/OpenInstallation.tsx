@@ -133,7 +133,7 @@ const OpenInstallation = () => {
       try {
         const [preordersRes, assignedTasksRes] = await Promise.all([
           // axios.get('http://35.154.208.29:1883/api/preOrder/getall/preorders', {
-            axios.get('https://salestrackbackend.circolife.vip/api/preOrder/getall/preorders', {
+            axios.get(`${process.env.NEXT_PUBLIC_SALES_BACKEND_API}/api/preOrder/getall/preorders`, {
             headers: {
               Authorization: `Bearer ${process.env.NEXT_PUBLIC_SALES_BACKEND_TOKEN}`,
             },

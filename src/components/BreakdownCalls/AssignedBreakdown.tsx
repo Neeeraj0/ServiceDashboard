@@ -28,7 +28,9 @@ interface Order {
   _id: string;
   task_id: string;
   contactPerson: string;
-  customerDetails: string;
+  contactNumber: string;
+  customerName: string;
+  customerNumber: string;
   complaintRaised?: string;
   issueReported: string;
   status: string;
@@ -98,9 +100,11 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
       const orders = res.data.map((order: any) => ({
         _id: order._id,
         task_id: order.task_id,
-        contactPerson: order.client_name,
+        contactPerson: order.contactperson,
+        contactNumber: order.contactnumber,
         complaintRaised: order.complaintRaised,
-        customerDetails: order.client_number,
+        customerName: order.client_name,
+        customerNumber: order.client_number,
         issueReported: order.description,
         status: order.status,
         address: order.address.map((addr: Address) => addr.location).join(", ") || "N/A",
@@ -183,7 +187,7 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
   const indexOfLastOrder = currentPage * itemsPerPage;
   const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
   const filteredOrders = backendData.filter((order) =>
-    order.contactPerson.toLowerCase().includes(searchQuery.toLowerCase())
+    order.customerName.toLowerCase().includes(searchQuery.toLowerCase())
   );
   const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
 
@@ -271,8 +275,14 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
                     currentOrders.map((order) => (
                       <tr key={order._id} className="hover:bg-gray-50">
                         <td className="p-2 border-b border-blue-gray-50 text-sm">{order.task_id || "N/A"}</td>
-                        <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">{order.contactPerson || "N/A"}</td>
-                        <td className="p-2 border-b border-blue-gray-50 text-sm">{order.customerDetails || "N/A"}</td>
+                        <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
+                          Name: {order.contactPerson || "N/A"} <br />
+                          Phone: {order.contactNumber || "N/A"}
+                        </td>
+                        <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
+                          Name: {order.customerName || "N/A"} <br />
+                          Phone: {order.customerNumber || "N/A"}
+                        </td>
                         <td className="p-2 border-b border-blue-gray-50 text-sm">
                           {order.assignedTechnicians?.length > 0 ? (
                             <ul className="list-none">

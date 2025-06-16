@@ -106,11 +106,11 @@ export default function CustomerInfoButton({
           recentInteractions?: RecentInteraction[]; 
           stats?: any;
         };
-      }>(`https://production.circolife.vip/api/query/userInfo/${customerId || customerEmail}`, {
+      }>(`${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/query/userInfo/${customerId || customerEmail}`, {
       // }>(`http://localhost:5000/api/query/userInfo/${customerId || customerEmail}`, {
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem('authToken')}`
+          "Authorization": `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_TOKEN}`
         },
       });
       
@@ -248,18 +248,17 @@ export default function CustomerInfoButton({
     console.log("Submitting contact information:", note);
     try {
       const response = await axios.put(
-        `https://production.circolife.vip/api/query/queries/${queryId}/contact-log`,
-        // `http://localhost:5000/api/query/queries/${queryId}/contact-log`,
+        `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/query/queries/${queryId}/contact-log`,
         {
           note,
           contactedBy: userName, // e.g. from context or auth
         },
-        // {
-        //   headers: {
-        //     "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
-        //     "Content-Type": "application/json"
-        //   }
-        // }
+        {
+          headers: {
+            "Authorization": `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_TOKEN}`,
+            "Content-Type": "application/json"
+          }
+        }
       );
   
       toast.success("Contact log added:", response.data);

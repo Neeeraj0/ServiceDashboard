@@ -167,8 +167,15 @@ const CompletedBreakdown: React.FC<CompletedBreakdownProps> = ({onLoadingComplet
           TAT1: order.TAT1,
           TAT2: order.TAT2
         }));
-  
-        const resQueries = await axios.get('https://production.circolife.vip/api/query/queries/all');
+        const resQueries = await axios.get(
+          `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/query/queries/all`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_TOKEN}`
+            }
+          }
+        );
         console.log('line 93', resQueries);
         const completedQueryIds = resQueries?.data.allQueries
           .filter((query: any) => query?.queryStatus === 'Resolved')

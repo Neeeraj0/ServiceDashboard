@@ -24,8 +24,8 @@ const OverdueTasks: React.FC = () => {
   useEffect(() => {
     const fetchQueries = async () => {
       try {
-        const res = await axios.get("https://production.circolife.vip/api/query/queries/all", {
-          headers: { "Content-Type": "application/json" },
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/query/queries/all`, {
+          headers: { "Content-Type": "application/json", "Authorization": `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_TOKEN}` },
         });
         console.log("Response data: ", res.data);
         if (!res.data || !res.data.allQueries) {

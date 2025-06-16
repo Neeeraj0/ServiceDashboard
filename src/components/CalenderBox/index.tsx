@@ -377,64 +377,6 @@ export default function Calendar({ data = [] }: CalendarProps) {
     setIsDialogOpen(true)
   }
 
-  const handleSubmit = async () => {
-    // Validation
-    if(!formData.acType || !formData.client_name || !formData.client_number || 
-       !formData.serviceType || !formData.nextServiceDate || 
-       !formData.serialId || !formData.deviceId) {
-      toast.error(
-        "Please enter all required details",
-      );
-      console.log("form data",formData);    
-      return;
-    }
-
-    try {
-      const now = new Date().toISOString();
-      const eventData = {
-        ...formData,
-        model: determineModel(formData.acType, formData.tonnage),
-        lastProcessed: now
-      };
-
-      const response = await axios.post('http://localhost:8080/api/routine/createPmServiceEvent', eventData);
-      
-      if (response.status === 201) {
-        toast.success(
-          "Event added successfully",
-        );
-        
-        setIsDialogOpen(false);
-        setFormData(initialFormData);
-      }
-    } catch (error) {
-      console.error("Error saving event:", error);
-      toast.error(
-       "Failed to save event. Please try again.",
-      );
-    }
-  }
-
-  const determineModel = (acType: string, tonnage: string) => {
-    if (acType === "Split") {
-      switch(tonnage) {
-        case "1": return "S10";
-        case "1.5": return "S15";
-        case "2": return "S20";
-        default: return "S15";
-      }
-    } else if (acType === "Cassette") {
-      switch(tonnage) {
-        case "2": return "C20";
-        case "3": return "C30";
-        default: return "C20";
-      }
-    }
-    
-    // Default fallback
-    return acType === "Split" ? "S15" : "C20";
-  }
-
   const calendarDays = []
 
   for (let i = 0; i < firstDayOfMonth; i++) {

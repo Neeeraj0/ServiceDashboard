@@ -71,10 +71,11 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
 
   const fetchTasks = async () => {
     try {
-      const res = await axios.get("https://production.circolife.vip/api/query/queries/all", {
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/query/queries/all`, {
         // const res = await axios.get("https://app.dev.circolife.vip/api/query/queries/all", {
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_TOKEN}`
         },
       });
 
@@ -96,6 +97,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
           .filter(part => part.trim() !== '') // Remove empty parts
           .join(', ') || "N/A", // Join non-empty parts with a comma
         deviceid: order.deviceid || "N/A",
+        addressId: order.addressid || "N/A",
         orderModels: order.orderModels || [],
       }));
 
@@ -149,7 +151,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
   );
   
   const searchFilteredOrders = activeOrders.filter((order) =>
-    order?.contactperson?.toLowerCase().includes(searchQuery.toLowerCase())
+    order?.customerName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleTaskAssigned = (id: string) => {
@@ -218,8 +220,14 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
       }
       
       const res = await axios.post(
-        `https://production.circolife.vip/api/query/queries/filter`,
-        requestBody
+        // `https://production.circolife.vip/api/query/queries/filter`,
+        `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/query/queries/filter`,
+        requestBody,
+        {
+          headers: {
+            "Authorization": `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_TOKEN}`
+          }
+        }
       );
 
       const orders = res.data.filteredQueries.map((order: any) => ({
@@ -333,7 +341,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
     const indexOfLastOrder = currentPage * itemsPerPage;
     const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
     const filteredOrders = searchFilteredOrders.filter((order) =>
-      order?.contactperson?.toLowerCase().includes(searchQuery.toLowerCase())
+      order?.customerName?.toLowerCase().includes(searchQuery.toLowerCase())
     );
     const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
   
@@ -422,13 +430,15 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
                 <tr key={order._id} className={removingId === order._id ? "fade-out" : ""}>
                   <td className="p-2 border-b border-blue-gray-50 text-sm">{index + 1}</td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
-                    {order.contactperson} <br /> {order.contactnumber} <br />
+                    Name: {order.contactperson} <br /> 
+                    Number: {order.contactnumber} <br />
                     {order.alternateContactPersonName && order.alternateNumber && (
                       <b className="font-bold">Alternate: {order.alternateContactPersonName} <br /> {order.alternateNumber} </b>
                     )}
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
-                    {order.customerName ? order.customerName : order.contactperson} <br /> {order.contactnumber}
+                    Name: {order.customerName ? order.customerName : order.contactperson} <br /> 
+                    Number: {order.customerNumber}
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
                     {order.subject}
