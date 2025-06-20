@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FiFilter, FiX, FiDownload } from "react-icons/fi";
@@ -12,6 +12,11 @@ import axios from "axios";
 interface FilterDrawerProps {
   fetchFilteredData: (filters: FilterParams) => void;
   handleDownloadExcel: () => void;
+  // Add these props to receive current filter state from parent
+  initialStartDate?: string | null;
+  initialEndDate?: string | null;
+  initialIssues?: string[];
+  initialLocations?: string[];
 }
 
 interface FilterParams {
@@ -21,13 +26,28 @@ interface FilterParams {
   locations: string[];
 }
 
-const FilterDrawer: React.FC<FilterDrawerProps> = ({ fetchFilteredData, handleDownloadExcel}) => {
+const FilterDrawer: React.FC<FilterDrawerProps> = ({ 
+  fetchFilteredData, 
+  handleDownloadExcel,
+  initialStartDate = null,
+  initialEndDate = null,
+  initialIssues = [],
+  initialLocations = []
+}) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+
+  // Sync local state with props whenever the drawer opens or props change
+  useEffect(() => {
+    setStartDate(initialStartDate ? new Date(initialStartDate) : null);
+    setEndDate(initialEndDate ? new Date(initialEndDate) : null);
+    setSelectedIssues(initialIssues);
+    setSelectedLocations(initialLocations);
+  }, [initialStartDate, initialEndDate, initialIssues, initialLocations, isOpen]);
 
   const handleToggleDrawer = () => setIsOpen(prev => !prev);
 
@@ -76,6 +96,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ fetchFilteredData, handleDo
     fetchFilteredData(filters);
     setIsOpen(false);
   }, [startDate, endDate, selectedIssues, selectedLocations, fetchFilteredData]);
+
   return (
     <div className="relative">
       <button

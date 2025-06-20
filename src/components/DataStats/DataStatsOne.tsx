@@ -8,6 +8,7 @@ import { Bell, CalendarCheck, CircleCheckBig, FolderOpenDot, Loader2, Plus, Refr
 import AssignedTasks from './getAssigned';
 import OverdueTasks from './getOverdue';
 import MapOne from "../Maps/MapOne";
+import IndiaComplaintsMap from '../Maps/ComplaintsMap';
 
 // Define the type based on the actual API response structure
 type BreakdownSummary = {
@@ -71,11 +72,11 @@ const TaskCard = ({ task }: { task: any }) => {
         <div>
           <div className="mb-2">
             <span className="text-lg font-semibold text-gray-800">Customer Name : </span>
-            <span className="text-lg text-gray-800">{task.contactperson || "N/A"}</span>
+            <span className="text-lg text-gray-800">{task.customerName ? task.customerName : task.contactperson || "N/A"}</span>
           </div>
           <div className="mb-2">
             <span className="text-lg font-semibold text-gray-800">Customer Mobile : </span>
-            <span className="text-lg text-gray-800">{task.contactnumber || "N/A"}</span>
+            <span className="text-lg text-gray-800">{task.customerNumber ? task.customerNumber : task.contactnumber || "N/A"}</span>
           </div>
           <div className="mb-2">
             <span className="text-lg font-semibold text-gray-800">Task Type : </span>
@@ -121,7 +122,6 @@ function Dashboard() {
   const chartContainer = useRef<HTMLDivElement>(null);
   const [timeFilter, setTimeFilter] = useState('7 Days');
   const [todayTasks, setTodayTasks] = useState<any[]>([]);
-
   // Helper function to check if a date is today
   const isToday = (dateString: string) => {
     const taskDate = new Date(dateString);
@@ -312,16 +312,16 @@ function Dashboard() {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/query/queries/all`, {
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/query/getToday/Complaints`, {
         headers: {
           "Content-Type": "application/json",
           "Authorization": `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_TOKEN}`
         },
       });
-      console.log("Fetched Data: ", res.data.allQueries);
+      console.log("Fetched Data: ", res.data.data);
       
       // Process and enhance the data
-      const processedData = res.data.allQueries.map((order: any) => ({
+      const processedData = res.data.data.map((order: any) => ({
         ...order,
         contactperson: order.contactperson || "N/A",
         contactnumber: order.contactnumber || "N/A",
@@ -349,15 +349,12 @@ function Dashboard() {
       );
       setBackendData(activeOrders);
       
-      // Get today's tasks using our helper function
       const todaysActiveOrders = activeOrders.filter((order: any) => isToday(order.TimeStamp));
       
-      // Sort today's tasks by timestamp (newest first)
       const sortedTasks = [...todaysActiveOrders].sort((a, b) => 
         new Date(b.TimeStamp).getTime() - new Date(a.TimeStamp).getTime()
       );
       
-      // Debug log for today's tasks
       console.log("Today's active orders:", todaysActiveOrders.length);
       console.log("First task timestamp:", sortedTasks[0]?.TimeStamp);
       console.log("Current date for comparison:", new Date().toISOString());
@@ -379,11 +376,9 @@ function Dashboard() {
     }
   };
   
-  // Initialize data on component mount
   useEffect(() => {
     fetchTasks();
     
-    // Set up resize observer for chart responsiveness
     const resizeObserver = new ResizeObserver(() => {
       if (chartInstance.current) {
         chartInstance.current.resize();
@@ -630,9 +625,11 @@ function Dashboard() {
           )}
         </div>
       </div>
-      {/* <div className="mt-8">
-        <MapOne />
-      </div> */}
+      <IndiaComplaintsMap 
+          // complaintData={todayTasks}
+            title="Country Heatmap"
+            compact={false}
+      />
       <AssignedTasks />
       <OverdueTasks />
     </>

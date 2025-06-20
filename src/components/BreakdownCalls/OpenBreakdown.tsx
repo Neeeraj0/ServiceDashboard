@@ -43,6 +43,12 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
   const [hasAssignAccess, setHasAssignAccess] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const { triggerRefresh, refreshKey } = useRefresh();
+  const [currentFilters, setCurrentFilters] = useState<FilterParams>({
+  startDate: null,
+  endDate: null,
+  issues: [],
+  locations: []
+});
   const router = useRouter();
   // Check token
   useEffect(() => {
@@ -191,6 +197,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
   const fetchFilteredData = async (filters: FilterParams) => {
     try {
       setLoading(true);
+      setCurrentFilters(filters); // Update current filters
       // Prepare request body
       const requestBody: any = {};
 
@@ -220,7 +227,6 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
       }
       
       const res = await axios.post(
-        // `https://production.circolife.vip/api/query/queries/filter`,
         `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/query/queries/filter`,
         requestBody,
         {
@@ -381,10 +387,14 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
                 <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
               </svg>
             </button>
-
+            
             <FilterDrawer
               fetchFilteredData={fetchFilteredData}
               handleDownloadExcel={handleDownloadExcel}
+              initialStartDate={currentFilters.startDate}
+              initialEndDate={currentFilters.endDate}
+              initialIssues={currentFilters.issues}
+              initialLocations={currentFilters.locations}
             />
           </div>
         </div>

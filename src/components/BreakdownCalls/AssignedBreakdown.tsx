@@ -156,9 +156,11 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
       const orders = res.data.map((order: any) => ({
         _id: order._id,
         task_id: order.task_id,
-        contactPerson: order.client_name,
+        contactPerson: order.contactperson,
+        contactNumber: order.contactnumber,
         complaintRaised: order.complaintRaised,
-        customerDetails: order.client_number,
+        customerName: order.client_name,
+        customerNumber: order.client_number,
         issueReported: order.description,
         status: order.status,
         address: order.address.map((addr: Address) => addr.location).join(", ") || "N/A",
@@ -167,7 +169,7 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
         deviceId: order.ac_units?.map((unit: any) => `${unit.type} (${unit.capacity})`).join(", ") || "N/A",
         assignedTechnicians: order.assignedTechnicians || []
       }));
-      
+
       setBackendData(orders);
       toast.success(`${orders.length} tasks found`);
       
@@ -187,10 +189,9 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
   const indexOfLastOrder = currentPage * itemsPerPage;
   const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
   const filteredOrders = backendData.filter((order) =>
-    order.customerName.toLowerCase().includes(searchQuery.toLowerCase())
+    order?.customerName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
   const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
-
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   const handleRefresh = () => {

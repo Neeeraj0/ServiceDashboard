@@ -167,8 +167,10 @@ export default function MarkAsReolved({ orderId, onResolved, order, ac_units}: M
         complaintRaised: order.TimeStamp,
         quantity: 1,
         taskType: "breakdown",
-        client_number: order.contactnumber,
-        client_name: order.contactperson ,
+        addressId: order.addressId,
+        customerId: order.customer_id,
+        client_number: order.customerNumber ? order.customerNumber : order.contactnumber,
+        client_name: order.customerName,
         assignedBy: userName ? [userName] : [],
         status: "Completed",
         note: resolveNote, // Resolution note

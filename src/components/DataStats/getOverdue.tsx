@@ -87,7 +87,7 @@ const OverdueTasks: React.FC = () => {
       </div>
       <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-md p-5">
         <table className="min-w-full text-sm text-left">
-          <thead className="bg-gray-100 text-xs uppercase">
+          <thead className="bg-white text-xs uppercase">
             <tr>
               <th className="p-2 truncate w-20">Query ID</th>
               <th className="p-2">Contact Person</th>

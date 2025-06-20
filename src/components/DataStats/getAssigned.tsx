@@ -65,9 +65,9 @@ const AssignedTasks: React.FC = () => {
             </button>
         </p>
       </div>
-      <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-md p-5">
+      <div className="overflow-x-auto rounded-xl border border-gray-200 gap-5 shadow-md p-5">
         <table className="min-w-full text-sm text-left">
-          <thead className="bg-gray-100 text-xs uppercase">
+          <thead className="bg-white text-xs uppercase">
             <tr className="rounded-lg">
               <th className="p-2">Task ID</th>
               <th className="p-2">Technician Name</th>
