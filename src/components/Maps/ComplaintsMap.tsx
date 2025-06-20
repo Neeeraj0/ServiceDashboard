@@ -192,15 +192,6 @@ interface Geography {
   id: string;
   properties: GeographyProperties;
 }
-
-// const getColor = (value: number | undefined, max: number): string => {
-//   if (!value || value === 0) return '#f0f0f0';
-//   const intensity = Math.min(value / max, 1);
-//   const red = Math.floor(255 * intensity);
-//   const green = Math.floor(255 * (1 - intensity * 0.8));
-//   const blue = Math.floor(255 * (1 - intensity * 0.8));
-//   return `rgb(${red}, ${green}, ${blue})`;
-// };
 const getColor = (value: number | undefined, max: number): string => {
   if (!value || value === 0) return '#f0f0f0'; // default for no data
 
@@ -352,7 +343,6 @@ const IndiaComplaintsMap: React.FC<IndiaComplaintsMapProps> = ({
       console.log("line 340", complaint.state);
       const normalizedStateName = normalizeStateName(complaint.state);
       console.log("line 342", normalizeStateName);
-      console.log("line 343", STATE_ID_MAPPING[normalizedStateName]);
       if (normalizedStateName && STATE_ID_MAPPING[normalizedStateName]) {
         const stateId = STATE_ID_MAPPING[normalizedStateName];
         stateComplaintCounts[stateId] = (stateComplaintCounts[stateId] || 0) + 1;
@@ -450,7 +440,7 @@ const IndiaComplaintsMap: React.FC<IndiaComplaintsMapProps> = ({
           {title}
         </h2>
         <p className={`text-gray-600 mb-4 ${compact ? 'text-xs' : 'text-sm'}`}>
-          Today's complaint distribution patterns across states
+          Today&apos;s complaint distribution patterns across states
         </p>
         <div className="flex items-end gap-3">
           <span className={`font-bold text-gray-900 ${compact ? 'text-2xl' : 'text-4xl'}`}>
@@ -460,7 +450,7 @@ const IndiaComplaintsMap: React.FC<IndiaComplaintsMapProps> = ({
             <span className={`${isPositive ? 'text-green-600' : 'text-red-600'}`}>
               {isPositive ? '↗' : '↘'} {Math.abs(percentageChange)}%
             </span>
-            <span className="text-gray-600">Today's Complaints</span>
+            <span className="text-gray-600">Today&apos;s Complaints</span>
           </div>
         </div>
       </div>
@@ -556,7 +546,7 @@ const IndiaComplaintsMap: React.FC<IndiaComplaintsMapProps> = ({
           <div className={`font-bold text-blue-600 ${compact ? 'text-xl' : 'text-2xl'}`}>
             {totalComplaints}
           </div>
-          <div className={`text-blue-600 ${compact ? 'text-xs' : 'text-sm'}`}>Today's Complaints</div>
+          <div className={`text-blue-600 ${compact ? 'text-xs' : 'text-sm'}`}>Today&apos;s Complaints</div>
         </div>
         <div className="bg-gradient-to-l from-green-300 to-green-50 p-4 rounded-lg shadow-md">
           <div className={`font-bold text-green-600 ${compact ? 'text-xl' : 'text-2xl'}`}>
