@@ -26,7 +26,11 @@ interface AssignTaskProps {
   addressId: string;
   customerComplaint: string;
   ac_units: ACUnit[];
-  onTaskAssigned: (id: string) => void; // Callback prop
+  onTaskAssigned: (id: string) => void;
+  closeDropdown: () => void;
+  // Add these props to control modal from parent
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 // Cache for fetched technicians to avoid repeated API calls
@@ -46,9 +50,12 @@ export default React.memo(function AssignTask({
   customerComplaint,
   addressId,
   ac_units,
-  onTaskAssigned
+  onTaskAssigned,
+  closeDropdown,
+  isOpen,
+  onOpenChange
 }: AssignTaskProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  // Remove internal isOpen state - use props instead
   const [technicianName, setTechnicianName] = useState("");
   const [servicingDate, setServicingDate] = useState("");
   const [servicingTime, setServicingTime] = useState("");
@@ -59,6 +66,7 @@ export default React.memo(function AssignTask({
   const {userName, userId} = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submitTimeout = useRef<NodeJS.Timeout>();
+
   useEffect(() => {
     const fetchTechnicians = async () => {
       const cachedTechnicians = JSON.parse(localStorage.getItem("technicians") || "[]");
@@ -70,8 +78,8 @@ export default React.memo(function AssignTask({
       if (cachedTechnicians.length === 0) {
         try {
           const response = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/technicians/getTechnicians`);
-          localStorage.setItem("technicians", JSON.stringify(response.data)); // Cache the data
-          setTechnicians(response.data); // Update state with fresh data
+          localStorage.setItem("technicians", JSON.stringify(response.data));
+          setTechnicians(response.data);
           console.log('Fetched technicians:', response);
         } catch (error) {
           console.error('Error fetching technicians:', error);
@@ -140,11 +148,11 @@ export default React.memo(function AssignTask({
   }
 
   function convertTo24HourFormat(time: string): string {
-    const [timePart, period] = time.split(" "); // e.g., "9:00 AM"
+    const [timePart, period] = time.split(" ");
     let [hours, minutes] = timePart.split(":").map(Number);
   
-    if (period === "PM" && hours !== 12) hours += 12; // Convert PM to 24-hour format
-    if (period === "AM" && hours === 12) hours = 0; // Handle midnight (12:00 AM)
+    if (period === "PM" && hours !== 12) hours += 12;
+    if (period === "AM" && hours === 12) hours = 0;
   
     return `${hours?.toString().padStart(2, "0")}:${minutes?.toString().padStart(2, "0")}`;
   }
@@ -258,13 +266,9 @@ export default React.memo(function AssignTask({
       await axios.post(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/tasks`, taskDataCreation, {
         headers: { "Content-Type": "application/json" },
       });
-      // await axios.post(`http://localhost:8080/api/tasks`, taskDataCreation, {
-      //   headers: { "Content-Type": "application/json" },
-      // });
 
       console.log("task data", taskDataCreation);
 
-      // Update query status
       await axios.put(
         `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/queryApi/updateQueryStatus/${orderId}`,
         { queryStatus: "Assigned" },
@@ -274,7 +278,7 @@ export default React.memo(function AssignTask({
       toast.success("Task assigned successfully");
       submitTimeout.current = setTimeout(() => {
         onTaskAssigned(orderId);
-        setIsOpen(false);
+        onOpenChange(false); // Close modal using prop
         setIsSubmitting(false);
       }, 5000);
     } catch (error) {
@@ -300,7 +304,7 @@ export default React.memo(function AssignTask({
     return options;
   };
 
-  const timeOptions = generateTimeOptions(30); // 30-minute intervals
+  const timeOptions = generateTimeOptions(30);
 
   useEffect(() => {
     setIsButtonClicked(
@@ -309,32 +313,10 @@ export default React.memo(function AssignTask({
       servicingTime !== ""
     );
   }, [selectedTechnicians, servicingDate, servicingTime]);
+
   return (
     <div className="flex w-full font-sans">
-      <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
-        <Dialog.Trigger asChild>
-        <button
-          onClick={() => setIsOpen(true)}
-          className="px-4 py-2 flex items-center gap-2 text-sm font-medium text-black bg-white rounded text-center mx-auto"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            shapeRendering="geometricPrecision"
-            width="15"
-            height="15"
-            textRendering="geometricPrecision"
-            imageRendering="optimizeQuality"
-            fillRule="evenodd"
-            clipRule="evenodd"
-            viewBox="0 0 419 511.67"
-            className="shrink-0"
-          >
-            <path d="M314.98 303.62c57.47 0 104.02 46.59 104.02 104.03 0 57.47-46.58 104.02-104.02 104.02-57.47 0-104.02-46.58-104.02-104.02 0-57.47 46.58-104.03 104.02-104.03zM41.73 59.27h23.93v24.38H41.73c-4.54 0-8.7 1.76-11.8 4.61l-.45.49c-3.14 3.13-5.1 7.48-5.1 12.24v315.53c0 4.75 1.96 9.1 5.1 12.24 3.13 3.15 7.48 5.11 12.25 5.11h142.62c1.68 8.44 4.17 16.6 7.36 24.38H41.73c-11.41 0-21.86-4.71-29.42-12.26C4.72 438.44 0 427.99 0 416.52V100.99c0-11.48 4.7-21.92 12.25-29.47l.79-.72c7.5-7.13 17.62-11.53 28.69-11.53zm297.55 217.37V100.99c0-4.74-1.96-9.09-5.12-12.24-3.11-3.15-7.47-5.1-12.24-5.1h-23.91V59.27h23.91c11.45 0 21.86 4.72 29.42 12.26 7.61 7.56 12.32 18.02 12.32 29.46V283.6c-7.79-3.06-15.95-5.41-24.38-6.96zm-206.75-8.07c-7.13 0-12.92-5.79-12.92-12.92s5.79-12.93 12.92-12.93h142.83c7.13 0 12.92 5.8 12.92 12.93s-5.79 12.92-12.92 12.92H132.53zM89.5 241.22c7.98 0 14.44 6.46 14.44 14.44 0 7.97-6.46 14.43-14.44 14.43-7.97 0-14.44-6.46-14.44-14.43 0-7.98 6.47-14.44 14.44-14.44zm0 78.62c7.98 0 14.44 6.46 14.44 14.44 0 7.97-6.46 14.43-14.44 14.43-7.97 0-14.44-6.46-14.44-14.43 0-7.98 6.47-14.44 14.44-14.44zm43.04 27.35c-7.13 0-12.93-5.79-12.93-12.92s5.8-12.93 12.93-12.93h80.96a133.608 133.608 0 0 0-17.26 25.85h-63.7zM89.5 162.6c7.98 0 14.44 6.46 14.44 14.44 0 7.98-6.46 14.44-14.44 14.44-7.97 0-14.44-6.46-14.44-14.44 0-7.98 6.47-14.44 14.44-14.44zm43.03 27.37c-7.13 0-12.92-5.8-12.92-12.93s5.79-12.92 12.92-12.92h142.83c7.13 0 12.92 5.79 12.92 12.92s-5.79 12.93-12.92 12.93H132.53zM93 39.4h46.13C141.84 17.18 159.77 0 181.52 0c21.62 0 39.45 16.95 42.34 38.94l46.76.46c2.61 0 4.7 2.09 4.7 4.71v51.84c0 2.6-2.09 4.7-4.7 4.7H93.05c-2.56 0-4.71-2.1-4.71-4.7V44.11A4.638 4.638 0 0 1 93 39.4zm88.03-19.25c12.3 0 22.26 9.98 22.26 22.27 0 12.3-9.96 22.26-22.26 22.26-12.29 0-22.26-9.96-22.26-22.26 0-12.29 9.97-22.27 22.26-22.27zm118.39 346.9c-.04-4.59-.46-7.86 5.23-7.79l18.45.23c5.95-.04 7.53 1.86 7.46 7.43v25.16h25.02c4.59-.03 7.86-.46 7.78 5.24l-.22 18.44c.03 5.96-1.86 7.54-7.43 7.48h-25.15v25.14c.07 5.57-1.51 7.46-7.46 7.43l-18.45.22c-5.69.09-5.27-3.2-5.23-7.79v-25h-25.16c-5.59.06-7.47-1.52-7.44-7.48l-.22-18.44c-.09-5.7 3.2-5.27 7.79-5.24h25.03v-25.03z"/>
-          </svg>
-          Assign Task
-        </button>
-        </Dialog.Trigger>
-
+      <Dialog.Root open={isOpen} onOpenChange={onOpenChange}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/40" />
           <Dialog.Content className="flex items-center justify-center fixed inset-0 w-full h-full bg-transparent">
@@ -410,12 +392,6 @@ export default React.memo(function AssignTask({
                   <label className="block text-sm text-gray-700 mb-1">
                     Assigning Time
                   </label>
-                  {/* <input
-                    type="time"
-                    className="form-control w-full p-2 border rounded"
-                    value={servicingTime}
-                    onChange={(e) => setServicingTime(e.target.value)}
-                  /> */}
                   <select
                     className="form-control w-full p-2 border rounded"
                     value={servicingTime}
@@ -430,25 +406,13 @@ export default React.memo(function AssignTask({
                   </select>
                 </div>
 
-                {/* <button onClick={refreshTechnicians} className="text-blue-500 hover:underline w-fit">
-                  Refresh Technicians
-                </button> */}
-
                 <div className="flex justify-center mt-8">
-                  {/* <button
-                    type="submit"
-                    disabled={!isButtonClicked}
-                    className={`bg-purple-600 text-white py-2 px-8 rounded text-sm hover:bg-purple-700`}
-                  >
-                    Submit
-                  </button> */}
                   <button
                     type="submit"
                     disabled={!isButtonClicked || isSubmitting}
                     className={`bg-purple-600 text-white py-2 px-8 rounded text-sm hover:bg-purple-700 
                       ${(isSubmitting || !isButtonClicked) ? 'opacity-50 cursor-not-allowed w-10vw' : ''}`}
                   >
-                    {/* {isSubmitting ? 'Submitting...' : 'Submit'} */}
                     {isSubmitting ? (
                       <svg
                         className="animate-spin h-5 w-5 text-white mx-auto"

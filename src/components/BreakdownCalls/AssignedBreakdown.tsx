@@ -239,9 +239,9 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
                     <th className="p-2 border-b border-blue-gray-50 min-w-[120px]">
                       <div className="font-semibold text-sm">Task ID</div>
                     </th>
-                    <th className="p-2 border-b border-blue-gray-50 min-w-[150px]">
+                    {/* <th className="p-2 border-b border-blue-gray-50 min-w-[150px]">
                       <div className="font-semibold text-sm">Contact Person</div>
-                    </th>
+                    </th> */}
                     <th className="p-2 border-b border-blue-gray-50 min-w-[150px]">
                       <div className="font-semibold text-sm">Customer Details</div>
                     </th>
@@ -276,10 +276,10 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
                     currentOrders.map((order) => (
                       <tr key={order._id} className="hover:bg-gray-50">
                         <td className="p-2 border-b border-blue-gray-50 text-sm">{order.task_id || "N/A"}</td>
-                        <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
+                        {/* <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
                           Name: {order.contactPerson || "N/A"} <br />
                           Phone: {order.contactNumber || "N/A"}
-                        </td>
+                        </td> */}
                         <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
                           Name: {order.customerName || "N/A"} <br />
                           Phone: {order.customerNumber || "N/A"}

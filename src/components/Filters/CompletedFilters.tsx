@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { Calendar1, RotateCcwIcon } from "lucide-react";
 import { formatDate } from "../utils/dateUtils";
 import issuesList from '../utils/IssuesList';
+import axios from "axios";
 
 interface Technician {
   _id: string;
@@ -56,56 +57,92 @@ interface Order {
 }
 
 interface FilterDrawerProps {
-  originalData: Order[];
   setFilteredData: (data: Order[]) => void;
+  filters: {
+    startDate: Date | null;
+    endDate: Date | null;
+    selectedIssues: string[];
+    selectedLocations: string[];
+    selectedTechnicians: string[];
+    isPeriodicService: string | null;
+  };
+  setFilters: (filters: any) => void;
+  triggerRefresh: () => void;
 }
 
-const CompletedFilterDrawer: React.FC<FilterDrawerProps> = ({ originalData, setFilteredData }) => {
+const CompletedFilterDrawer: React.FC<FilterDrawerProps> = ({ 
+  setFilteredData,
+  filters,
+  setFilters,
+  triggerRefresh
+}) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
-  const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
-  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
-  const [selectedTechnicians, setSelectedTechnicians] = useState<string[]>([]);
-  const [isPeriodicService, setIsPeriodicService] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [dropdownOptions, setDropdownOptions] = useState({
+    issues: [] as string[],
+    locations: [] as string[],
+    technicians: [] as Array<{_id: string, name: string}>
+  });
 
-  // Extract unique issues from originalData
-//   const uniqueIssues = [...new Set(originalData.map(order => order.issueReported))].filter(Boolean);
-  
-  // Extract unique technician names
-  const allTechnicians = originalData.flatMap(order => 
-    order.assignedTechnicians.map(tech => tech.name)
-  );
-//   const uniqueTechnicians = [...new Set(allTechnicians)].filter(Boolean);
-
-  // Extract unique locations (using first part of address)
-  const extractLocation = (address: string) => {
-    return address.split(',')[0].trim();
-  };
-//   const uniqueLocations = [...new Set(originalData.map(order => extractLocation(order.address)))].filter(Boolean);
+  // Fetch filter options from backend
+  useEffect(() => {
+    const fetchFilterOptions = async () => {
+      try {
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/breakdown/filter-options`
+        );
+        setDropdownOptions({
+          issues: res.data.issues || [],
+          locations: res.data.locations || [],
+          technicians: res.data.technicians || []
+        });
+      } catch (error) {
+        console.error('Failed to fetch filter options:', error);
+      }
+    };
+    
+    fetchFilterOptions();
+  }, []);
 
   const handleToggleDrawer = () => {
     setIsOpen((prev) => !prev);
   };
 
-  const handleToggle = (value: string, setter: React.Dispatch<React.SetStateAction<string[]>>) => {
-    setter((prev) => (prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]));
+  const handleToggle = (key: string, value: string) => {
+    setFilters((prev: any) => {
+      const currentArray = prev[key] as string[];
+      return {
+        ...prev,
+        [key]: currentArray.includes(value) 
+          ? currentArray.filter(item => item !== value)
+          : [...currentArray, value]
+      };
+    });
   };
 
   const handleRadioChange = (value: string | null) => {
-    setIsPeriodicService(value);
+    setFilters((prev: any) => ({
+      ...prev,
+      isPeriodicService: value
+    }));
   };
 
   const resetFilters = () => {
-    setStartDate(null);
-    setEndDate(null);
-    setSelectedIssues([]);
-    setSelectedLocations([]);
-    setSelectedTechnicians([]);
-    setIsPeriodicService(null);
-    setFilteredData(originalData);
+    setFilters({
+      startDate: null,
+      endDate: null,
+      selectedIssues: [],
+      selectedLocations: [],
+      selectedTechnicians: [],
+      isPeriodicService: null
+    });
+    triggerRefresh();
     toast.success("Filters reset");
+  };
+
+  const applyFilters = () => {
+    triggerRefresh();
+    setIsOpen(false);
   };
 
   const downloadExcel = async () => {
@@ -114,19 +151,45 @@ const CompletedFilterDrawer: React.FC<FilterDrawerProps> = ({ originalData, setF
       toast.success("Preparing download...");
       const XLSX = await import("xlsx"); 
 
-      const exportData = originalData.map((order) => ({
+      // Fetch all data with current filters
+      const formatToLocalYMD = (date: Date) => 
+       `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+      const params = {
+        limit: 10000, // Adjust based on your needs
+        ...(filters.startDate && { startDate: formatToLocalYMD(filters.startDate) }),
+        ...(filters.endDate && { endDate: formatToLocalYMD(filters.endDate) }),
+        ...(filters.selectedIssues.length > 0 && { issues: filters.selectedIssues.join(',') }),
+        // ...(filters.selectedLocations.length > 0 && { locations: filters.selectedLocations.join(',') }),
+        // ...(filters.selectedTechnicians.length > 0 && { technicians: filters.selectedTechnicians.join(',') }),
+        ...(filters.isPeriodicService !== null && { 
+          periodicService: filters.isPeriodicService === 'yes' ? 'true' : 'false' 
+        })
+      };
+
+      const res = await axios.get(
+        `${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/breakdown/v2/getCompletedDetails`,
+        { params }
+      );
+
+      const exportData = res.data.tasks.map((order: any) => ({
         "Task ID": order.task_id,
-        "Contact Person": order.contactPerson,
-        "Customer Details": order.customerDetails,
-        "Issue Reported": order.issueReported,
-        "Issue Found": order.issueFound,
-        "Assigned Technicians": order.assignedTechnicians.map((tech) => tech.name).join(", ") || "N/A",
+        "Contact Person": order.client_name,
+        "Customer Details": order.client_number,
+        "Issue Reported": order.customerComplaint,
+        "Issue Found": order.issueObserved,
+        "Assigned Technicians": order.assignedTechnicians?.map((tech: any) => tech.name).join(", ") || "N/A",
         "Resolve Note": order.note,
-        "Materials Used": order.materialsUsed.map(m => `${m.materialName}${m.quantityUsed ? ` (${m.quantityUsed})` : ''}`).join(", "),
-        "Customer Address": order.address,
-        "Assigned Date": order.assignedDate ? `${formatDate(order.assignedDate).date} ${formatDate(order.assignedDate).time}` : "N/A",
-        "Closure Date": order.endDate ? `${formatDate(order.endDate).date} ${formatDate(order.endDate).time}` : "N/A",
-        "Device ID": order.deviceId,
+        "Materials Used": order.materialsUsed
+          ? order.materialsUsed.flatMap((m: any) => 
+              m.materials?.map((mat: any) => 
+                `${mat.materialName}${mat.quantityUsed ? ` (${mat.quantityUsed})` : ''}`
+              ) || []
+          ).join(", ")
+          : "N/A",
+        "Customer Address": order.address?.map((addr: any) => addr.location).join(", ") || "N/A",
+        "Assigned Date": order.assignedDate ? formatDate(order.assignedDate).date + " " + formatDate(order.assignedDate).time : "N/A",
+        "Closure Date": order.endDate ? formatDate(order.endDate).date + " " + formatDate(order.endDate).time : "N/A",
+        "Device ID": order.ac_units?.map((unit: any) => `${unit.type} (${unit.capacity})`).join(", ") || "N/A",
         "Routine Services": order.isPeriodicService ? "Yes" : "No",
         "TAT1": order.TAT1,
         "TAT2": order.TAT2,
@@ -145,63 +208,6 @@ const CompletedFilterDrawer: React.FC<FilterDrawerProps> = ({ originalData, setF
       setLoading(false);
     }
   };
-
-  const applyFilters = useCallback(() => {
-    let filtered = [...originalData];
-
-    // Apply date filter for assigned date
-    if (startDate && endDate) {
-      filtered = filtered.filter((order) => {
-        const orderDate = new Date(order.assignedDate);
-        return orderDate >= startDate && orderDate <= endDate;
-      });
-    }
-
-    // Apply issue filter
-    if (selectedIssues.length > 0) {
-      filtered = filtered.filter((order) => selectedIssues.includes(order.issueReported));
-    }
-
-    // Apply location filter
-    if (selectedLocations.length > 0) {
-      filtered = filtered.filter((order) => {
-        const location = extractLocation(order.address);
-        return selectedLocations.includes(location);
-      });
-    }
-
-    // Apply technician filter
-    if (selectedTechnicians.length > 0) {
-      filtered = filtered.filter((order) => {
-        return order.assignedTechnicians.some(tech => 
-          selectedTechnicians.includes(tech.name)
-        );
-      });
-    }
-
-    // Apply periodic service filter
-    if (isPeriodicService !== null) {
-      filtered = filtered.filter((order) => {
-        if (isPeriodicService === "yes") {
-          return order.isPeriodicService === true;
-        } else if (isPeriodicService === "no") {
-          return order.isPeriodicService === false;
-        }
-        return true;
-      });
-    }
-
-    setFilteredData(filtered);
-    toast.success(`${filtered.length} tasks found`);
-  }, [startDate, endDate, selectedIssues, selectedLocations, selectedTechnicians, isPeriodicService, originalData, setFilteredData]);
-
-  useEffect(() => {
-    if (!isOpen) {
-      if (startDate || endDate || selectedIssues.length > 0 || selectedLocations.length > 0 || selectedTechnicians.length > 0 || isPeriodicService !== null) {
-        applyFilters();
-      }
-    }
-  }, [startDate, endDate, selectedIssues, selectedLocations, selectedTechnicians, isPeriodicService, applyFilters, isOpen]);
 
   return (
     <div className="relative">
@@ -243,11 +249,15 @@ const CompletedFilterDrawer: React.FC<FilterDrawerProps> = ({ originalData, setF
                   <div className="flex flex-row gap-5">
                     <Calendar1 />
                     <DatePicker
-                      selected={startDate}
-                      onChange={(date) => setStartDate(date)}
+                      selected={filters.startDate}
+                      // onChange={(date) => setFilters((prev: any) => ({...prev, startDate: date}))}
+                      onChange={(date) => setFilters((prev: any) => ({
+                        ...prev,
+                        startDate: date ? new Date(date.setHours(12, 0, 0, 0)) : null
+                      }))}
                       selectsStart
-                      startDate={startDate}
-                      endDate={endDate}
+                      startDate={filters.startDate}
+                      endDate={filters.endDate}
                       placeholderText="Start Date"
                       className="w-full rounded-md border border-gray-300 p-2 cursor-pointer"
                       dateFormat="yyyy-MM-dd"
@@ -256,11 +266,15 @@ const CompletedFilterDrawer: React.FC<FilterDrawerProps> = ({ originalData, setF
                   <div className="flex flex-row gap-5">
                     <Calendar1 />
                     <DatePicker
-                      selected={endDate}
-                      onChange={(date) => setEndDate(date)}
+                      selected={filters.endDate}
+                      // onChange={(date) => setFilters((prev: any) => ({...prev, endDate: date}))}
+                      onChange={(date) => setFilters((prev: any) => ({
+                        ...prev,
+                        endDate: date ? new Date(date.setHours(12, 0, 0, 0)) : null
+                      }))}
                       selectsEnd
-                      startDate={startDate}
-                      endDate={endDate}
+                      startDate={filters.startDate}
+                      endDate={filters.endDate}
                       placeholderText="End Date"
                       className="w-full rounded-md border border-gray-300 p-2 cursor-pointer"
                       dateFormat="yyyy-MM-dd"
@@ -273,131 +287,102 @@ const CompletedFilterDrawer: React.FC<FilterDrawerProps> = ({ originalData, setF
               <div>
                 <h3 className="text-lg font-medium text-gray-900">Issue Reported</h3>
                 <div className="mt-2 max-h-40 overflow-y-auto">
-                  {issuesList.map((issue) => (
+                  {dropdownOptions.issues.map((issue) => (
                     <label
                       key={issue}
                       className={`w-full p-2 gap-5 rounded-md items-center cursor-pointer flex mb-2 ${
-                        selectedIssues.includes(issue)
+                        filters.selectedIssues.includes(issue)
                           ? 'bg-blue-100 text-blue-600'
                           : 'bg-gray-200 text-gray-400 hover:text-black'
                       }`}
                     >
                       <input
                         type="checkbox"
-                        checked={selectedIssues.includes(issue)}
-                        onChange={() => handleToggle(issue, setSelectedIssues)}
+                        checked={filters.selectedIssues.includes(issue)}
+                        onChange={() => handleToggle('selectedIssues', issue)}
                         className={`mr-2 ${
-                          selectedIssues.includes(issue)
+                          filters.selectedIssues.includes(issue)
                             ? 'accent-blue-600'
                             : 'text-gray-200'
                         }`}
                       />
-                      <span className={selectedIssues.includes(issue) ? 'font-medium' : ''}>{issue}</span>
+                      <span className={filters.selectedIssues.includes(issue) ? 'font-medium' : ''}>{issue}</span>
                     </label>
                   ))}
                 </div>
               </div>
 
-              {/* Technician Filter */}
-              {/* <div>
-                <h3 className="text-lg font-medium text-gray-900">Technician</h3>
-                <div className="mt-2 max-h-40 overflow-y-auto">
-                  {uniqueTechnicians.map((tech) => (
-                    <label
-                      key={tech}
-                      className={`w-full p-2 gap-5 rounded-md items-center cursor-pointer flex mb-2 ${
-                        selectedTechnicians.includes(tech)
-                          ? 'bg-blue-100 text-blue-600'
-                          : 'bg-gray-200 text-gray-400 hover:text-black'
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedTechnicians.includes(tech)}
-                        onChange={() => handleToggle(tech, setSelectedTechnicians)}
-                        className={`mr-2 ${
-                          selectedTechnicians.includes(tech)
-                            ? 'accent-blue-600'
-                            : 'text-gray-200'
-                        }`}
-                      />
-                      <span className={selectedTechnicians.includes(tech) ? 'font-medium' : ''}>{tech}</span>
-                    </label>
-                  ))}
-                </div>
-              </div> */}
-
               {/* Location Filter */}
-              {/* <div>
+              <div>
                 <h3 className="text-lg font-medium text-gray-900">Location</h3>
                 <div className="mt-2 max-h-40 overflow-y-auto">
-                  {uniqueLocations.map((location) => (
+                  {dropdownOptions.locations.map((location) => (
                     <label
                       key={location}
                       className={`w-full p-2 gap-5 rounded-md items-center cursor-pointer flex mb-2 ${
-                        selectedLocations.includes(location)
+                        filters.selectedLocations.includes(location)
                           ? 'bg-blue-100 text-blue-600'
                           : 'bg-gray-200 text-gray-400 hover:text-black'
                       }`}
                     >
                       <input
                         type="checkbox"
-                        checked={selectedLocations.includes(location)}
-                        onChange={() => handleToggle(location, setSelectedLocations)}
+                        checked={filters.selectedLocations.includes(location)}
+                        onChange={() => handleToggle('selectedLocations', location)}
                         className={`mr-2 ${
-                          selectedLocations.includes(location)
+                          filters.selectedLocations.includes(location)
                             ? 'accent-blue-600'
                             : 'text-gray-200'
                         }`}
                       />
-                      <span className={selectedLocations.includes(location) ? 'font-medium' : ''}>{location}</span>
+                      <span className={filters.selectedLocations.includes(location) ? 'font-medium' : ''}>{location}</span>
                     </label>
                   ))}
                 </div>
-              </div> */}
+              </div>
 
               {/* Periodic Service Filter */}
               <div>
                 <h3 className="text-lg font-medium text-gray-900">Routine Services</h3>
                 <div className="mt-2 space-y-2">
                   <label className={`w-full p-2 gap-5 rounded-md items-center cursor-pointer flex ${
-                    isPeriodicService === "yes" ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-400 hover:text-black'
+                    filters.isPeriodicService === "yes" ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-400 hover:text-black'
                   }`}>
                     <input
                       type="radio"
-                      checked={isPeriodicService === "yes"}
+                      checked={filters.isPeriodicService === "yes"}
                       onChange={() => handleRadioChange("yes")}
                       className={`mr-2 ${
-                        isPeriodicService === "yes" ? 'accent-blue-600' : 'text-gray-200'
+                        filters.isPeriodicService === "yes" ? 'accent-blue-600' : 'text-gray-200'
                       }`}
                     />
-                    <span className={isPeriodicService === "yes" ? 'font-medium' : ''}>Yes</span>
+                    <span className={filters.isPeriodicService === "yes" ? 'font-medium' : ''}>Yes</span>
                   </label>
                   <label className={`w-full p-2 gap-5 rounded-md items-center cursor-pointer flex ${
-                    isPeriodicService === "no" ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-400 hover:text-black'
+                    filters.isPeriodicService === "no" ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-400 hover:text-black'
                   }`}>
                     <input
                       type="radio"
-                      checked={isPeriodicService === "no"}
+                      checked={filters.isPeriodicService === "no"}
                       onChange={() => handleRadioChange("no")}
                       className={`mr-2 ${
-                        isPeriodicService === "no" ? 'accent-blue-600' : 'text-gray-200'
+                        filters.isPeriodicService === "no" ? 'accent-blue-600' : 'text-gray-200'
                       }`}
                     />
-                    <span className={isPeriodicService === "no" ? 'font-medium' : ''}>No</span>
+                    <span className={filters.isPeriodicService === "no" ? 'font-medium' : ''}>No</span>
                   </label>
                   <label className={`w-full p-2 gap-5 rounded-md items-center cursor-pointer flex ${
-                    isPeriodicService === null ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-400 hover:text-black'
+                    filters.isPeriodicService === null ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-400 hover:text-black'
                   }`}>
                     <input
                       type="radio"
-                      checked={isPeriodicService === null}
+                      checked={filters.isPeriodicService === null}
                       onChange={() => handleRadioChange(null)}
                       className={`mr-2 ${
-                        isPeriodicService === null ? 'accent-blue-600' : 'text-gray-200'
+                        filters.isPeriodicService === null ? 'accent-blue-600' : 'text-gray-200'
                       }`}
                     />
-                    <span className={isPeriodicService === null ? 'font-medium' : ''}>All</span>
+                    <span className={filters.isPeriodicService === null ? 'font-medium' : ''}>All</span>
                   </label>
                 </div>
               </div>
@@ -414,7 +399,14 @@ const CompletedFilterDrawer: React.FC<FilterDrawerProps> = ({ originalData, setF
                 <button 
                   onClick={applyFilters} 
                   className="w-full bg-blue-600 text-white px-4 py-2 mt-2 rounded-md"
-                  disabled={!selectedIssues.length && !startDate && !endDate && !selectedLocations.length && !selectedTechnicians.length && isPeriodicService === null}
+                  disabled={
+                    !filters.selectedIssues.length && 
+                    !filters.startDate && 
+                    !filters.endDate && 
+                    !filters.selectedLocations.length && 
+                    !filters.selectedTechnicians.length && 
+                    filters.isPeriodicService === null
+                  }
                 >
                   Apply Filters
                 </button>

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import ClickOutside from "@/components/ClickOutside";
 import { ACUnit, Order } from "@/types/breakdown/Order";
 import AssignTask from "../Dialogs/AssignTask";
 import MarkAsResolved from "../Dialogs/MarkAsResolved";
@@ -28,12 +27,13 @@ const DropdownDefaultTwo = ({
   onResolved: (id: string) => void;
 }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [isAssignTaskOpen, setIsAssignTaskOpen] = useState(false);
   const [isResolvedOpen, setIsResolvedOpen] = useState(false);
 
   const shippingAddrDetail = getShippingAddress(orderId);
 
   return (
-    <div>
+    <>
       <div className="relative flex items-center justify-center">
         <button
           className="flex rounded-md bg-white text-red-500 px-3 py-2 shadow-sm hover:bg-gray-50 border-gray-300 border-sm border"
@@ -51,47 +51,75 @@ const DropdownDefaultTwo = ({
 
         {dropdownOpen && (
           <div className="absolute right-0 top-full z-40 mt-1 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
-            <div className="py-1 gap-1 flex flex-col items-center justify-center mx-auto">
-              <AssignTask
-                orderId={orderId}
-                customerName={order.customerName || ''}
-                customerNumber={order.customerNumber || ''}
-                contactPerson={order.contactperson}
-                contactNumber={order.contactnumber}
-                description={order.summary}
-                customerId={order?.customer_id || ''}
-                deviceId={order.deviceid}
-                addressId={order.addressId || ''}
-                complaintRaised={order.TimeStamp}
-                customerComplaint={order.subject}
-                addressDisplay={order.address}
-                ac_units={
-                  Array.isArray(order.orderModels) && typeof order.orderModels[0] === "string"
-                    ? transformOrderModels(order.orderModels as (string | number | null)[])
-                    : (order.orderModels as ACUnit[])
-                }
-                onTaskAssigned={onTaskAssigned}
-              />
-             {/* <MarkAsResolved
-                  orderId={orderId}
-                  order={order}
-                  onResolved={onResolved}
-              /> */}
-              <MarkAsResolved 
-                orderId={orderId}
-                order= {order}
-                ac_units={
-                  Array.isArray(order.orderModels) && typeof order.orderModels[0] === "string"
-                    ? transformOrderModels(order.orderModels as (string | number | null)[])
-                    : (order.orderModels as ACUnit[])
-                }
-                onResolved={onResolved}
-              />
+            <div className="py-1 flex flex-col items-center gap-2">
+              <button
+                className="text-sm w-full px-4 py-2 text-left hover:bg-gray-100"
+                onClick={() => {
+                  setIsAssignTaskOpen(true);
+                  setDropdownOpen(false);
+                }}
+              >
+                Assign Task
+              </button>
+              <button
+                className="text-sm w-full px-4 py-2 text-left hover:bg-gray-100"
+                onClick={() => {
+                  setIsResolvedOpen(true);
+                  setDropdownOpen(false);
+                }}
+              >
+                Mark as Resolved
+              </button>
             </div>
           </div>
         )}
       </div>
-    </div>
+
+      <AssignTask
+        orderId={orderId}
+        customerName={order.customerName || ''}
+        customerNumber={order.customerNumber || ''}
+        contactPerson={order.contactperson}
+        contactNumber={order.contactnumber}
+        description={order.summary}
+        customerId={order?.customer_id || ''}
+        deviceId={order.deviceid}
+        addressId={order.addressId || ''}
+        complaintRaised={order.TimeStamp}
+        customerComplaint={order.subject}
+        addressDisplay={order.address}
+        ac_units={
+          Array.isArray(order.orderModels) && typeof order.orderModels[0] === "string"
+            ? transformOrderModels(order.orderModels as (string | number | null)[])
+            : (order.orderModels as ACUnit[])
+        }
+        onTaskAssigned={(id) => {
+          setIsAssignTaskOpen(false);
+          onTaskAssigned(id);
+        }}
+        closeDropdown={() => setIsAssignTaskOpen(false)}
+        isOpen={isAssignTaskOpen}
+        onOpenChange={setIsAssignTaskOpen}
+      />
+
+      {isResolvedOpen && (
+        <MarkAsResolved
+          orderId={orderId}
+          order={order}
+          ac_units={
+            Array.isArray(order.orderModels) && typeof order.orderModels[0] === "string"
+              ? transformOrderModels(order.orderModels as (string | number | null)[])
+              : (order.orderModels as ACUnit[])
+          }
+          onResolved={(id) => {
+            setIsResolvedOpen(false);
+            onResolved(id);
+          }}
+          isOpen={isResolvedOpen}
+          onOpenChange={setIsResolvedOpen}
+        />
+      )}
+    </>
   );
 };
 

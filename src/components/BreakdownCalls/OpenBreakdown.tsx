@@ -43,6 +43,8 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
   const [hasAssignAccess, setHasAssignAccess] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const { triggerRefresh, refreshKey } = useRefresh();
+  const [assignModalData, setAssignModalData] = useState<Order | null>(null);
+  const [resolvedModalData, setResolvedModalData] = useState<Order | null>(null); 
   const [currentFilters, setCurrentFilters] = useState<FilterParams>({
   startDate: null,
   endDate: null,
@@ -92,16 +94,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
         subject: order.subject || "N/A",
         summary: order.summery || "N/A",
         deviceCount: order.deviceCount || 1,
-        address: [
-          order.flat || '',
-          order.area || '',
-          order.address || '',
-          order.city || '',
-          order.state || '',
-          order.pincode || ''
-      ]
-          .filter(part => part.trim() !== '') // Remove empty parts
-          .join(', ') || "N/A", // Join non-empty parts with a comma
+        address: order.address,
         deviceid: order.deviceid || "N/A",
         addressId: order.addressid || "N/A",
         orderModels: order.orderModels || [],
