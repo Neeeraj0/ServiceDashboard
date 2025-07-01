@@ -133,15 +133,40 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
     return address?.customerData?.shipping_address[0] || null;
   };
 
+  // const formatDate = (timestamp: string) => {
+  //   const date = new Date(timestamp);
+  //   return (
+  //     <div className="flex flex-col text-sm">
+  //       <span>{date.toLocaleDateString()}</span>
+  //       <span>{date.toLocaleTimeString()}</span>
+  //     </div>
+  //   );
+  // };
+
   const formatDate = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return (
-      <div className="flex flex-col text-sm">
-        <span>{date.toLocaleDateString()}</span>
-        <span>{date.toLocaleTimeString()}</span>
-      </div>
-    );
-  };
+  // Use regex or split to isolate date and time
+  const [datePart, timePartRaw] = timestamp.split("T");
+
+  const timePart = timePartRaw?.split(".")[0] || ""; // remove milliseconds
+  const [hours24, minutes, seconds] = timePart.split(":");
+
+  let hours = parseInt(hours24, 10);
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
+
+  const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+
+  const [year, month, day] = datePart.split("-");
+
+  return (
+    <div className="flex flex-col text-sm">
+      <span>{`${parseInt(month)}/${parseInt(day)}/${year}`}</span>
+      <span>{formattedTime}</span>
+    </div>
+  );
+};
+
+
 
   const activeOrders = filteredData.filter(
     (order) =>
