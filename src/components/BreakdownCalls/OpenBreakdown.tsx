@@ -460,9 +460,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
                   <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
                     Name: {order.contactperson} <br /> 
                     Number: {order.contactnumber} <br />
-                    {order.alternateContactPersonName && order.alternateNumber && (
-                      <b className="font-bold">Alternate: {order.alternateContactPersonName} <br /> {order.alternateNumber} </b>
-                    )}
+                    <b className="font-bold">Alternate: {order.alternateContactPersonName} <br /> {order.alternateNumber} </b>
                   </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
                     Name: {order.customerName ? order.customerName : order.contactperson} <br /> 

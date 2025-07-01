@@ -181,7 +181,7 @@ export default React.memo(function AssignTask({
               ? "S30"
               : unit.model;
         } 
-        else if (unit?.model.startsWith("S")) {
+        else if (unit?.model?.startsWith("S")) {
           type = "Split AC";
           capacity =
             unit.model === "S10"
@@ -192,7 +192,7 @@ export default React.memo(function AssignTask({
               ? "S20"
               : unit.model;
         } 
-        else if (unit?.model.startsWith("C")) {
+        else if (unit?.model?.startsWith("C")) {
           type = "Cassette AC";
           capacity =
             unit.model === "C10"
