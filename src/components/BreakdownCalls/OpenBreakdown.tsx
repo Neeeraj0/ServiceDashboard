@@ -79,8 +79,8 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
 
   const fetchTasks = async () => {
     try {
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/query/queries/all`, {
-        // const res = await axios.get("https://app.dev.circolife.vip/api/query/queries/all", {
+      // const res = await axios.get(`${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/query/queries/all`, {
+        const res = await axios.get("https://app.dev.circolife.vip/api/query/queries/all", {
         headers: {
           "Content-Type": "application/json",
           "Authorization": `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_TOKEN}`
@@ -94,7 +94,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
         subject: order.subject || "N/A",
         summary: order.summery || "N/A",
         deviceCount: order.deviceCount || 1,
-        address: order.address,
+        address: order.address !== "" ? order.address : "N/A",
         deviceid: order.deviceid || "N/A",
         addressId: order.addressid || "N/A",
         orderModels: order.orderModels || [],
@@ -261,16 +261,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
         subject: order.subject || "N/A",
         summary: order.summery || "N/A",
         deviceCount: order?.deviceCount || 1,
-        address: [
-          order.flat || '',
-          order.area || '',
-          order.address || '',
-          order.city || '',
-          order.state || '',
-          order.pincode || ''
-      ]
-          .filter(part => part.trim() !== '') // Remove empty parts
-          .join(', ') || "N/A", // Join non-empty parts with a comma
+        address: order.address !== "" ? order.address : "N/A",
         deviceid: order.deviceid || "N/A",
         orderModels: order.orderModels || [],
       }));
@@ -428,7 +419,7 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
       <table className="w-full text-left table-auto min-w-max mt-10">
         <thead>
           <tr>
-            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Task ID</th>
+            <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Ticket ID</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Contact Person</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Customer Details</th>
             <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 text-sm">Issue Reported</th>
@@ -456,7 +447,9 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
 
               return (
                 <tr key={order._id} className={removingId === order._id ? "fade-out" : ""}>
-                  <td className="p-2 border-b border-blue-gray-50 text-sm">{index + 1}</td>
+                  <td className="p-2 border-b border-blue-gray-50 text-sm max-w-[170px] truncate whitespace-nowrap overflow-hidden">
+                    {order.ticketId}
+                  </td>
                   <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
                     Name: {order.contactperson} <br /> 
                     Number: {order.contactnumber} <br />

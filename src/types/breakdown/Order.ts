@@ -6,6 +6,7 @@ export type ACUnit = {
 export type Order = {
     _id: string;
     customerName?: string;
+    ticketId?: string;
     customerNumber?: string;
     addressId?: string;
     deviceCount?: number;

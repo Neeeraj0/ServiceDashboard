@@ -14,6 +14,7 @@ interface Technician {
 
 interface AssignTaskProps {
   orderId: string;
+  ticketId: string;
   contactPerson: string;
   contactNumber: string;
   deviceId: string;
@@ -38,6 +39,7 @@ let techniciansCache: Technician[] | null = null;
 
 export default React.memo(function AssignTask({
   orderId,
+  ticketId,
   customerName,
   customerNumber,
   contactPerson,
@@ -243,6 +245,7 @@ export default React.memo(function AssignTask({
     const taskDataCreation = {
       _id: orderId,
       title: "Breakdown",
+      ticketId: ticketId,
       customerComplaint,
       description,
       servicingDate: servicingDateTime,
@@ -270,7 +273,7 @@ export default React.memo(function AssignTask({
       console.log("task data", taskDataCreation);
 
       await axios.put(
-        `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/queryApi/updateQueryStatus/${orderId}`,
+        `${process.env.NEXT_PUBLIC_CIRCOLIFE_TESTING_API}/api/queryApi/updateQueryStatus/${orderId}`,
         { queryStatus: "Assigned" },
         { headers: { "Content-Type": "application/json" } }
       );

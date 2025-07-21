@@ -77,6 +77,7 @@ const DropdownDefaultTwo = ({
 
       <AssignTask
         orderId={orderId}
+        ticketId={order.ticketId || ''}
         customerName={order.customerName || ''}
         customerNumber={order.customerNumber || ''}
         contactPerson={order.contactperson}
