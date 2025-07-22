@@ -273,7 +273,7 @@ export default React.memo(function AssignTask({
       console.log("task data", taskDataCreation);
 
       await axios.put(
-        `${process.env.NEXT_PUBLIC_CIRCOLIFE_TESTING_API}/api/queryApi/updateQueryStatus/${orderId}`,
+        `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/queryApi/updateQueryStatus/${orderId}`,
         { queryStatus: "Assigned" },
         { headers: { "Content-Type": "application/json" } }
       );

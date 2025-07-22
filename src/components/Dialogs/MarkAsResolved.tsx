@@ -92,6 +92,7 @@ export default function MarkAsResolved({
 
       const payload = {
         _id: orderId,
+        ticketId: order.ticketId,
         address: order.address,
         title: "Breakdown",
         customerComplaint: order.subject,

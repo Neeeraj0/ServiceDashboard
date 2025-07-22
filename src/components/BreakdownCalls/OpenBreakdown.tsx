@@ -79,8 +79,8 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
 
   const fetchTasks = async () => {
     try {
-      // const res = await axios.get(`${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/query/queries/all`, {
-        const res = await axios.get("https://app.dev.circolife.vip/api/query/queries/all", {
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/query/queries/all`, {
+        // const res = await axios.get("https://app.dev.circolife.vip/api/query/queries/all", {
         headers: {
           "Content-Type": "application/json",
           "Authorization": `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_TOKEN}`
