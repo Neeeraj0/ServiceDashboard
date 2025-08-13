@@ -163,7 +163,6 @@ export default React.memo(function AssignTask({
   ac_units && ac_units.length > 0
     ? ac_units.map((unit) => {
         let type, capacity;
-        console.log("units", unit);
 
         if (
           unit?.model === "1 Ton" ||
@@ -267,17 +266,11 @@ export default React.memo(function AssignTask({
 
     try {
       await axios.post(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/tasks`, taskDataCreation, {
+      // await axios.post(`http://35.154.208.29:8080/api/tasks`, taskDataCreation, {
         headers: { "Content-Type": "application/json" },
       });
 
       console.log("task data", taskDataCreation);
-
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/queryApi/updateQueryStatus/${orderId}`,
-        { queryStatus: "Assigned" },
-        { headers: { "Content-Type": "application/json" } }
-      );
-
       toast.success("Task assigned successfully");
       submitTimeout.current = setTimeout(() => {
         onTaskAssigned(orderId);

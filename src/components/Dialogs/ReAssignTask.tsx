@@ -130,15 +130,6 @@ export default function ReAssignTask({
           "Content-Type": "application/json",
         },
       })
-      axios({
-        method: "PUT",
-        // url: `${'http://35.154.99.208:5000/'}/${orderId}`,
-        url: `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/queryApi/updateQueryStatus/${orderId}`,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        data: queryData,
-      })
         .then((res) => {
           alert("Task assigned successfully");
         })

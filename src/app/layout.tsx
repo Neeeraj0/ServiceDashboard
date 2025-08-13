@@ -84,7 +84,7 @@ export default function RootLayout({
                       <SSEProvider>
                         {loading ? <Loader /> : children}
                       </SSEProvider>
-                    ) : (
+                    ) : ( 
                       loading ? <Loader /> : isPublicRoute ? children : null
                     )}
                 </RefreshProvider>

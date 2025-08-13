@@ -1,5 +1,5 @@
 import * as Dialog from "@radix-ui/react-dialog";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import toast from "react-hot-toast";
 import React from "react";
 import "../BreakdownCalls/module.style.css";
@@ -30,9 +30,20 @@ export default function MarkAsResolved({
   const [isLoading, setIsLoading] = useState(false);
   const { userName } = useAuth();
   const [token, setToken] = useState<string | null>(null);
+  
+  // Prevent multiple simultaneous submissions
+  const isSubmittingRef = useRef(false);
 
   const getToken = async (): Promise<string | null> => {
     if (token) return token;
+    
+    // Check localStorage first (but don't store new tokens there)
+    const storedToken = localStorage.getItem("token");
+    if (storedToken) {
+      setToken(storedToken);
+      return storedToken;
+    }
+
     try {
       const loginResponse = await axios.post(
         "https://testing.backend.summary.circolife.vip/api/login",
@@ -47,9 +58,10 @@ export default function MarkAsResolved({
 
       const newToken = loginResponse.data.token;
       setToken(newToken);
-      localStorage.setItem("token", newToken);
+      // Note: We're not storing in localStorage to avoid Claude.ai artifact issues
       return newToken;
     } catch (error) {
+      console.error("Authentication failed:", error);
       toast.error("Authentication failed");
       return null;
     }
@@ -57,15 +69,27 @@ export default function MarkAsResolved({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent multiple simultaneous submissions
+    if (isSubmittingRef.current || isLoading) {
+      console.warn("Submission already in progress, ignoring duplicate call");
+      return;
+    }
+
     if (!resolveNote.trim() || !issueIdentified.trim()) {
       toast.error("Please provide resolution details and select an issue.");
       return;
     }
 
     try {
+      // Set flags to prevent duplicate submissions
+      isSubmittingRef.current = true;
       setIsLoading(true);
-      const token = await getToken();
-      if (!token) return;
+      
+      const authToken = await getToken();
+      if (!authToken) {
+        return;
+      }
 
       const transformedACUnit =
         ac_units?.length
@@ -113,62 +137,74 @@ export default function MarkAsResolved({
         endDate: new Date().toISOString(),
       };
 
-      await axios.post(
+      console.log("Submitting payload:", payload);
+
+      const response = await axios.post(
         `${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/tasks/saveMarkAsResolved`,
+        // `http://localhost:8080/api/tasks/saveMarkAsResolved`,
         payload,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${authToken}`,
             "Content-Type": "application/json",
           },
+          timeout: 30000, // 30 second timeout
         }
       );
 
-      const istDateTime = new Date()
-        .toLocaleString("sv-SE", { timeZone: "Asia/Kolkata" })
-        .replace(" ", "T");
-
-      await fetch(
-        `${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/queryApi/updateQueryStatus/${orderId}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            status: false,
-            queryStatus: "Completed",
-            resolvedNote: resolveNote,
-            resolvedTimeStamp: istDateTime,
-          }),
-        }
-      );
-
+      console.log("API Response:", response.data);
+      
       toast.success("Query marked as resolved successfully");
       onResolved(orderId);
       onOpenChange(false);
+      
+      // Reset form
       setResolveNote("");
       setIssueIdentified("");
+      
     } catch (error) {
-      toast.error("Failed to mark as resolved.");
-      console.error(error);
+      console.error("Failed to mark as resolved:", error);
+      
+      if (axios.isAxiosError(error)) {
+        if (error.code === 'ECONNABORTED') {
+          toast.error("Request timeout. Please try again.");
+        } else if (error.response?.status === 401) {
+          toast.error("Session expired. Please refresh and try again.");
+          setToken(null);
+          localStorage.removeItem("token");
+        } else {
+          toast.error(`Failed to mark as resolved: ${error.response?.data?.message || error.message}`);
+        }
+      } else {
+        toast.error("Failed to mark as resolved. Please try again.");
+      }
     } finally {
       setIsLoading(false);
+      isSubmittingRef.current = false;
     }
+  };
+
+  // Reset submission flag when dialog closes
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      isSubmittingRef.current = false;
+      setIsLoading(false);
+    }
+    onOpenChange(open);
   };
 
   return (
     <div className="flex w-full font-sans">
-      <Dialog.Root open={isOpen} onOpenChange={onOpenChange}>
+      <Dialog.Root open={isOpen} onOpenChange={handleOpenChange}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/40" />
           <Dialog.Content className="flex items-center justify-center fixed inset-0 w-full h-full bg-transparent">
             <div className="w-[35%] h-auto bg-white rounded-lg p-8 shadow-lg relative">
               <button
                 className="absolute top-2 right-2 text-gray-600 hover:text-red-500"
-                onClick={() => onOpenChange(false)}
+                onClick={() => handleOpenChange(false)}
                 aria-label="Close"
+                disabled={isLoading}
               >
                 &times;
               </button>
@@ -189,6 +225,7 @@ export default function MarkAsResolved({
                     value={issueIdentified}
                     onChange={(e) => setIssueIdentified(e.target.value)}
                     required
+                    disabled={isLoading}
                   >
                     <option value="" disabled>
                       Select
@@ -211,12 +248,13 @@ export default function MarkAsResolved({
                     value={resolveNote}
                     onChange={(e) => setResolveNote(e.target.value)}
                     required
+                    disabled={isLoading}
                   />
                 </div>
 
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || isSubmittingRef.current}
                   className={`btn-primary bg-[#A14996] text-white p-2 rounded-lg w-full ${
                     isLoading ? "opacity-50 cursor-not-allowed" : ""
                   }`}

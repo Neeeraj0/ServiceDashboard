@@ -321,9 +321,19 @@ const PipingModal: React.FC<ModalProps> = ({ isOpen, onClose, images, taskName, 
             <div className="flex flex-col items-center gap-4">
               {images.map((image, index) => (
                 <div key={index} className="flex flex-col items-center w-full">
-                  <h4 className="text-lg font-semibold capitalize mb-2">
-                    {image.type} - {image.servicePhase}
-                  </h4>
+                  {taskName !== "uninstallation" ? (
+                    <h4 className="text-lg font-semibold capitalize mb-2">
+                      {image.type} - {image.servicePhase}
+                    </h4>
+                  ) : (
+                    <h4 className="text-lg font-semibold capitalize mb-2">
+                      {image.type
+                        .trim()
+                        .replace(/_/g, ' ')              
+                        .replace(/\b\w/g, c => c.toUpperCase()) 
+                      }
+                    </h4>
+                  )}
                   {/* <img
                     src={image.presignedUrl}
                     alt={image.type}

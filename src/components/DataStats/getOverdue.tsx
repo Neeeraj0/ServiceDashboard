@@ -47,18 +47,8 @@ const OverdueTasks: React.FC = () => {
             queryRaised: order.TimeStamp,
             status: order.status || "N/A",
             queryStatus: order.queryStatus === "assign" ? "Assigned" : order.queryStatus === "complete" ? "Completed" : order.queryStatus === "open" ? "Not Started" : "N/A",
-            address: [
-              order.flat,
-              order.area,
-              order.address,
-              order.city,
-              order.state,
-              order.pincode,
-            ]
-              .filter((part) => part?.trim() !== "")
-              .join(", ") || "N/A",
-          }))
-          .slice(0, 5);
+            address: order.address || "N/A",
+          }));
         setQueries(filteredData);
       } catch (err: any) {
         console.error("Error fetching queries: ", err);
