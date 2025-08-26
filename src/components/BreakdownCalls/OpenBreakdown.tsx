@@ -299,13 +299,15 @@ const OpenBreakdown: React.FC<OpenBreakdownProps> = ({ onLoadingComplete }) => {
   
         return {
           "S.No": index + 1,
+          "Ticket ID": order.ticketId,
           "Contact Person": order.contactperson,
           "Contact Number": order.contactnumber,
+          "Customer Name": order.customerName,
           "Issue Reported": order.subject,
           "Issue Summary": order.summary,
-          "Customer Address": addressDisplay || "N/A",
+          "Customer Address": order.address,
           "Date": formatDate(order.TimeStamp),
-          "Device ID": order.deviceid || "N/A",
+          "Device ID": order.deviceid,
         };
       });
   
