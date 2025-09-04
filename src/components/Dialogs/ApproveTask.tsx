@@ -5,11 +5,13 @@ import toast from "react-hot-toast";
 
 interface CompletedApproveTaskProps {
   orderId: string;
+  ticketId?: string;
   onTaskApproved?: () => void;
 }
 
 export default function CompletedApproveTask({
   orderId,
+  ticketId,
   onTaskApproved
 }: CompletedApproveTaskProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -33,7 +35,7 @@ export default function CompletedApproveTask({
     e.preventDefault();
     if (orderId) {
       try {
-        await axios.put(`${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/queryApi/updateQueryStatus/${orderId}`
+        await axios.put(`${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/queryApi/updateQueryStatus/${ticketId}`
         , queryData, {
           headers: {
             "Content-Type": "application/json",

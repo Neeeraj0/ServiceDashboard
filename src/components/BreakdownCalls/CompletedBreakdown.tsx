@@ -41,6 +41,7 @@ interface MaterialUsed {
 
 interface Order {
   _id: string;
+  ticketId?: string;
   task_id: string;
   contactPerson: string;
   customerDetails: string;
@@ -144,6 +145,7 @@ const CompletedBreakdown: React.FC<CompletedBreakdownProps> = ({ onLoadingComple
     const orders = tasks.map((order: any) => ({
       _id: order._id,
       task_id: order.task_id,
+      ticketId: order.ticketId,
       contactPerson: order.client_name,
       customerDetails: order.client_number,
       issueReported: order.customerComplaint,
@@ -388,14 +390,15 @@ const CompletedBreakdown: React.FC<CompletedBreakdownProps> = ({ onLoadingComple
                     <td className="p-4 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs">
                       {order.TAT2}
                     </td>
-                    {/* {hasAssignAccess && (
+                    {hasAssignAccess && (
                       <td className="p-4 border-b border-blue-gray-50 text-xs">
                         <CompletedApproveTask 
                           orderId={order._id}
+                          ticketId={order.ticketId}
                           onTaskApproved={() => removeCompletedTask(order._id)}
                         />
                       </td>
-                    )} */}
+                    )}
                   </tr>
                 );
               })
