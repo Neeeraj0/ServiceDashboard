@@ -298,9 +298,9 @@ const CompletedBreakdown: React.FC<CompletedBreakdownProps> = ({ onLoadingComple
               </th>
               <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">TAT 1</th>
               <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">TAT 2</th>
-              {hasAssignAccess && (
+              {/* {hasAssignAccess && (
                 <th className="p-2 border-b border-blue-gray-50 min-w-[120px] text-sm">Action</th>
-              )}
+              )} */}
             </tr>
           </thead>
           <tbody>
@@ -388,14 +388,14 @@ const CompletedBreakdown: React.FC<CompletedBreakdownProps> = ({ onLoadingComple
                     <td className="p-4 border-b border-blue-gray-50 whitespace-normal break-words max-w-xs">
                       {order.TAT2}
                     </td>
-                    {hasAssignAccess && (
+                    {/* {hasAssignAccess && (
                       <td className="p-4 border-b border-blue-gray-50 text-xs">
                         <CompletedApproveTask 
                           orderId={order._id}
                           onTaskApproved={() => removeCompletedTask(order._id)}
                         />
                       </td>
-                    )}
+                    )} */}
                   </tr>
                 );
               })
