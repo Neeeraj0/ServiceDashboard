@@ -454,7 +454,7 @@ export default function Calendar({ data = [] }: CalendarProps) {
           <Button variant="outline" size="icon" onClick={nextMonth}>
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <Button onClick={handleAddEvent} className="ml-4">
+          <Button onClick={handleAddEvent} className="ml-4 bg-black text-white hover:bg-gray-800" variant="default">
             <Plus className="h-4 w-4 mr-2" /> Add Event
           </Button>
         </div>

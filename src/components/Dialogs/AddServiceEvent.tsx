@@ -624,7 +624,7 @@ const AddServiceEventModal = ({ open, onClose, defaultDate }: Props) => {
 
         <div className="mt-6 flex justify-end gap-4">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={() => handleSubmit()}>Save</Button>
+          <Button onClick={() => handleSubmit()} className="bg-black text-white hover:bg-gray-600" variant="default" >Save</Button>
         </div>
       </div>
     </div>

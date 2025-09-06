@@ -6,6 +6,7 @@ import Calendar from '../CalenderBox';
 import Pagination from '../Pagination';
 import SearchBox from '../SearchBox/SearchBox';
 import Loader from '../common/Loader';
+import toast from 'react-hot-toast';
 
 interface Device {
   deviceId: string;
@@ -178,17 +179,56 @@ const Upcoming: React.FC = () => {
   }, [filter]);
 
   // Refresh assigned tasks when a task is assigned
+  // const handleTaskAssigned = async () => {
+  //   await fetchAssignedTasks();
+  //   // Optionally refresh the main data as well
+  //   const url = `${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/routine/orders/service-due/${filter}`;
+  //   try {
+  //     const response = await axios.get<GroupedDevice[]>(url);
+  //     setData(response.data);
+  //   } catch (error) {
+  //     console.error("Error refreshing data:", error);
+  //   }
+  // };
+
   const handleTaskAssigned = async () => {
+  setLoading(true); // Show loading state
+  
+  try {
+    // Clear current data first
+    setData([]);
+    setSelectedDevices({});
+    setExpandedCards({});
+    
+    // Refresh assigned tasks
     await fetchAssignedTasks();
-    // Optionally refresh the main data as well
+    
+    // Refresh main data
     const url = `${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/routine/orders/service-due/${filter}`;
-    try {
-      const response = await axios.get<GroupedDevice[]>(url);
-      setData(response.data);
-    } catch (error) {
-      console.error("Error refreshing data:", error);
-    }
-  };
+    const response = await axios.get<GroupedDevice[]>(url);
+    const enriched = await Promise.all(response.data.map(enrichWithDeviceIds));
+    setData(enriched);
+    
+    // Reset selected devices
+    const initialSelectedDevices: { [key: string]: Set<string> } = {};
+    enriched.forEach(group => {
+      const availableDevices = getAvailableDevices(group);
+      if (availableDevices.length === 1) {
+        initialSelectedDevices[group.addressId] = new Set([availableDevices[0].deviceId]);
+      }
+    });
+    setSelectedDevices(initialSelectedDevices);
+    
+    // Reset to first page
+    setCurrentPage(1);
+    
+  } catch (error) {
+    console.error("Error refreshing data:", error);
+    toast.error("Failed to refresh data");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // const transformDataForCalendar = (groupedData: GroupedDevice[]): IncomingData[] => {
   //   return groupedData
@@ -511,7 +551,7 @@ const enrichWithDeviceIds = async (group: GroupedDevice): Promise<GroupedDevice>
                             <button className="flex items-center text-sm text-gray-600">
                               <span className="mr-2">ℹ️</span> View Customer
                             </button>
-                            <RoutineAssignTask
+                            {/* <RoutineAssignTask
                               orderId={group.addressId}
                               clientName={group.client_name}
                               clientNumber={group.client_number}
@@ -527,7 +567,32 @@ const enrichWithDeviceIds = async (group: GroupedDevice): Promise<GroupedDevice>
                                 {...(selectedDeviceArray.length === 1
                                 ? { deviceId: selectedDeviceArray[0] }
                                 : { deviceIds: selectedDeviceArray })}
-                            />
+                            /> */}
+
+                            {selectedSet.size > 0 ? (
+                              <RoutineAssignTask
+                                orderId={group.addressId}
+                                clientName={group.client_name}
+                                clientNumber={group.client_number}
+                                description="Periodic service"
+                                complaintRaised=""
+                                customerComplaint=""
+                                addressDisplay={address}
+                                acUnits={acUnits}
+                                totalQuantity={totalQuantity}
+                                isPartial={isPartial}
+                                onTaskAssigned={handleTaskAssigned}
+                                deviceId={selectedDeviceArray.join(', ')}
+                                deviceIds={selectedDeviceArray}
+                              />
+                            ) : (
+                              <button 
+                                className="border border-gray-300 text-gray-400 p-3 rounded-md text-sm cursor-not-allowed" 
+                                disabled
+                              >
+                                Select devices to assign
+                              </button>
+                            )}
                           </div>
                         </div>
                       );

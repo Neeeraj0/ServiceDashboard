@@ -35,7 +35,7 @@ export default function CompletedApproveTask({
     e.preventDefault();
     if (orderId) {
       try {
-        await axios.put(`${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/queryApi/updateQueryStatus/${ticketId}`
+        await axios.patch(`${process.env.NEXT_PUBLIC_CIRCOLIFE_PRODUCTION_API}/api/queryApi/updateQueryStatus/${ticketId}`
         , queryData, {
           headers: {
             "Content-Type": "application/json",
