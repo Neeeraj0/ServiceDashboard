@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
-import './module.style.css'
+// import './module.style.css'
 import AssignInstallation from '../Dialogs/AssignInstallation';
 import SearchBox from '../SearchBox/SearchBox';
 import { useRefresh } from '@/app/context/RefreshContext';
@@ -100,6 +100,7 @@ const OpenInstallation = () => {
     "C15": "Cassette 1.5T",
     "C20": "Cassette 2T",
     "C30": "Cassette 3T",
+    "C40": "Cassette 4T",
   };
 
   //checktoken

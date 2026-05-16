@@ -117,7 +117,7 @@ const menuGroups = [
           { label: "Open", route: "/installation/open"},
           { label: "Assigned", route: "/installation/assigned"},
           { label: "Approval Pending", route: "/installation/approvalPending"},
-          { label: "Completed", route: "/installation/completed"}
+          // { label: "Completed", route: "/installation/completed"}
         ],
       },
       // {
