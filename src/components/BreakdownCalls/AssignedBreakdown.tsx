@@ -57,7 +57,8 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
   const [hasAssignAccess, setHasAssignAccess] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; // Number of items per page
+  const itemsPerPage = 20; // Number of items per page
+  const [totalItems, setTotalItems] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const { triggerRefresh, refreshKey } = useRefresh();
 
@@ -88,16 +89,19 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
 
   // Fetch data on load and refreshKey change
   useEffect(() => {
-    fetchAssignedOrders();
+    fetchAssignedOrders(1);
   }, [refreshKey]);
 
   // Fetch initial data
-  const fetchAssignedOrders = async () => {
+  const fetchAssignedOrders = async (page: number = 1) => {
     try {
       setIsLoading(true);
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/breakdown/getAssigned`);
+      const res = await axios.get(
+        `${process.env.NEXT_PUBLIC_SERVICE_BACKEND_API}/api/breakdown/getAssigned?page=${page}&limit=${itemsPerPage}`
+      );
       
-      const orders = res.data.map((order: any) => ({
+      const ordersList = res.data.data || [];
+      const orders = ordersList.map((order: any) => ({
         _id: order._id,
         task_id: order.task_id,
         contactPerson: order.contactperson,
@@ -115,6 +119,7 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
       }));
       
       setBackendData(orders);
+      setTotalItems(res.data.pagination?.totalCount || 0);
     } catch (error) {
       console.error(error);
       toast.error("Failed to fetch assigned tasks");
@@ -125,11 +130,14 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
   };
 
   // Fetch filtered data using API
-  const fetchFilteredData = async (filters: FilterParams) => {
+  const fetchFilteredData = async (filters: FilterParams, page: number = 1) => {
     try {
       setIsLoading(true);
       // Prepare request body
-      const requestBody: any = {};
+      const requestBody: any = {
+        page,
+        limit: itemsPerPage
+      };
       
       if (filters.startDate) {
         requestBody.startDate = filters.startDate;
@@ -144,8 +152,8 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
       }
       
       // If no filters applied, fetch all data
-      if (Object.keys(requestBody).length === 0) {
-        return fetchAssignedOrders();
+      if (!filters.startDate && !filters.endDate && (!filters.statuses || filters.statuses.length === 0)) {
+        return fetchAssignedOrders(page);
       }
       
       const res = await axios.post(
@@ -153,7 +161,7 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
         requestBody
       );
 
-      const orders = res.data.map((order: any) => ({
+      const orders = res.data.data.map((order: any) => ({
         _id: order._id,
         task_id: order.task_id,
         contactPerson: order.contactperson,
@@ -171,6 +179,7 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
       }));
 
       setBackendData(orders);
+      setTotalItems(res.data.pagination?.totalCount || 0);
       toast.success(`${orders.length} tasks found`);
       
     } catch (error) {
@@ -186,13 +195,15 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
   }, [searchQuery]);
 
   // Pagination logic
-  const indexOfLastOrder = currentPage * itemsPerPage;
-  const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
+  const paginate = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+    fetchAssignedOrders(pageNumber);
+  };
+
+  // Filter by search query on client side
   const filteredOrders = backendData.filter((order) =>
     order?.customerName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   const handleRefresh = () => {
     toast.success('Data refreshing...');
@@ -273,7 +284,7 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
                       <td colSpan={10} className="text-center p-4">No tasks available</td>
                     </tr>
                   ) : (
-                    currentOrders.map((order) => (
+                    backendData.map((order) => (
                       <tr key={order._id} className="hover:bg-gray-50">
                         <td className="p-2 border-b border-blue-gray-50 text-sm">{order.task_id || "N/A"}</td>
                         {/* <td className="p-2 border-b border-blue-gray-50 text-sm max-w-50">
@@ -335,7 +346,7 @@ const AssignedBreakdown: React.FC<AssignedBreakdownProps> = ({ onLoadingComplete
       
       <Pagination
         currentPage={currentPage}
-        totalItems={filteredOrders.length}
+        totalItems={totalItems}
         itemsPerPage={itemsPerPage}
         paginate={paginate}
       />
