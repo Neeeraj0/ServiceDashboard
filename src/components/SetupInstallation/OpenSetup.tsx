@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
-import './module.style.css'
+// import './module.style.css'
 import AssignInstallation from '../Dialogs/AssignInstallation';
 import SearchBox from '../SearchBox/SearchBox';
 import { useRefresh } from '@/app/context/RefreshContext';

@@ -115,24 +115,37 @@ const AssignedInstallation: React.FC = () => {
     setCurrentPage(1);
   }, [searchQuery]);
 
-  const mapOrder = (order: any): Order => ({
-    _id: order._id,
-    task_id: order.task_id,
-    contactPerson: order.client_name,
-    customerDetails: order.client_number,
-    issueReported: order.description,
-    status: order.status,
-    devices: order.devices || [],
-    address:
-      order.address?.map((addr: Address) => addr.location).join(', ') || 'N/A',
-    date: order.servicingDate,
-    scheduledDate: order.scheduledDate || '',
-    deviceId:
-      order.ac_units
-        ?.map((unit: any) => `${unit.type} (${unit.capacity})`)
-        .join(', ') || 'N/A',
-    assignedTechnicians: order.assignedTechnicians || [],
-  });
+  const mapOrder = (order: any): Order => {
+    // Map ac_units to devices format for AcInstallationDetails component
+    const devices = order.ac_units?.map((unit: any, index: number) => ({
+      deviceName: `${unit.type} - Unit ${index + 1}`,
+      model: unit.capacity,
+      status: order.status === 'Completed' 
+        ? 'Installation Completed' 
+        : order.status === 'open' 
+        ? 'Installation Open' 
+        : 'Installation Pending',
+    })) || [];
+
+    return {
+      _id: order._id,
+      task_id: order.task_id,
+      contactPerson: order.client_name,
+      customerDetails: order.client_number,
+      issueReported: order.description,
+      status: order.status,
+      devices,
+      address:
+        order.address?.map((addr: Address) => addr.location).join(', ') || 'N/A',
+      date: order.servicingDate,
+      scheduledDate: order.scheduledDate || '',
+      deviceId:
+        order.ac_units
+          ?.map((unit: any) => `${unit.type} (${unit.capacity})`)
+          .join(', ') || 'N/A',
+      assignedTechnicians: order.assignedTechnicians || [],
+    };
+  };
 
   const parseResponse = (response: any) => {
     const responseData = response?.data;
