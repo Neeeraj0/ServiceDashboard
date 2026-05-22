@@ -116,18 +116,14 @@ const AssignedInstallation: React.FC = () => {
   }, [searchQuery]);
 
   const mapOrder = (order: any): Order => {
+    console.log('Mapping order:', order);
     // Map ac_units to devices format for AcInstallationDetails component
-    const devices = order.ac_units?.flatMap((unit: any) =>
-      Array.from({ length: unit.quantity }, (_, index) => ({
-        deviceName: `${unit.type} - Unit ${index + 1}`,
-        model: unit.capacity,
-        status: order.status === 'Completed'
-          ? 'Installation Completed'
-          : order.status === 'open'
-          ? 'Installation Open'
-          : 'Installation Pending',
-      }))
-    ) || [];
+    const devices = order.devices?.map((unit: any) => ({
+      deviceName: unit.deviceName,
+      model: unit.model,
+      status: unit.status, // already "Installation Completed/Open/Pending"
+    })) || [];
+
 
     return {
       _id: order._id,
