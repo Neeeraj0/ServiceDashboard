@@ -17,6 +17,7 @@ const AcInstallationDetails: React.FC<AcInstallationDetailsProps> = ({ devices =
   const completedCount = devices.filter(device => 
     device.status === 'Installation Completed').length;
   
+    console.log('Devices:', devices);
   // Group devices by model for the tooltip
   const modelGroups = devices.reduce((acc: Record<string, Device[]>, device) => {
     if (!acc[device.model]) {
