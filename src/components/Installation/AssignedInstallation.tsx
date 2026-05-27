@@ -212,11 +212,8 @@ const AssignedInstallation: React.FC = () => {
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   // Client-side search on current page data
-  const filteredOrders = backendData.filter((order) =>
-    order.contactPerson?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  const currentOrders = searchQuery ? filteredOrders : backendData;
-  const paginationTotalItems = searchQuery ? filteredOrders.length : totalItems;
+  const currentOrders = backendData;
+  const paginationTotalItems = totalItems;
 
   return (
     <div>
